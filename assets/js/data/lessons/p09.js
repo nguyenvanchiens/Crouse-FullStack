@@ -37,8 +37,8 @@ server {
 
   location /static/ {
     root /var/www/app;               # file ở /var/www/app/static/...
-    expires 30d;
-    add_header Cache-Control "public, immutable";
+    # Chỉ đặt một header Cache-Control; dùng thêm "expires" sẽ sinh header thứ hai
+    add_header Cache-Control "public, max-age=2592000, immutable";
   }
 
   location / {
@@ -57,6 +57,7 @@ server {
         p: [
           "Gzip giảm đáng kể kích thước JSON, CSS, JS khi truyền qua mạng, đổi lại tốn một ít CPU. Không nên nén ảnh JPEG/PNG hay file đã nén sẵn vì gần như không giảm thêm. `gzip_min_length` tránh nén các response quá nhỏ.",
           "File tĩnh có tên chứa hash (ví dụ `app.3f9c2a.js`) có thể cache lâu với `immutable` vì mỗi lần build tên file đổi. File không có hash như `index.html` thì nên cache ngắn hoặc `no-cache`.",
+          "Lưu ý về `add_header`: một khối `location` có `add_header` riêng sẽ không kế thừa các `add_header` khai báo ở khối `server` bên ngoài. Nếu bạn đặt header bảo mật ở `server`, hãy kiểm tra lại chúng vẫn có trong response của các location con.",
           "`client_max_body_size` mặc định là 1m. Nếu API cho upload file, bạn phải tăng giá trị này, nếu không client nhận lỗi 413 mà log ứng dụng không hề có dòng nào vì request bị chặn ngay tại Nginx."
         ],
         list: [
@@ -79,8 +80,8 @@ server {
     ],
     quiz: [
       { q: "Khi nào `least_conn` phù hợp hơn round-robin?", options: ["Khi mọi request có thời gian xử lý gần như bằng nhau", "Khi thời gian xử lý request chênh lệch lớn giữa các request", "Khi chỉ có một server backend", "Khi cần sticky session theo cookie"], answer: 1, explain: "`least_conn` gửi request tới server đang ít kết nối nhất, tránh dồn việc vào server đang bận với request chậm. Nếu request đồng đều, round-robin đã đủ; một server thì không cần cân bằng; sticky session là cơ chế khác (ví dụ `ip_hash`)." },
-      { q: "Client upload file 5MB nhận lỗi 413, log ứng dụng không có gì. Nguyên nhân khả dĩ nhất?", options: ["Ứng dụng bị crash", "`client_max_body_size` vẫn đang là mặc định 1m", "Gzip chưa bật", "Upstream dùng round-robin"], answer: 1, explain: "Nginx chặn body lớn hơn `client_max_body_size` (mặc định 1m) và trả 413 trước khi request tới ứng dụng, vì vậy log ứng dụng trống. Gzip và thuật toán cân bằng tải không liên quan." },
-      { q: "Vì sao có thể đặt `Cache-Control: public, immutable` với `app.3f9c2a.js` nhưng không nên với `index.html`?", options: ["Vì file JS luôn nhỏ hơn HTML", "Vì tên file JS chứa hash, nội dung đổi thì tên đổi; còn `index.html` giữ nguyên tên", "Vì trình duyệt không cache HTML", "Vì Nginx không phục vụ được HTML"], answer: 1, explain: "File có hash trong tên là bất biến: bản mới có tên mới nên cache lâu vẫn an toàn. `index.html` giữ nguyên tên, cache lâu sẽ khiến người dùng không thấy bản mới. Kích thước không phải lý do; trình duyệt vẫn cache HTML." }
+      { q: "Client upload file 5MB nhận lỗi 413, log ứng dụng không có gì. Nguyên nhân khả dĩ nhất?", options: ["Ứng dụng crash khi đọc body lớn", "Nginx giới hạn body mặc định 1m", "Gzip chưa bật cho kiểu multipart", "Upstream dùng round-robin thay least_conn"], answer: 1, explain: "Nginx chặn body lớn hơn `client_max_body_size` (mặc định 1m) và trả 413 trước khi request tới ứng dụng, vì vậy log ứng dụng trống. Gzip và thuật toán cân bằng tải không liên quan." },
+      { q: "Vì sao có thể đặt `Cache-Control: public, immutable` với `app.3f9c2a.js` nhưng không nên với `index.html`?", options: ["Vì file JS luôn nhỏ hơn file HTML nên cache rẻ hơn", "Vì bản JS mới có tên mới, còn `index.html` giữ nguyên tên", "Vì trình duyệt không bao giờ cache file HTML", "Vì header `immutable` chỉ áp dụng cho JavaScript"], answer: 1, explain: "File có hash trong tên là bất biến: bản mới có tên mới nên cache lâu vẫn an toàn. `index.html` giữ nguyên tên, cache lâu sẽ khiến người dùng không thấy bản mới. Kích thước không phải lý do; trình duyệt vẫn cache HTML; `immutable` dùng được cho mọi loại file." }
     ]
   },
   "p09.m0.t1": {
@@ -141,9 +142,9 @@ app.listen(3000, '127.0.0.1');`
       "Ứng dụng tự redirect sang HTTPS dựa trên `req.protocol` nhưng không đọc `X-Forwarded-Proto`, gây vòng lặp redirect."
     ],
     quiz: [
-      { q: "Điểm khác biệt cốt lõi giữa forward proxy và reverse proxy là gì?", options: ["Forward proxy nhanh hơn", "Forward proxy đại diện cho client, reverse proxy đại diện cho server", "Reverse proxy chỉ dùng cho HTTPS", "Forward proxy luôn làm load balancing"], answer: 1, explain: "Phân biệt nằm ở phía mà proxy đại diện. Tốc độ không phải tiêu chí; reverse proxy dùng cho cả HTTP; load balancing là việc của reverse proxy chứ không phải forward proxy." },
-      { q: "TLS termination tại reverse proxy mang lại lợi ích gì?", options: ["Backend không cần xử lý TLS, chứng chỉ quản lý tập trung ở một nơi", "Dữ liệu được mã hoá hai lần", "Không cần chứng chỉ nữa", "Client không cần dùng HTTPS"], answer: 0, explain: "Proxy giải mã HTTPS, backend nhận HTTP trong mạng nội bộ tin cậy, chứng chỉ chỉ cài ở proxy. Nó không mã hoá hai lần, vẫn cần chứng chỉ, và client vẫn dùng HTTPS tới proxy." },
-      { q: "Vì sao không nên tin `X-Forwarded-For` từ mọi request?", options: ["Header này quá dài", "Client có thể tự gửi giá trị giả nếu request không đi qua proxy tin cậy", "Nginx không hỗ trợ header này", "Header này chỉ có trong HTTP/2"], answer: 1, explain: "Header chỉ là text do bên gửi đặt. Nếu backend nhận request trực tiếp, kẻ tấn công có thể giả IP để lách rate limit. Nginx hỗ trợ đầy đủ header này và nó dùng được với mọi phiên bản HTTP." }
+      { q: "Điểm khác biệt cốt lõi giữa forward proxy và reverse proxy là gì?", options: ["Forward proxy luôn nhanh hơn reverse proxy", "Forward proxy thay client, reverse proxy thay server", "Reverse proxy chỉ dùng được cho HTTPS", "Forward proxy luôn làm load balancing"], answer: 1, explain: "Phân biệt nằm ở phía mà proxy đại diện. Tốc độ không phải tiêu chí; reverse proxy dùng cho cả HTTP; load balancing là việc của reverse proxy chứ không phải forward proxy." },
+      { q: "TLS termination tại reverse proxy mang lại lợi ích gì?", options: ["Chứng chỉ chỉ cần quản lý tại proxy", "Dữ liệu được mã hoá hai lần liên tiếp", "Hệ thống không cần chứng chỉ nữa", "Client không cần dùng HTTPS nữa"], answer: 0, explain: "Proxy giải mã HTTPS, backend nhận HTTP trong mạng nội bộ tin cậy, chứng chỉ chỉ cài ở proxy. Nó không mã hoá hai lần, vẫn cần chứng chỉ, và client vẫn dùng HTTPS tới proxy." },
+      { q: "Vì sao không nên tin `X-Forwarded-For` từ mọi request?", options: ["Header này thường quá dài để xử lý", "Client có thể tự đặt giá trị giả cho header", "Nginx không hỗ trợ ghi header này", "Header này chỉ tồn tại trong HTTP/2"], answer: 1, explain: "Header chỉ là text do bên gửi đặt. Nếu backend nhận request trực tiếp, kẻ tấn công có thể giả IP để lách rate limit. Nginx hỗ trợ đầy đủ header này và nó dùng được với mọi phiên bản HTTP." }
     ]
   },
   "p09.m0.t2": {
@@ -152,13 +153,13 @@ app.listen(3000, '127.0.0.1');`
         h: "TLS và Let's Encrypt hoạt động thế nào",
         p: [
           "TLS mã hoá kết nối giữa client và server, đồng thời chứng minh server đúng là chủ của tên miền nhờ chứng chỉ do một CA (Certificate Authority) ký. Let's Encrypt là CA miễn phí, cấp chứng chỉ tự động qua giao thức ACME.",
-          "Để cấp chứng chỉ, bạn phải chứng minh quyền kiểm soát domain. Có hai cách phổ biến: HTTP-01 (đặt một file bí mật tại `http://domain/.well-known/acme-challenge/...`, cần cổng 80 mở) và DNS-01 (tạo bản ghi TXT `_acme-challenge`, bắt buộc khi xin chứng chỉ wildcard `*.example.com`). Chứng chỉ Let's Encrypt có hạn ngắn nên việc gia hạn tự động là bắt buộc chứ không phải tùy chọn."
+          "Để cấp chứng chỉ, bạn phải chứng minh quyền kiểm soát domain. Có hai cách phổ biến: HTTP-01 (đặt một file bí mật tại `http://domain/.well-known/acme-challenge/...`, cần cổng 80 mở) và DNS-01 (tạo bản ghi TXT `_acme-challenge`, bắt buộc khi xin chứng chỉ wildcard `*.example.com`). Chứng chỉ Let's Encrypt có hạn ngắn (mặc định hiện là 90 ngày, và theo lộ trình đã công bố sẽ giảm dần xuống 64 ngày từ 2/2027 và 45 ngày từ 2/2028) nên việc gia hạn tự động là bắt buộc chứ không phải tùy chọn. Let's Encrypt cũng đã ngừng gửi email nhắc hết hạn từ 2025, vì vậy bạn phải tự giám sát ngày hết hạn chứng chỉ."
         ]
       },
       {
         h: "Cấp và tự gia hạn bằng certbot",
         p: [
-          "Plugin `--nginx` của certbot tự tạo challenge, xin chứng chỉ và sửa file cấu hình Nginx. Trên Ubuntu, gói certbot cài sẵn systemd timer (hoặc cron) chạy `certbot renew` định kỳ; lệnh này chỉ gia hạn khi chứng chỉ sắp hết hạn."
+          "Plugin `--nginx` của certbot tự tạo challenge, xin chứng chỉ và sửa file cấu hình Nginx. Trên Ubuntu, gói certbot cài sẵn systemd timer (hoặc cron) chạy `certbot renew` định kỳ; lệnh này chỉ gia hạn khi chứng chỉ sắp hết hạn. Trang chính thức của certbot khuyến nghị cài qua snap để luôn có bản mới; gói apt cũng dùng được nhưng có thể cũ hơn."
         ],
         code: {
           lang: "bash", file: "terminal",
@@ -219,7 +220,7 @@ server {
     ],
     quiz: [
       { q: "Muốn xin chứng chỉ wildcard `*.example.com` từ Let's Encrypt, bạn phải dùng loại challenge nào?", options: ["HTTP-01", "DNS-01", "Không cần challenge", "TLS qua cổng 22"], answer: 1, explain: "Wildcard chỉ cấp qua DNS-01 (bản ghi TXT `_acme-challenge`). HTTP-01 chỉ chứng minh một hostname cụ thể; mọi chứng chỉ đều cần challenge; cổng 22 là SSH." },
-      { q: "HSTS giải quyết vấn đề gì mà redirect 301 không giải quyết được?", options: ["Tăng tốc TLS handshake", "Request HTTP đầu tiên vẫn đi dạng rõ; HSTS khiến trình duyệt tự dùng HTTPS từ lần sau", "Tự gia hạn chứng chỉ", "Nén dữ liệu"], answer: 1, explain: "Redirect chỉ xảy ra sau khi request HTTP đã gửi đi. HSTS ghi nhớ ở trình duyệt để bỏ qua bước HTTP. Nó không liên quan tốc độ handshake, gia hạn hay nén." },
+      { q: "HSTS giải quyết vấn đề gì mà redirect 301 không giải quyết được?", options: ["Rút ngắn thời gian TLS handshake", "Bỏ qua request HTTP dạng rõ ở các lần sau", "Tự động gia hạn chứng chỉ sắp hết hạn", "Nén dữ liệu trước khi mã hoá"], answer: 1, explain: "Redirect chỉ xảy ra sau khi request HTTP đã gửi đi. HSTS ghi nhớ ở trình duyệt để bỏ qua bước HTTP. Nó không liên quan tốc độ handshake, gia hạn hay nén." },
       { q: "Từ Nginx 1.25.1, cách bật HTTP/2 được khuyến nghị là gì?", options: ["`listen 443 ssl http2;`", "Chỉ thị riêng `http2 on;`", "`enable_http2 true;`", "HTTP/2 không hỗ trợ nữa"], answer: 1, explain: "Tham số `http2` trong `listen` đã deprecated từ 1.25.1, thay bằng chỉ thị `http2 on;`. `enable_http2` không tồn tại, và HTTP/2 vẫn được hỗ trợ." }
     ]
   },
@@ -235,7 +236,7 @@ server {
       {
         h: "Header Cache-Control điều khiển cache ở edge",
         p: [
-          "CDN tôn trọng header từ origin. `max-age` áp dụng cho trình duyệt, `s-maxage` áp dụng cho cache dùng chung như CDN và ghi đè `max-age` ở đó. `private` nghĩa là chỉ trình duyệt được cache, CDN không được lưu. `no-store` nghĩa là không ai được lưu.",
+          "CDN thường tôn trọng header từ origin (trừ khi bạn cấu hình TTL ghi đè ở CDN). `max-age` áp dụng cho mọi cache, còn `s-maxage` chỉ áp dụng cho cache dùng chung như CDN và ghi đè `max-age` ở đó; vì vậy trong thực tế `max-age` quyết định trình duyệt, `s-maxage` quyết định CDN. `max-age=0` nghĩa là bản lưu hết hạn ngay, phải hỏi lại server trước khi dùng. `private` nghĩa là chỉ trình duyệt được cache, CDN không được lưu. `no-store` nghĩa là không ai được lưu.",
           "`stale-while-revalidate` cho phép trả bản cũ trong lúc đi lấy bản mới ở nền, giúp người dùng không phải chờ khi cache vừa hết hạn."
         ],
         code: {
@@ -266,7 +267,7 @@ app.get('/api/me', auth, (req, res) => {
           "Đánh đổi lớn nhất là tính nhất quán: TTL càng dài, origin càng nhẹ nhưng người dùng càng dễ thấy dữ liệu cũ. Rủi ro nguy hiểm nhất là cache nhầm response có dữ liệu cá nhân rồi trả cho người khác."
         ],
         list: [
-          "Khóa cache (cache key) mặc định thường gồm host + path + query; header như `Cookie`, `Authorization` cần cân nhắc kỹ.",
+          "Khóa cache (cache key) quyết định hai request có dùng chung một bản cache không. Mặc định khác nhau tùy CDN và cache policy (ví dụ managed policy `CachingOptimized` của CloudFront không đưa query string vào key), nên hãy kiểm tra cấu hình thật; header như `Cookie`, `Authorization` cần cân nhắc kỹ.",
           "Đặt origin chỉ nhận traffic từ CDN (ví dụ CloudFront Origin Access Control cho S3) để không bị gọi vòng.",
           "Theo dõi cache hit ratio để biết CDN có thật sự hiệu quả."
         ]
@@ -284,8 +285,8 @@ app.get('/api/me', auth, (req, res) => {
       "Origin vẫn mở công khai nên kẻ tấn công bỏ qua CDN và đánh thẳng vào server."
     ],
     quiz: [
-      { q: "Header `Cache-Control: public, max-age=0, s-maxage=60` có nghĩa là gì?", options: ["Không ai được cache", "Trình duyệt không cache, CDN cache 60 giây", "Trình duyệt cache 60 giây, CDN không cache", "Cache vĩnh viễn"], answer: 1, explain: "`s-maxage` áp dụng cho cache dùng chung như CDN, `max-age=0` áp dụng cho trình duyệt. Muốn không ai cache thì dùng `no-store`." },
-      { q: "Cách bền vững nhất để người dùng luôn nhận JS/CSS mới sau deploy mà vẫn cache lâu là gì?", options: ["Purge toàn bộ CDN mỗi lần deploy", "Đặt hash nội dung vào tên file", "Tắt CDN", "Đặt `max-age=1`"], answer: 1, explain: "Tên file đổi khi nội dung đổi, nên cache lâu vẫn an toàn và không cần purge. Purge toàn bộ tốn thời gian và làm tụt hit ratio; tắt CDN hoặc TTL 1 giây làm mất lợi ích cache." },
+      { q: "Header `Cache-Control: public, max-age=0, s-maxage=60` có nghĩa là gì?", options: ["Không nơi nào được lưu response", "Trình duyệt phải hỏi lại ngay, CDN dùng 60 giây", "Trình duyệt dùng 60 giây, CDN phải hỏi lại ngay", "Mọi nơi được cache vĩnh viễn"], answer: 1, explain: "`s-maxage` áp dụng cho cache dùng chung như CDN, `max-age=0` áp dụng cho trình duyệt. Muốn không ai cache thì dùng `no-store`." },
+      { q: "Cách bền vững nhất để người dùng luôn nhận JS/CSS mới sau deploy mà vẫn cache lâu là gì?", options: ["Purge toàn bộ CDN mỗi lần deploy", "Đặt hash nội dung vào tên file", "Tắt CDN cho file JS/CSS", "Đặt `max-age=1` cho mọi asset"], answer: 1, explain: "Tên file đổi khi nội dung đổi, nên cache lâu vẫn an toàn và không cần purge. Purge toàn bộ tốn thời gian và làm tụt hit ratio; tắt CDN hoặc TTL 1 giây làm mất lợi ích cache." },
       { q: "Header nào đảm bảo CDN không lưu response chứa thông tin cá nhân?", options: ["`public`", "`s-maxage=0`", "`private, no-store`", "`immutable`"], answer: 2, explain: "`private` cấm cache dùng chung, `no-store` cấm mọi nơi lưu. `public` cho phép lưu; `s-maxage=0` vẫn có thể được lưu và revalidate; `immutable` chỉ nói nội dung không đổi." }
     ]
   },
@@ -301,7 +302,8 @@ app.get('/api/me', auth, (req, res) => {
       {
         h: "ufw trên VPS",
         p: [
-          "`ufw` là giao diện đơn giản cho firewall của Linux. Hãy đặt mặc định chặn chiều vào, rồi mở từng cổng cần. Luôn thêm quy tắc SSH trước khi `enable`, nếu không bạn sẽ tự khoá mình ra ngoài."
+          "`ufw` là giao diện đơn giản cho firewall của Linux. Hãy đặt mặc định chặn chiều vào, rồi mở từng cổng cần. Luôn thêm quy tắc SSH trước khi `enable`, nếu không bạn sẽ tự khoá mình ra ngoài.",
+          "Với SSH, Ubuntu hiện đại đọc thêm các file trong `/etc/ssh/sshd_config.d/` và với mỗi tùy chọn, giá trị gặp đầu tiên được dùng. Một số image cloud có sẵn file (ví dụ `50-cloud-init.conf`) đặt `PasswordAuthentication yes`, khiến việc sửa `sshd_config` không có tác dụng. Cách chắc chắn là tạo file riêng có tên xếp trước, kiểm tra bằng `sudo sshd -t` rồi xem giá trị thực tế bằng `sudo sshd -T | grep passwordauthentication`. Nhớ giữ một phiên SSH đang mở khi thử để không tự khoá mình."
         ],
         code: {
           lang: "bash", file: "terminal",
@@ -313,9 +315,10 @@ sudo ufw allow 443/tcp
 sudo ufw enable
 sudo ufw status verbose
 
-# Tắt đăng nhập SSH bằng mật khẩu
-sudo sed -i 's/^#\\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-sudo systemctl reload ssh`
+# Tắt đăng nhập SSH bằng mật khẩu (file drop-in, tên bắt đầu bằng 00 để được đọc trước)
+echo 'PasswordAuthentication no' | sudo tee /etc/ssh/sshd_config.d/00-hardening.conf
+sudo sshd -t && sudo systemctl reload ssh
+sudo sshd -T | grep -i passwordauthentication   # mong đợi: passwordauthentication no`
         }
       },
       {
@@ -354,9 +357,9 @@ resource "aws_vpc_security_group_ingress_rule" "db_from_app" {
       "`ufw enable` trước khi cho phép SSH và bị khoá khỏi server."
     ],
     quiz: [
-      { q: "Vì sao nên cho RDS nhận cổng 5432 từ security group của app thay vì từ dải IP?", options: ["Vì AWS không cho dùng IP", "Quy tắc vẫn đúng khi app scale hoặc đổi IP, không cần sửa", "Để DB chạy nhanh hơn", "Để mở DB cho Internet"], answer: 1, explain: "Tham chiếu security group gắn quyền theo vai trò chứ không theo địa chỉ, nên máy mới của app tự được phép. AWS vẫn cho dùng CIDR; hiệu năng DB không đổi; mục đích là thu hẹp chứ không mở rộng quyền truy cập." },
-      { q: "Security group là stateful nghĩa là gì?", options: ["Nó lưu log mọi gói tin", "Response của kết nối đã được cho phép chiều vào tự động được đi ra", "Nó chỉ áp dụng cho subnet", "Phải khai báo quy tắc cho cả hai chiều"], answer: 1, explain: "Stateful theo dõi kết nối nên response tự được phép. NACL mới là stateless và áp dụng cho subnet, cần quy tắc hai chiều. Security group không lưu log gói tin (đó là VPC Flow Logs)." },
-      { q: "Cách nào cho phép vào shell EC2 mà không cần mở cổng 22 ra Internet?", options: ["Mở 22 cho 0.0.0.0/0 nhưng đặt mật khẩu mạnh", "AWS Systems Manager Session Manager", "Dùng cổng 2222", "Tắt security group"], answer: 1, explain: "Session Manager mở phiên qua agent SSM và quyền IAM, không cần cổng inbound. Mật khẩu mạnh vẫn phơi cổng; đổi cổng chỉ né bot đơn giản; không thể tắt security group." }
+      { q: "Vì sao nên cho RDS nhận cổng 5432 từ security group của app thay vì từ dải IP?", options: ["Vì security group của RDS không nhận dải IP", "Vì quy tắc vẫn đúng khi app đổi IP hoặc scale", "Vì DB xử lý truy vấn nhanh hơn", "Vì cần mở DB cho Internet truy cập"], answer: 1, explain: "Tham chiếu security group gắn quyền theo vai trò chứ không theo địa chỉ, nên máy mới của app tự được phép. AWS vẫn cho dùng CIDR; hiệu năng DB không đổi; mục đích là thu hẹp chứ không mở rộng quyền truy cập." },
+      { q: "Security group là stateful nghĩa là gì?", options: ["Nó lưu log mọi gói tin đi qua", "Response của kết nối được phép tự đi ra", "Nó chỉ áp dụng ở mức subnet", "Phải khai báo quy tắc cho cả hai chiều"], answer: 1, explain: "Stateful theo dõi kết nối nên response tự được phép. NACL mới là stateless và áp dụng cho subnet, cần quy tắc hai chiều. Security group không lưu log gói tin (đó là VPC Flow Logs)." },
+      { q: "Cách nào cho phép vào shell EC2 mà không cần mở cổng 22 ra Internet?", options: ["Mở 22 cho 0.0.0.0/0 kèm mật khẩu mạnh", "Dùng AWS Systems Manager Session Manager", "Chuyển SSH sang cổng 2222", "Gỡ security group khỏi instance"], answer: 1, explain: "Session Manager mở phiên qua agent SSM và quyền IAM, không cần cổng inbound. Mật khẩu mạnh vẫn phơi cổng; đổi cổng chỉ né bot đơn giản; không thể tắt security group." }
     ]
   },
   "p09.m0.t5": {
@@ -416,8 +419,8 @@ www.example.com.     300  IN  CNAME  example.com.`
       "Đặt DMARC `p=reject` ngay từ đầu khi chưa cấu hình DKIM cho mọi dịch vụ gửi mail, làm email hợp lệ bị từ chối."
     ],
     quiz: [
-      { q: "Muốn `example.com` (apex) trỏ tới một ALB trên AWS, nên dùng bản ghi nào?", options: ["CNAME", "Alias record của Route 53 (hoặc ALIAS/ANAME)", "MX", "NS"], answer: 1, explain: "CNAME không được đặt ở apex vì apex còn có SOA/NS. Alias record trả về IP của ALB như bản ghi A. MX dành cho email; NS dành cho ủy quyền zone." },
-      { q: "Chuẩn bị chuyển server, TTL hiện là 86400 giây. Làm gì trước?", options: ["Đổi IP ngay rồi hạ TTL", "Hạ TTL xuống thấp, chờ ít nhất 86400 giây, rồi mới đổi IP", "Xoá bản ghi rồi tạo lại", "Tăng TTL lên"], answer: 1, explain: "Resolver đã cache theo TTL cũ, nên phải chờ hết TTL đó thì TTL mới thấp mới có hiệu lực. Đổi ngay hay xoá bản ghi đều khiến người dùng gặp lỗi; tăng TTL làm chuyển đổi chậm hơn." },
+      { q: "Muốn `example.com` (apex) trỏ tới một ALB trên AWS, nên dùng bản ghi nào?", options: ["Bản ghi CNAME tới tên DNS của ALB", "Alias record (loại A) tới ALB", "Bản ghi MX tới tên DNS của ALB", "Bản ghi NS tới tên DNS của ALB"], answer: 1, explain: "CNAME không được đặt ở apex vì apex còn có SOA/NS. Alias record trả về IP của ALB như bản ghi A. MX dành cho email; NS dành cho ủy quyền zone." },
+      { q: "Chuẩn bị chuyển server, TTL hiện là 86400 giây. Làm gì trước?", options: ["Đổi IP ngay, rồi hạ TTL xuống 60 giây", "Hạ TTL, chờ hết 86400 giây, rồi đổi IP", "Xoá bản ghi, chờ vài phút rồi tạo lại", "Tăng TTL lên để cache ổn định hơn"], answer: 1, explain: "Resolver đã cache theo TTL cũ, nên phải chờ hết TTL đó thì TTL mới thấp mới có hiệu lực. Đổi ngay hay xoá bản ghi đều khiến người dùng gặp lỗi; tăng TTL làm chuyển đổi chậm hơn." },
       { q: "Bản ghi nào cho bên nhận biết cách xử lý email không qua SPF/DKIM?", options: ["SPF", "DKIM", "DMARC", "MX"], answer: 2, explain: "DMARC định chính sách (`none`, `quarantine`, `reject`) và nơi gửi báo cáo. SPF liệt kê server được gửi; DKIM là chữ ký; MX là server nhận." }
     ]
   },
@@ -487,7 +490,7 @@ aws s3 ls --profile dev`
     quiz: [
       { q: "Ứng dụng chạy trên ECS cần đọc S3. Cách cấp quyền đúng nhất?", options: ["Tạo IAM user và đặt access key vào biến môi trường", "Gắn task role có policy chỉ đọc bucket cần thiết", "Dùng access key của root", "Mở bucket public"], answer: 1, explain: "Task role cấp credential tạm thời, tự xoay vòng, và gắn đúng quyền. Access key dài hạn dễ lộ; root key không bao giờ nên dùng; bucket public làm lộ dữ liệu." },
       { q: "Một policy Allow `s3:*` và một policy khác Deny `s3:DeleteObject` cùng gắn cho role. Kết quả khi gọi DeleteObject?", options: ["Được phép vì Allow rộng hơn", "Bị từ chối vì Deny tường minh luôn thắng", "Tùy thứ tự gắn policy", "Lỗi cấu hình"], answer: 1, explain: "Logic đánh giá của IAM: Deny tường minh ghi đè mọi Allow, bất kể thứ tự. Đây là cấu hình hợp lệ và thường dùng để chặn hành động nguy hiểm." },
-      { q: "Vì sao nên dùng OIDC cho GitHub Actions thay vì lưu access key trong secrets?", options: ["OIDC nhanh hơn", "Workflow nhận credential tạm thời qua assume role, không có key dài hạn để bị lộ", "Access key không dùng được trong CI", "OIDC miễn phí còn access key thì không"], answer: 1, explain: "OIDC cho phép trust policy giới hạn theo repo/branch và cấp credential ngắn hạn. Access key vẫn dùng được nhưng là rủi ro dài hạn; tốc độ và chi phí không phải lý do chính." }
+      { q: "Vì sao nên dùng OIDC cho GitHub Actions thay vì lưu access key trong secrets?", options: ["Vì OIDC làm workflow chạy nhanh hơn", "Vì không còn key dài hạn nào để bị lộ", "Vì access key không dùng được trong CI", "Vì access key bị tính phí, OIDC thì không"], answer: 1, explain: "Với OIDC, workflow assume role và nhận credential tạm thời; trust policy giới hạn được theo repo/branch. Access key vẫn dùng được nhưng là rủi ro dài hạn; tốc độ và chi phí không phải lý do chính." }
     ]
   },
   "p09.m1.t1": {
@@ -495,7 +498,7 @@ aws s3 ls --profile dev`
       {
         h: "VPC, subnet public và private",
         p: [
-          "VPC là mạng riêng ảo của bạn trên AWS, với một dải IP (CIDR) như `10.0.0.0/16`. Bên trong, bạn chia thành subnet, mỗi subnet nằm trong một Availability Zone (AZ). Để chịu được sự cố một AZ, hãy tạo subnet ở ít nhất hai AZ.",
+          "VPC là mạng riêng ảo của bạn trên AWS, với một dải IP (CIDR) như `10.0.0.0/16`. Số sau dấu `/` là số bit cố định của phần mạng: `/16` cho khoảng 65.536 địa chỉ, `/24` cho 256 địa chỉ (AWS giữ lại 5 địa chỉ trong mỗi subnet: 4 địa chỉ đầu và 1 địa chỉ cuối). Bên trong, bạn chia thành subnet, mỗi subnet nằm trong một Availability Zone (AZ). Để chịu được sự cố một AZ, hãy tạo subnet ở ít nhất hai AZ.",
           "Subnet \"public\" hay \"private\" không phải một cờ cấu hình mà do route table quyết định. Subnet public có route `0.0.0.0/0` tới Internet Gateway (IGW), nên tài nguyên có IP public trong đó giao tiếp hai chiều với Internet. Subnet private không có route tới IGW; nó ra Internet (tải package, gọi API bên ngoài) qua NAT Gateway đặt ở subnet public, nhưng Internet không thể chủ động kết nối vào.",
           "Quy tắc chung: chỉ load balancer (và có thể NAT Gateway, bastion) nằm ở subnet public. Ứng dụng, database, cache nằm ở subnet private."
         ]
@@ -585,9 +588,9 @@ resource "aws_route_table_association" "private_a" {
       "Chọn CIDR VPC trùng với mạng văn phòng hoặc VPC khác, sau này không thể peering/VPN được."
     ],
     quiz: [
-      { q: "Điều gì khiến một subnet trở thành \"public\"?", options: ["Tên subnet có chữ public", "Route table của nó có route `0.0.0.0/0` tới Internet Gateway", "Subnet có NAT Gateway", "Subnet nằm ở AZ đầu tiên"], answer: 1, explain: "Tính public đến từ route tới IGW. Tên chỉ là nhãn; subnet private mới route qua NAT; AZ không quyết định." },
-      { q: "Máy trong subnet private cần tải package từ Internet. Cần gì?", options: ["Gắn IP public cho máy", "Route `0.0.0.0/0` tới NAT Gateway đặt ở subnet public", "Mở security group 0.0.0.0/0 chiều vào", "Tạo NACL Deny all"], answer: 1, explain: "NAT cho phép đi ra nhưng không cho Internet chủ động vào. IP public vô dụng khi subnet không có route tới IGW; mở chiều vào không giúp đi ra; NACL Deny all chặn mọi thứ." },
-      { q: "Khác biệt nào giữa security group và NACL là đúng?", options: ["Security group stateless, NACL stateful", "Security group gắn vào ENI và stateful; NACL gắn vào subnet và stateless", "Cả hai chỉ có quy tắc Allow", "NACL không áp dụng cho traffic ra"], answer: 1, explain: "Security group stateful ở mức interface; NACL stateless ở mức subnet và hỗ trợ cả Deny, áp dụng cho cả chiều vào và chiều ra." }
+      { q: "Điều gì khiến một subnet trở thành \"public\"?", options: ["Tag `Name` của subnet có chữ public", "Route `0.0.0.0/0` trỏ tới Internet Gateway", "Route `0.0.0.0/0` trỏ tới NAT Gateway", "Subnet nằm ở AZ đầu tiên của region"], answer: 1, explain: "Tính public đến từ route tới IGW. Tên chỉ là nhãn; subnet private mới route qua NAT; AZ không quyết định." },
+      { q: "Máy trong subnet private cần tải package từ Internet. Cần gì?", options: ["Gắn Elastic IP trực tiếp cho máy", "Route `0.0.0.0/0` tới NAT Gateway", "Mở security group 0.0.0.0/0 chiều vào", "Thêm NACL Deny all cho subnet"], answer: 1, explain: "NAT cho phép đi ra nhưng không cho Internet chủ động vào. IP public vô dụng khi subnet không có route tới IGW; mở chiều vào không giúp đi ra; NACL Deny all chặn mọi thứ." },
+      { q: "Khác biệt nào giữa security group và NACL là đúng?", options: ["Security group stateless; NACL stateful", "Security group stateful; NACL stateless", "Cả hai chỉ có quy tắc Allow", "NACL không áp dụng cho traffic ra"], answer: 1, explain: "Security group stateful ở mức interface; NACL stateless ở mức subnet và hỗ trợ cả Deny, áp dụng cho cả chiều vào và chiều ra." }
     ]
   },
   "p09.m1.t2": {
@@ -683,7 +686,7 @@ resource "aws_ecs_service" "api" {
     quiz: [
       { q: "Trong ECS, quyền để ứng dụng đọc S3 nên gắn vào đâu?", options: ["Execution role", "Task role", "Security group", "Cluster"], answer: 1, explain: "Task role là danh tính của code trong container. Execution role chỉ dùng cho ECS agent kéo image, đọc secret khi khởi động và ghi log. Security group là firewall; cluster không mang quyền IAM cho ứng dụng." },
       { q: "Tác vụ nào không phù hợp với Lambda?", options: ["Resize ảnh khi có file mới trên S3", "Xử lý webhook thỉnh thoảng mới có", "Job xử lý dữ liệu chạy liên tục 2 giờ", "Cron nhỏ chạy mỗi giờ"], answer: 2, explain: "Lambda có giới hạn tối đa 15 phút mỗi lần gọi, nên job 2 giờ phải chạy trên Fargate/EC2 hoặc chia nhỏ. Ba trường hợp còn lại là tác vụ ngắn theo sự kiện, rất hợp Lambda." },
-      { q: "Vì sao máy trong Auto Scaling Group phải stateless?", options: ["Vì ASG không hỗ trợ EBS", "Vì ASG có thể xoá và thay máy bất cứ lúc nào khi scale in hoặc máy lỗi", "Vì stateless chạy nhanh hơn", "Vì ALB yêu cầu"], answer: 1, explain: "Scale in hoặc thay máy lỗi sẽ xoá máy cùng dữ liệu local. ASG vẫn dùng EBS làm ổ gốc; lý do không phải hiệu năng hay yêu cầu của ALB." }
+      { q: "Vì sao máy trong Auto Scaling Group phải stateless?", options: ["Vì máy trong ASG không gắn được EBS", "Vì máy có thể bị xoá khi scale in hoặc lỗi", "Vì ứng dụng stateless chạy nhanh hơn", "Vì ALB từ chối target có trạng thái"], answer: 1, explain: "Scale in hoặc thay máy lỗi sẽ xoá máy cùng dữ liệu local. ASG vẫn dùng EBS làm ổ gốc; lý do không phải hiệu năng hay yêu cầu của ALB." }
     ]
   },
   "p09.m1.t3": {
@@ -747,7 +750,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "uploads" {
         h: "Presigned URL: upload thẳng lên S3",
         p: [
           "Nếu client upload file qua server của bạn, server phải gánh băng thông và bộ nhớ. Presigned URL là URL có chữ ký tạm thời, cho phép client PUT hoặc GET một object cụ thể trong vài phút mà không cần credential AWS. Server chỉ kiểm tra quyền và sinh URL; file đi thẳng từ trình duyệt lên S3.",
-          "URL được ký bằng credential của server, nên quyền của nó không vượt quá quyền của role đó, và hết hạn khi credential tạm thời hết hạn dù `expiresIn` dài hơn."
+          "URL được ký bằng credential của server, nên quyền của nó không vượt quá quyền của role đó, và hết hạn khi credential tạm thời hết hạn dù `expiresIn` dài hơn. Với chữ ký SigV4, thời hạn tối đa là 7 ngày; trong thực tế nên để vài phút."
         ],
         code: {
           lang: "typescript", file: "upload.ts",
@@ -782,8 +785,8 @@ export async function createUploadUrl(userId: string, contentType: string) {
     ],
     quiz: [
       { q: "Nhiều task ECS ở nhiều AZ cần cùng đọc ghi một thư mục chia sẻ kiểu POSIX. Chọn gì?", options: ["EBS", "EFS", "S3 mount như ổ đĩa", "Instance store"], answer: 1, explain: "EFS là NFS dùng chung đa AZ. EBS thường gắn vào một máy trong một AZ; S3 là object storage chứ không phải file system POSIX; instance store mất khi máy dừng." },
-      { q: "Lợi ích chính của presigned URL cho upload là gì?", options: ["File được nén tự động", "Client upload thẳng lên S3, server không phải trung chuyển file", "Bucket trở thành public", "Không cần IAM nữa"], answer: 1, explain: "Server chỉ ký URL có hạn; băng thông đi thẳng tới S3. Bucket vẫn private, quyền vẫn dựa trên IAM của bên ký, và S3 không tự nén file." },
-      { q: "Lifecycle rule `abort_incomplete_multipart_upload` dùng để làm gì?", options: ["Tăng tốc upload", "Dọn các phần multipart upload bị bỏ dở đang chiếm dung lượng", "Chặn upload file lớn", "Mã hoá file"], answer: 1, explain: "Multipart upload dở dang vẫn lưu các phần đã tải và vẫn bị tính dung lượng dù không thấy trong danh sách object. Rule này xoá chúng sau N ngày; nó không liên quan tốc độ, giới hạn kích thước hay mã hoá." }
+      { q: "Lợi ích chính của presigned URL cho upload là gì?", options: ["S3 tự nén file trước khi lưu", "File đi thẳng lên S3, không qua server", "Bucket tạm thời trở thành public", "Không cần IAM cho bên ký URL"], answer: 1, explain: "Server chỉ ký URL có hạn; băng thông đi thẳng tới S3. Bucket vẫn private, quyền vẫn dựa trên IAM của bên ký, và S3 không tự nén file." },
+      { q: "Lifecycle rule `abort_incomplete_multipart_upload` dùng để làm gì?", options: ["Tăng tốc các upload nhiều phần", "Dọn các phần upload bị bỏ dở", "Chặn upload file vượt kích thước", "Mã hoá từng phần của file"], answer: 1, explain: "Multipart upload dở dang vẫn lưu các phần đã tải và vẫn bị tính dung lượng dù không thấy trong danh sách object. Rule này xoá chúng sau N ngày; nó không liên quan tốc độ, giới hạn kích thước hay mã hoá." }
     ]
   },
   "p09.m1.t4": {
@@ -809,7 +812,8 @@ export async function createUploadUrl(userId: string, contentType: string) {
       {
         h: "RDS bằng Terraform",
         p: [
-          "`manage_master_user_password = true` để RDS tự sinh mật khẩu và lưu trong Secrets Manager, mật khẩu không nằm trong code hay state dưới dạng biến bạn tự đặt."
+          "`manage_master_user_password = true` để RDS tự sinh mật khẩu và lưu trong Secrets Manager, mật khẩu không nằm trong code hay state dưới dạng biến bạn tự đặt.",
+          "Phiên bản PostgreSQL được hỗ trợ thay đổi theo thời gian (RDS hỗ trợ PostgreSQL 18 từ 11/2025). Trước khi chọn, hãy xem danh sách thực tế bằng `aws rds describe-db-engine-versions --engine postgres --query \"DBEngineVersions[].EngineVersion\"` và kiểm tra instance class bạn chọn có hỗ trợ phiên bản đó. Chọn major mới nhất cho dự án mới để có thời gian hỗ trợ dài nhất."
         ],
         code: {
           lang: "hcl", file: "rds.tf",
@@ -821,7 +825,7 @@ export async function createUploadUrl(userId: string, contentType: string) {
 resource "aws_db_instance" "main" {
   identifier                  = "task-prod"
   engine                      = "postgres"
-  engine_version              = "17"
+  engine_version              = "18"   # chỉ ghi major, RDS chọn minor mặc định
   instance_class              = "db.t4g.medium"
   allocated_storage           = 50
   storage_encrypted           = true
@@ -861,9 +865,9 @@ resource "aws_db_instance" "main" {
       "Chưa bao giờ thử khôi phục backup; hãy định kỳ restore sang instance mới để kiểm tra."
     ],
     quiz: [
-      { q: "Mục đích chính của Multi-AZ (instance standby) trên RDS là gì?", options: ["Tăng throughput đọc", "Sẵn sàng cao: tự failover sang standby ở AZ khác", "Giảm chi phí", "Chạy nhiều engine cùng lúc"], answer: 1, explain: "Standby đồng bộ để failover, không nhận đọc. Tăng đọc là việc của read replica; Multi-AZ tốn thêm chi phí; không liên quan nhiều engine." },
-      { q: "Người dùng cập nhật hồ sơ rồi tải lại trang thấy dữ liệu cũ. Ứng dụng đọc từ read replica. Nguyên nhân?", options: ["Backup đang chạy", "Replication bất đồng bộ nên replica bị lag", "Multi-AZ đang failover", "Security group chặn"], answer: 1, explain: "Read replica nhận thay đổi bất đồng bộ nên có độ trễ. Đọc ngay sau ghi nên đi tới primary. Backup và security group không gây dữ liệu cũ; failover sẽ gây lỗi kết nối chứ không phải dữ liệu cũ." },
-      { q: "`manage_master_user_password = true` mang lại lợi ích gì?", options: ["Không cần mật khẩu", "RDS tự sinh và lưu mật khẩu trong Secrets Manager, không phải đặt trong code", "Mật khẩu được gửi qua email", "Tắt mã hoá"], answer: 1, explain: "RDS tạo và quản lý secret trong Secrets Manager; ứng dụng đọc secret đó. Vẫn có mật khẩu, không gửi email, và không liên quan mã hoá storage." }
+      { q: "Mục đích chính của Multi-AZ (instance standby) trên RDS là gì?", options: ["Tăng throughput cho truy vấn đọc", "Tự failover sang bản standby ở AZ khác", "Giảm chi phí lưu trữ và backup", "Chạy nhiều engine DB cùng lúc"], answer: 1, explain: "Standby đồng bộ để failover, không nhận đọc. Tăng đọc là việc của read replica; Multi-AZ tốn thêm chi phí; không liên quan nhiều engine." },
+      { q: "Người dùng cập nhật hồ sơ rồi tải lại trang thấy dữ liệu cũ. Ứng dụng đọc từ read replica. Nguyên nhân?", options: ["Backup tự động đang chạy", "Replica nhận thay đổi có độ trễ", "Multi-AZ đang failover", "Security group chặn một phần"], answer: 1, explain: "Read replica nhận thay đổi bất đồng bộ nên có độ trễ. Đọc ngay sau ghi nên đi tới primary. Backup và security group không gây dữ liệu cũ; failover sẽ gây lỗi kết nối chứ không phải dữ liệu cũ." },
+      { q: "`manage_master_user_password = true` mang lại lợi ích gì?", options: ["DB không còn cần mật khẩu", "Mật khẩu do RDS sinh, lưu ở Secrets Manager", "Mật khẩu được gửi qua email cho admin", "Storage không cần mã hoá nữa"], answer: 1, explain: "RDS tạo và quản lý secret trong Secrets Manager; ứng dụng đọc secret đó. Vẫn có mật khẩu, không gửi email, và không liên quan mã hoá storage." }
     ]
   },
   "p09.m1.t5": {
@@ -876,7 +880,7 @@ resource "aws_db_instance" "main" {
         list: [
           "ALB (Application Load Balancer): cân bằng tải tầng 7, routing theo host/path/header, health check target, hỗ trợ HTTP/2, WebSocket, gRPC.",
           "Route 53: DNS managed, Alias record trỏ apex tới ALB/CloudFront, health check và routing policy (weighted, failover, latency).",
-          "ACM: cấp chứng chỉ TLS công khai miễn phí cho dịch vụ tích hợp (ALB, CloudFront, API Gateway) và tự gia hạn. Không xuất được private key của chứng chỉ công khai để cài lên server của bạn.",
+          "ACM: cấp chứng chỉ TLS công khai miễn phí cho dịch vụ tích hợp (ALB, CloudFront, API Gateway) và tự gia hạn. Chứng chỉ loại này không xuất được private key. Từ 6/2025 ACM có thêm chứng chỉ công khai exportable (tính phí) để cài lên EC2, container hay server ngoài AWS; loại này bạn phải tự triển khai lại mỗi khi gia hạn.",
           "CloudFront: CDN, cache ở edge, gắn WAF, chứng chỉ phải nằm ở region `us-east-1`."
         ]
       },
@@ -955,8 +959,8 @@ resource "aws_route53_record" "api" {
     ],
     quiz: [
       { q: "Chứng chỉ ACM dùng cho CloudFront phải được tạo ở region nào?", options: ["Region gần người dùng nhất", "`us-east-1`", "Cùng region với origin", "Bất kỳ region nào"], answer: 1, explain: "CloudFront là dịch vụ toàn cầu và chỉ đọc chứng chỉ ACM ở `us-east-1`. Với ALB thì chứng chỉ phải ở cùng region với ALB." },
-      { q: "Vì sao dùng Alias record thay vì bản ghi A với IP của ALB?", options: ["IP của ALB có thể thay đổi; Alias luôn trỏ tới đúng tên DNS của ALB", "Alias nhanh hơn", "ALB không có IP", "Bản ghi A không hỗ trợ IPv4"], answer: 0, explain: "ALB scale và đổi IP theo thời gian, nên không được hard-code IP. Alias giải quyết điều đó và dùng được ở apex. ALB có IP nhưng không cố định." },
-      { q: "Trong mô hình Route 53 → ALB → ECS, TLS thường được kết thúc ở đâu?", options: ["Ở Route 53", "Ở ALB với chứng chỉ ACM", "Ở từng container", "Không cần TLS"], answer: 1, explain: "ALB kết thúc TLS với chứng chỉ ACM tự gia hạn. Route 53 chỉ trả lời DNS; container có thể dùng TLS nội bộ nếu yêu cầu tuân thủ, nhưng không phải mặc định." }
+      { q: "Vì sao dùng Alias record thay vì bản ghi A với IP của ALB?", options: ["Vì IP của ALB thay đổi theo thời gian", "Vì Alias phân giải nhanh hơn bản ghi A", "Vì ALB hoàn toàn không có địa chỉ IP", "Vì bản ghi A không hỗ trợ IPv4"], answer: 0, explain: "ALB scale và đổi IP theo thời gian, nên không được hard-code IP. Alias giải quyết điều đó và dùng được ở apex. ALB có IP nhưng không cố định." },
+      { q: "Trong mô hình Route 53 → ALB → ECS, TLS thường được kết thúc ở đâu?", options: ["Ở Route 53, khi trả lời DNS", "Ở ALB, với chứng chỉ ACM", "Ở từng container, với certbot", "Không cần TLS trong mô hình này"], answer: 1, explain: "ALB kết thúc TLS với chứng chỉ ACM tự gia hạn. Route 53 chỉ trả lời DNS; container có thể dùng TLS nội bộ nếu yêu cầu tuân thủ, nhưng không phải mặc định." }
     ]
   },
   "p09.m1.t6": {
@@ -1042,8 +1046,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
     ],
     quiz: [
       { q: "Khi chi phí vượt ngưỡng AWS Budgets, điều gì xảy ra theo mặc định?", options: ["Tài khoản bị khoá", "Mọi tài nguyên bị dừng", "Gửi thông báo tới người đăng ký", "AWS tự giảm giá"], answer: 2, explain: "Budget mặc định chỉ gửi cảnh báo (email/SNS). Muốn tự động hành động phải cấu hình thêm budget action. Tài khoản không bị khoá và tài nguyên không tự dừng." },
-      { q: "Vì sao nên đặt notification `FORECASTED` bên cạnh `ACTUAL`?", options: ["Để được giảm giá", "Để biết sớm khi tốc độ chi tiêu dự báo sẽ vượt ngưỡng trước khi thật sự vượt", "Vì ACTUAL không hoạt động", "Để tắt cảnh báo"], answer: 1, explain: "Dự báo cho bạn thời gian phản ứng trước khi hoá đơn thật vượt ngưỡng. ACTUAL vẫn hoạt động nhưng chỉ báo khi đã vượt." },
-      { q: "Alarm nào hữu ích nhất cho một API công khai?", options: ["CPU > 10% trong 1 phút", "Số response 5xx cao kéo dài nhiều phút", "Có một dòng log mới", "Số lần deploy trong ngày"], answer: 1, explain: "5xx kéo dài là triệu chứng người dùng thực sự bị ảnh hưởng. CPU 10% là bình thường; mỗi dòng log hay số lần deploy không cần đánh thức ai." }
+      { q: "Vì sao nên đặt notification `FORECASTED` bên cạnh `ACTUAL`?", options: ["Để AWS áp dụng mức giá ưu đãi", "Để được báo trước khi hoá đơn vượt ngưỡng", "Vì ACTUAL không gửi được email", "Để giảm số lượng cảnh báo"], answer: 1, explain: "Dự báo cho bạn thời gian phản ứng trước khi hoá đơn thật vượt ngưỡng. ACTUAL vẫn hoạt động nhưng chỉ báo khi đã vượt." },
+      { q: "Alarm nào hữu ích nhất cho một API công khai?", options: ["CPU trên 10% trong 1 phút", "Tỉ lệ 5xx cao trong nhiều phút", "Có thêm một dòng log mới", "Số lần deploy trong một ngày"], answer: 1, explain: "5xx kéo dài là triệu chứng người dùng thực sự bị ảnh hưởng. CPU 10% là bình thường; mỗi dòng log hay số lần deploy không cần đánh thức ai." }
     ]
   },
   "p09.m1.t7": {
@@ -1095,8 +1099,8 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
     ],
     quiz: [
       { q: "Dịch vụ nào của GCP tương đương gần nhất với ECS Fargate?", options: ["Compute Engine", "Cloud Run", "Cloud Storage", "BigQuery"], answer: 1, explain: "Cloud Run chạy container không cần quản server. Compute Engine là máy ảo; Cloud Storage là object storage; BigQuery là data warehouse." },
-      { q: "Khi nào PaaS như Render/Railway là lựa chọn hợp lý?", options: ["Khi cần tùy biến mạng phức tạp và compliance chặt", "Khi làm MVP với đội nhỏ, cần ra sản phẩm nhanh", "Khi chạy hàng nghìn service", "Khi cần GPU tùy chỉnh"], answer: 1, explain: "PaaS giảm gần hết việc vận hành, rất hợp giai đoạn đầu. Các trường hợp còn lại cần mức kiểm soát mà cloud lớn đáp ứng tốt hơn." },
-      { q: "Thực hành nào giúp ứng dụng dễ chuyển giữa các nền tảng nhất?", options: ["Hard-code endpoint DB trong code", "Đóng gói container, cấu hình qua biến môi trường, stateless", "Lưu file upload trên đĩa local", "Dùng SDK độc quyền ở mọi nơi"], answer: 1, explain: "Container và 12-factor tách ứng dụng khỏi nền tảng. Hard-code cấu hình, lưu file local và phụ thuộc SDK độc quyền đều khiến việc chuyển đổi khó hơn." }
+      { q: "Khi nào PaaS như Render/Railway là lựa chọn hợp lý?", options: ["Khi cần mạng riêng phức tạp và compliance chặt", "Khi làm MVP với đội nhỏ, cần ra mắt nhanh", "Khi vận hành hàng nghìn service nội bộ", "Khi cần GPU và kernel tùy chỉnh"], answer: 1, explain: "PaaS giảm gần hết việc vận hành, rất hợp giai đoạn đầu. Các trường hợp còn lại cần mức kiểm soát mà cloud lớn đáp ứng tốt hơn." },
+      { q: "Thực hành nào giúp ứng dụng dễ chuyển giữa các nền tảng nhất?", options: ["Hard-code endpoint DB ngay trong code", "Đóng gói container, cấu hình qua biến môi trường", "Lưu file upload trên đĩa local của máy", "Gọi SDK độc quyền trực tiếp ở mọi nơi"], answer: 1, explain: "Container và 12-factor tách ứng dụng khỏi nền tảng. Hard-code cấu hình, lưu file local và phụ thuộc SDK độc quyền đều khiến việc chuyển đổi khó hơn." }
     ]
   },
   "p09.m2.t0": {
@@ -1195,7 +1199,7 @@ output "bucket_name" {
       "Đặt mật khẩu làm `default` của biến trong code; dùng Secrets Manager hoặc biến môi trường `TF_VAR_...`."
     ],
     quiz: [
-      { q: "Khác biệt giữa `resource` và `data` trong Terraform?", options: ["Không khác gì", "`resource` được Terraform tạo và quản lý vòng đời; `data` chỉ đọc thông tin đã có", "`data` nhanh hơn", "`data` chỉ dùng cho biến"], answer: 1, explain: "Data source truy vấn tài nguyên có sẵn mà không tạo hay xoá nó. Resource thì Terraform chịu trách nhiệm tạo, cập nhật, xoá." },
+      { q: "Khác biệt giữa `resource` và `data` trong Terraform?", options: ["Hai khối giống nhau, chỉ khác tên gọi", "`resource` được quản lý vòng đời, `data` chỉ đọc", "`data` tạo tài nguyên nhanh hơn `resource`", "`data` chỉ dùng để khai báo biến đầu vào"], answer: 1, explain: "Data source truy vấn tài nguyên có sẵn mà không tạo hay xoá nó. Resource thì Terraform chịu trách nhiệm tạo, cập nhật, xoá." },
       { q: "`version = \"~> 6.0\"` cho phép những phiên bản nào?", options: ["Chỉ 6.0.0", "6.x (>= 6.0, < 7.0)", "Mọi phiên bản >= 6.0", "Chỉ 6.0.x"], answer: 1, explain: "`~>` chỉ cho phép phần cuối cùng được chỉ định tăng: `~> 6.0` nghĩa là >= 6.0 và < 7.0. Nếu viết `~> 6.0.0` thì mới là chỉ 6.0.x." },
       { q: "File nào nên commit vào Git?", options: ["`.terraform/`", "`terraform.tfstate`", "`.terraform.lock.hcl`", "`tfplan` chứa giá trị nhạy cảm"], answer: 2, explain: "Lock file đảm bảo mọi người dùng cùng phiên bản provider. `.terraform/` là cache tải về; state và plan file có thể chứa secret, không commit." }
     ]
@@ -1212,13 +1216,13 @@ output "bucket_name" {
       {
         h: "Remote state trên S3 với state locking",
         p: [
-          "Khi làm việc nhóm, state phải nằm ở một chỗ chung. Backend S3 là lựa chọn phổ biến trên AWS. Để tránh hai người apply cùng lúc làm hỏng state, cần locking. Từ Terraform 1.10, S3 backend hỗ trợ khoá trực tiếp bằng file lock trên S3 với `use_lockfile = true`; cách cũ dùng bảng DynamoDB (`dynamodb_table`) đã bị deprecated.",
+          "Khi làm việc nhóm, state phải nằm ở một chỗ chung. Backend S3 là lựa chọn phổ biến trên AWS. Để tránh hai người apply cùng lúc làm hỏng state, cần locking. S3 backend hỗ trợ khoá trực tiếp bằng một file `.tflock` trên S3 với `use_lockfile = true`: tính năng này xuất hiện dạng thử nghiệm ở Terraform 1.10 và chính thức (GA) từ 1.11. Cũng từ 1.11, cách cũ dùng bảng DynamoDB (`dynamodb_table`) bị đánh dấu deprecated và sẽ bị gỡ ở một bản sau. Khi chuyển đổi, có thể bật cả hai cùng lúc một thời gian rồi mới bỏ DynamoDB.",
           "Bucket state nên bật versioning để khôi phục bản trước nếu state bị hỏng hoặc bị ghi nhầm, bật mã hoá và chặn public access. Bucket này thường được tạo một lần bằng tay hoặc bằng một cấu hình bootstrap riêng."
         ],
         code: {
           lang: "hcl", file: "backend.tf",
           src: `terraform {
-  required_version = ">= 1.10"
+  required_version = ">= 1.11"
   backend "s3" {
     bucket       = "myorg-tfstate"
     key          = "task-api/staging.tfstate"
@@ -1232,7 +1236,7 @@ output "bucket_name" {
       {
         h: "Thao tác với state an toàn",
         p: [
-          "Bạn hiếm khi cần sửa state, và không bao giờ sửa file JSON bằng tay. Terraform có lệnh riêng. Khi đổi tên resource trong code, dùng khối `moved` để Terraform hiểu đó là cùng một đối tượng thay vì xoá rồi tạo lại."
+          "Bạn hiếm khi cần sửa state, và không bao giờ sửa file JSON bằng tay. Terraform có lệnh riêng. Khi đổi tên resource trong code, dùng khối `moved` để Terraform hiểu đó là cùng một đối tượng thay vì xoá rồi tạo lại, ví dụ `moved { from = aws_s3_bucket.old_name  to = aws_s3_bucket.assets }` (trong file `.tf`, mỗi thuộc tính một dòng). Plan sẽ báo \"has moved to\" thay vì destroy/create. Ngược lại, muốn Terraform thôi quản lý một tài nguyên mà không xoá nó trên cloud, từ Terraform 1.7 có khối `removed` với `lifecycle { destroy = false }`, đi qua plan như mọi thay đổi khác."
         ],
         code: {
           lang: "bash", file: "terminal",
@@ -1248,7 +1252,7 @@ terraform force-unlock <LOCK_ID>`
     summary: [
       "State ánh xạ code với tài nguyên thật; mất state là Terraform mất khả năng quản lý.",
       "State chứa secret dạng rõ: không commit, lưu ở backend mã hoá, giới hạn quyền.",
-      "S3 backend với `use_lockfile = true` (Terraform >= 1.10) để khoá; `dynamodb_table` đã deprecated.",
+      "S3 backend với `use_lockfile = true` (GA từ Terraform 1.11) để khoá; `dynamodb_table` đã deprecated.",
       "Bật versioning cho bucket state; dùng `moved`, `state rm` thay vì sửa JSON tay."
     ],
     pitfalls: [
@@ -1257,9 +1261,9 @@ terraform force-unlock <LOCK_ID>`
       "Đổi tên resource mà không có khối `moved`, plan đòi destroy rồi tạo lại (với DB là mất dữ liệu)."
     ],
     quiz: [
-      { q: "Từ Terraform 1.10, cách khuyến nghị để khoá state trên S3 backend là gì?", options: ["`dynamodb_table`", "`use_lockfile = true`", "Không cần khoá", "Dùng Git lock"], answer: 1, explain: "S3 native lock qua `use_lockfile` thay cho DynamoDB, vốn đã deprecated. Không khoá thì apply đồng thời có thể làm hỏng state; Git không liên quan tới cơ chế lock của backend." },
-      { q: "Vì sao không commit state vào Git dù đã đánh dấu biến `sensitive`?", options: ["File quá lớn", "`sensitive` chỉ ẩn khỏi output; state vẫn chứa giá trị dạng rõ", "Git không đọc được JSON", "State tự mã hoá"], answer: 1, explain: "`sensitive` chỉ ảnh hưởng hiển thị. State local không tự mã hoá; mã hoá đến từ backend. Kích thước và định dạng không phải vấn đề chính." },
-      { q: "`terraform state rm aws_s3_bucket.legacy` làm gì?", options: ["Xoá bucket trên AWS", "Bỏ resource khỏi state, bucket trên AWS vẫn còn", "Đổi tên bucket", "Khôi phục bucket"], answer: 1, explain: "`state rm` chỉ khiến Terraform ngừng quản lý đối tượng; tài nguyên thật không bị động tới. Muốn xoá thật thì bỏ khỏi code rồi apply, hoặc dùng `destroy`." }
+      { q: "Với Terraform hiện hành (>= 1.11), cách khuyến nghị để khoá state trên S3 backend là gì?", options: ["`dynamodb_table`", "`use_lockfile = true`", "Không cần khoá", "Dùng Git lock"], answer: 1, explain: "S3 native lock qua `use_lockfile` (GA từ 1.11) thay cho DynamoDB, vốn đã deprecated. Không khoá thì apply đồng thời có thể làm hỏng state; Git không liên quan tới cơ chế lock của backend." },
+      { q: "Vì sao không commit state vào Git dù đã đánh dấu biến `sensitive`?", options: ["Vì file state quá lớn cho Git", "Vì state vẫn lưu giá trị dạng rõ", "Vì Git không lưu được file JSON", "Vì state local đã tự mã hoá sẵn"], answer: 1, explain: "`sensitive` chỉ ảnh hưởng hiển thị. State local không tự mã hoá; mã hoá đến từ backend. Kích thước và định dạng không phải vấn đề chính." },
+      { q: "`terraform state rm aws_s3_bucket.legacy` làm gì?", options: ["Xoá bucket trên AWS và khỏi state", "Bỏ khỏi state, bucket trên AWS vẫn còn", "Đổi tên bucket trong state và trên AWS", "Khôi phục bucket từ bản state trước"], answer: 1, explain: "`state rm` chỉ khiến Terraform ngừng quản lý đối tượng; tài nguyên thật không bị động tới. Muốn xoá thật thì bỏ khỏi code rồi apply, hoặc dùng `destroy`." }
     ]
   },
   "p09.m2.t2": {
@@ -1348,9 +1352,9 @@ module "vpc" {
       "Đổi tên khối `module` trong code mà không thêm `moved`, Terraform đòi tạo lại mọi thứ bên trong."
     ],
     quiz: [
-      { q: "Trong Terraform, \"root module\" là gì?", options: ["Module trên registry", "Thư mục nơi bạn chạy `terraform plan/apply`", "Module do HashiCorp viết", "File `main.tf` duy nhất"], answer: 1, explain: "Root module là thư mục làm việc hiện tại; nó gọi các child module. Không liên quan tới registry hay tác giả, và root module có thể gồm nhiều file." },
-      { q: "Làm sao module ứng dụng lấy được endpoint DB từ module `db`?", options: ["Đọc trực tiếp resource bên trong module", "Module `db` khai báo `output`, rồi dùng `module.db.endpoint`", "Dùng biến môi trường", "Không thể"], answer: 1, explain: "Resource bên trong module bị đóng gói; chỉ output mới truy cập được từ bên ngoài qua `module.<tên>.<output>`." },
-      { q: "Vì sao phải ghim `version` cho module registry?", options: ["Để tải nhanh hơn", "Để tránh tự động kéo phiên bản mới có thay đổi phá vỡ", "Vì registry yêu cầu", "Để giảm chi phí AWS"], answer: 1, explain: "Không ghim, `init` có thể kéo bản mới nhất với thay đổi biến hoặc resource. Ghim giúp thay đổi có kiểm soát; không liên quan tốc độ hay chi phí." }
+      { q: "Trong Terraform, \"root module\" là gì?", options: ["Module được tải từ Terraform Registry", "Thư mục nơi bạn chạy `plan`/`apply`", "Module chính thức do HashiCorp viết", "File `main.tf` duy nhất của dự án"], answer: 1, explain: "Root module là thư mục làm việc hiện tại; nó gọi các child module. Không liên quan tới registry hay tác giả, và root module có thể gồm nhiều file." },
+      { q: "Làm sao module ứng dụng lấy được endpoint DB từ module `db`?", options: ["Tham chiếu thẳng `aws_db_instance.this.address`", "Khai báo `output` trong module, dùng `module.db.endpoint`", "Xuất endpoint ra biến môi trường `TF_VAR_endpoint`", "Không thể, mỗi module phải chạy riêng"], answer: 1, explain: "Resource bên trong module bị đóng gói; chỉ output mới truy cập được từ bên ngoài qua `module.<tên>.<output>`." },
+      { q: "Vì sao phải ghim `version` cho module registry?", options: ["Để `terraform init` tải nhanh hơn", "Để không tự kéo bản mới có thay đổi phá vỡ", "Vì registry bắt buộc phải có `version`", "Để giảm chi phí tài nguyên AWS"], answer: 1, explain: "Không ghim, `init` có thể kéo bản mới nhất với thay đổi biến hoặc resource. Ghim giúp thay đổi có kiểm soát; không liên quan tốc độ hay chi phí." }
     ]
   },
   "p09.m2.t3": {
@@ -1415,9 +1419,9 @@ terraform workspace delete pr-123`
       "Commit `prod.tfvars` chứa mật khẩu DB."
     ],
     quiz: [
-      { q: "Vì sao thư mục riêng cho mỗi env thường được ưa chuộng cho prod?", options: ["Chạy nhanh hơn", "Rõ ràng, backend key riêng, dễ phân quyền CI và cho phép khác biệt cấu trúc", "Workspace không có state", "Vì Terraform không hỗ trợ workspace với S3"], answer: 1, explain: "Thư mục riêng làm môi trường hiển hiện trong code và pipeline. Workspace vẫn có state riêng và hỗ trợ S3 backend; tốc độ không khác biệt." },
-      { q: "Terraform tự động nạp file nào mà không cần `-var-file`?", options: ["`prod.tfvars`", "`terraform.tfvars` và `*.auto.tfvars`", "Mọi file `.tfvars`", "`variables.tf`"], answer: 1, explain: "Chỉ `terraform.tfvars` (và `.json`) cùng `*.auto.tfvars` được nạp tự động. File tên khác phải truyền `-var-file`. `variables.tf` là nơi khai báo biến, không phải giá trị." },
-      { q: "Cách nào an toàn để truyền mật khẩu vào Terraform trong CI?", options: ["Ghi vào tfvars và commit", "Biến môi trường `TF_VAR_db_password` từ secret của CI hoặc đọc Secrets Manager", "Đặt làm default của biến", "Ghi trong README"], answer: 1, explain: "Secret nên đến từ kho secret lúc chạy. Commit hay đặt default đều đưa secret vào Git." }
+      { q: "Vì sao thư mục riêng cho mỗi env thường được ưa chuộng cho prod?", options: ["Vì plan và apply chạy nhanh hơn", "Vì dễ tách quyền CI và backend theo từng env", "Vì workspace không có state riêng", "Vì S3 backend không hỗ trợ workspace"], answer: 1, explain: "Thư mục riêng làm môi trường hiển hiện trong code và pipeline. Workspace vẫn có state riêng và hỗ trợ S3 backend; tốc độ không khác biệt." },
+      { q: "Terraform tự động nạp file nào mà không cần `-var-file`?", options: ["`prod.tfvars` và `staging.tfvars`", "`terraform.tfvars` và `*.auto.tfvars`", "Mọi file có đuôi `.tfvars`", "`variables.tf` và `outputs.tf`"], answer: 1, explain: "Chỉ `terraform.tfvars` (và `.json`) cùng `*.auto.tfvars` được nạp tự động. File tên khác phải truyền `-var-file`. `variables.tf` là nơi khai báo biến, không phải giá trị." },
+      { q: "Cách nào an toàn để truyền mật khẩu vào Terraform trong CI?", options: ["Ghi vào `prod.tfvars` rồi commit", "Đặt `TF_VAR_db_password` từ secret của CI", "Đặt làm `default` của biến trong code", "Ghi trong README của thư mục env"], answer: 1, explain: "Secret nên đến từ kho secret lúc chạy. Commit hay đặt default đều đưa secret vào Git." }
     ]
   },
   "p09.m2.t4": {
@@ -1430,7 +1434,7 @@ terraform workspace delete pr-123`
         list: [
           "`terraform fmt -check -recursive`: định dạng thống nhất.",
           "`terraform validate`: cú pháp và kiểu dữ liệu.",
-          "`tflint`: lỗi mà validate bỏ qua, ví dụ loại instance không tồn tại, biến khai báo nhưng không dùng.",
+          "`tflint`: lỗi mà validate bỏ qua, ví dụ biến khai báo nhưng không dùng; khi bật ruleset AWS (plugin `tflint-ruleset-aws`) nó còn bắt được loại instance không tồn tại.",
           "`checkov` hoặc `trivy config`: quét cấu hình sai về bảo mật như bucket public, security group mở 0.0.0.0/0, DB không mã hoá."
         ]
       },
@@ -1492,9 +1496,9 @@ jobs:
       "Cho role của PR (kể cả PR từ fork) quyền ghi hạ tầng."
     ],
     quiz: [
-      { q: "Vì sao nên `terraform apply tfplan` thay vì `terraform apply` chạy lại plan?", options: ["Nhanh hơn", "Đảm bảo thứ được áp dụng đúng là plan đã review", "Không cần state", "Không cần credential"], answer: 1, explain: "Plan file cố định tập thay đổi đã được duyệt; chạy plan mới có thể ra kết quả khác nếu hạ tầng hoặc code đã đổi. Vẫn cần state và credential." },
+      { q: "Vì sao nên `terraform apply tfplan` thay vì `terraform apply` chạy lại plan?", options: ["Vì apply từ file plan chạy nhanh hơn", "Vì thứ được áp đúng là thứ đã review", "Vì apply từ file plan không cần state", "Vì apply từ file plan không cần credential"], answer: 1, explain: "Plan file cố định tập thay đổi đã được duyệt; chạy plan mới có thể ra kết quả khác nếu hạ tầng hoặc code đã đổi. Vẫn cần state và credential." },
       { q: "Công cụ nào phát hiện security group mở 0.0.0.0/0 cho cổng 22 trong code Terraform?", options: ["`terraform fmt`", "`checkov`", "`terraform output`", "`terraform init`"], answer: 1, explain: "Checkov (hoặc trivy config) quét cấu hình theo bộ quy tắc bảo mật. `fmt` chỉ định dạng, `output` in giá trị, `init` tải provider." },
-      { q: "CI nên lấy credential AWS thế nào?", options: ["Access key của admin trong secrets", "OIDC assume role, tách role plan và apply", "Hard-code trong workflow", "Dùng root"], answer: 1, explain: "OIDC cấp credential tạm thời, trust policy có thể giới hạn repo và branch; tách role giúp PR không có quyền ghi." }
+      { q: "CI nên lấy credential AWS thế nào?", options: ["Access key của admin lưu trong secrets", "OIDC assume role, tách role plan và apply", "Access key hard-code trong file workflow", "Access key của root lưu trong secrets"], answer: 1, explain: "OIDC cấp credential tạm thời, trust policy có thể giới hạn repo và branch; tách role giúp PR không có quyền ghi." }
     ]
   },
   "p09.m2.t5": {
@@ -1523,7 +1527,7 @@ terraform plan -detailed-exitcode -input=false`
       {
         h: "Import tài nguyên có sẵn",
         p: [
-          "Nhiều hệ thống có tài nguyên tạo tay từ trước khi dùng Terraform. Import đưa chúng vào state để quản lý tiếp mà không tạo lại. Từ Terraform 1.5 có khối `import` khai báo ngay trong code, đi qua plan như mọi thay đổi khác, và có thể sinh sẵn code cấu hình bằng `-generate-config-out`. Lệnh cũ `terraform import` vẫn dùng được nhưng không có bước plan để review.",
+          "Nhiều hệ thống có tài nguyên tạo tay từ trước khi dùng Terraform. Import đưa chúng vào state để quản lý tiếp mà không tạo lại. Từ Terraform 1.5 có khối `import` khai báo ngay trong code, đi qua plan như mọi thay đổi khác, và có thể sinh sẵn code cấu hình bằng `-generate-config-out` (tính năng ra mắt dạng thử nghiệm, code sinh ra cần rà soát kỹ). Lệnh cũ `terraform import` vẫn dùng được nhưng không có bước plan để review.",
           "Sau khi import, chạy plan cho đến khi báo không có thay đổi: nghĩa là code đã khớp thực tế. Code sinh tự động thường dài và cần dọn lại cho gọn trước khi commit."
         ],
         code: {
@@ -1553,8 +1557,8 @@ terraform plan -detailed-exitcode -input=false`
     ],
     quiz: [
       { q: "`terraform plan -detailed-exitcode` trả về 2 nghĩa là gì?", options: ["Lỗi", "Không có thay đổi", "Plan thành công và có thay đổi", "Bị khoá state"], answer: 2, explain: "0 là không thay đổi, 1 là lỗi, 2 là có thay đổi. Điều này giúp job CI phân biệt drift với lỗi." },
-      { q: "ECS service được Application Auto Scaling thay đổi `desired_count`. Làm sao để Terraform không kéo lại mỗi lần apply?", options: ["Xoá service khỏi state", "`lifecycle { ignore_changes = [desired_count] }`", "Tắt autoscaling", "Chạy `terraform import` mỗi ngày"], answer: 1, explain: "`ignore_changes` bỏ qua drift ở thuộc tính được quản lý bởi hệ thống khác. Xoá khỏi state làm mất quản lý; tắt autoscaling bỏ mất tính năng; import không liên quan." },
-      { q: "Ưu điểm của khối `import` so với lệnh `terraform import`?", options: ["Nhanh hơn", "Đi qua plan để review và có thể sinh sẵn cấu hình", "Không cần provider", "Tự xoá tài nguyên cũ"], answer: 1, explain: "Khối `import` là một phần của code, được plan và review như mọi thay đổi, và hỗ trợ `-generate-config-out`. Nó vẫn cần provider và không xoá gì." }
+      { q: "ECS service được Application Auto Scaling thay đổi `desired_count`. Làm sao để Terraform không kéo lại mỗi lần apply?", options: ["`terraform state rm aws_ecs_service.api`", "`lifecycle { ignore_changes = [desired_count] }`", "Tắt Application Auto Scaling cho service", "Chạy `terraform import` cho service mỗi ngày"], answer: 1, explain: "`ignore_changes` bỏ qua drift ở thuộc tính được quản lý bởi hệ thống khác. Xoá khỏi state làm mất quản lý; tắt autoscaling bỏ mất tính năng; import không liên quan." },
+      { q: "Ưu điểm của khối `import` so với lệnh `terraform import`?", options: ["Import nhanh hơn với tài nguyên lớn", "Đi qua plan để review trước khi áp", "Không cần cài provider tương ứng", "Tự xoá tài nguyên cũ sau khi import"], answer: 1, explain: "Khối `import` là một phần của code, được plan và review như mọi thay đổi, và hỗ trợ `-generate-config-out`. Nó vẫn cần provider và không xoá gì." }
     ]
   },
   "p09.m2.t6": {
@@ -1562,7 +1566,7 @@ terraform plan -detailed-exitcode -input=false`
       {
         h: "OpenTofu: fork mã nguồn mở của Terraform",
         p: [
-          "Năm 2023, HashiCorp đổi giấy phép Terraform từ MPL sang BSL. Cộng đồng tạo OpenTofu, một fork dưới Linux Foundation, giữ giấy phép MPL. OpenTofu dùng cùng ngôn ngữ HCL, cùng provider, lệnh gần như giống hệt (`tofu init`, `tofu plan`). Theo thời gian hai dự án có thêm tính năng riêng, ví dụ OpenTofu có mã hoá state phía client. Nếu tổ chức quan tâm giấy phép, OpenTofu là lựa chọn chuyển đổi ít tốn công nhất; hãy kiểm tra độ tương thích với phiên bản bạn đang dùng trước khi chuyển."
+          "Năm 2023, HashiCorp đổi giấy phép Terraform từ MPL sang BSL (HashiCorp sau đó được IBM mua lại). Cộng đồng tạo OpenTofu, một fork ban đầu thuộc Linux Foundation và từ 4/2025 là dự án sandbox của CNCF, giữ giấy phép MPL. OpenTofu dùng cùng ngôn ngữ HCL, cùng provider, lệnh gần như giống hệt (`tofu init`, `tofu plan`). Theo thời gian hai dự án có thêm tính năng riêng, ví dụ OpenTofu có mã hoá state phía client. Nếu tổ chức quan tâm giấy phép, OpenTofu là lựa chọn chuyển đổi ít tốn công nhất; hãy kiểm tra độ tương thích với phiên bản bạn đang dùng trước khi chuyển."
         ]
       },
       {
@@ -1611,8 +1615,8 @@ for (const env of envs) {
       "Chuyển từ Terraform sang OpenTofu mà không kiểm tra phiên bản tương thích và tính năng đang dùng."
     ],
     quiz: [
-      { q: "AWS CDK triển khai hạ tầng như thế nào?", options: ["Gọi API AWS trực tiếp và lưu state trên S3", "Sinh template CloudFormation rồi CloudFormation triển khai", "Dùng provider Terraform", "Chạy Ansible"], answer: 1, explain: "CDK synth ra CloudFormation template; state nằm trong CloudFormation stack. Nó không dùng provider Terraform hay Ansible (CDKTF là dự án khác)." },
-      { q: "Lý do chính cộng đồng tạo ra OpenTofu?", options: ["Terraform ngừng phát triển", "HashiCorp đổi giấy phép Terraform sang BSL", "Terraform không hỗ trợ AWS", "OpenTofu dùng ngôn ngữ mới"], answer: 1, explain: "OpenTofu ra đời sau khi giấy phép đổi sang BSL, để giữ một bản mã nguồn mở MPL. Terraform vẫn phát triển và hỗ trợ AWS; OpenTofu vẫn dùng HCL." },
+      { q: "AWS CDK triển khai hạ tầng như thế nào?", options: ["Gọi API AWS trực tiếp, lưu state trên S3", "Sinh template CloudFormation để CloudFormation triển khai", "Sinh code HCL rồi chạy qua provider Terraform", "Sinh playbook rồi chạy bằng Ansible"], answer: 1, explain: "CDK synth ra CloudFormation template; state nằm trong CloudFormation stack. Nó không dùng provider Terraform hay Ansible (CDKTF là dự án khác)." },
+      { q: "Lý do chính cộng đồng tạo ra OpenTofu?", options: ["Terraform ngừng phát triển tính năng mới", "HashiCorp đổi giấy phép Terraform sang BSL", "Terraform ngừng hỗ trợ provider AWS", "Cộng đồng muốn thay HCL bằng ngôn ngữ mới"], answer: 1, explain: "OpenTofu ra đời sau khi giấy phép đổi sang BSL, để giữ một bản mã nguồn mở MPL. Terraform vẫn phát triển và hỗ trợ AWS; OpenTofu vẫn dùng HCL." },
       { q: "Khi hạ tầng trải trên AWS, Cloudflare và GitHub, công cụ nào phù hợp nhất để quản lý ở một nơi?", options: ["CloudFormation", "AWS CDK", "Terraform/OpenTofu", "AWS Console"], answer: 2, explain: "Terraform/OpenTofu có provider cho rất nhiều nền tảng. CloudFormation và CDK tập trung vào AWS; console là thao tác tay, không phải IaC." }
     ]
   },
@@ -1655,6 +1659,7 @@ ansible_user=deploy`
         path: /etc/ssh/sshd_config
         regexp: '^#?PasswordAuthentication'
         line: 'PasswordAuthentication no'
+        validate: /usr/sbin/sshd -t -f %s   # file sai cú pháp thì không ghi đè
       notify: Reload ssh
 
     - name: Cấu hình Nginx cho ứng dụng
@@ -1681,7 +1686,7 @@ ansible_user=deploy`
         state: reloaded`
         },
         p: [
-          "Chạy thử với `ansible-playbook -i inventory.ini site.yml --check --diff` để xem thay đổi mà không áp dụng, rồi bỏ `--check` để chạy thật. Handler reload Nginx chạy `nginx -t` trước: file site chỉ là một mảnh cấu hình nên không kiểm tra riêng được, phải kiểm tra toàn bộ cấu hình rồi mới reload."
+          "Chạy thử với `ansible-playbook -i inventory.ini site.yml --check --diff` để xem thay đổi mà không áp dụng, rồi bỏ `--check` để chạy thật. Handler reload Nginx chạy `nginx -t` trước: file site chỉ là một mảnh cấu hình nên không kiểm tra riêng được, phải kiểm tra toàn bộ cấu hình rồi mới reload. Với SSH, `validate` chạy `sshd -t` trên bản nháp trước khi ghi; nhớ kiểm tra thêm các file trong `/etc/ssh/sshd_config.d/` vì chúng có thể đặt lại `PasswordAuthentication yes` (xem bài firewall)."
         ]
       },
       {
@@ -1704,9 +1709,9 @@ ansible_user=deploy`
       "Đặt mật khẩu trong biến playbook dạng rõ; dùng Ansible Vault hoặc kho secret."
     ],
     quiz: [
-      { q: "Handler trong Ansible chạy khi nào?", options: ["Mỗi lần chạy playbook", "Khi được notify bởi một task có trạng thái changed, thường ở cuối play", "Chỉ khi task lỗi", "Trước mọi task"], answer: 1, explain: "Handler chỉ chạy khi có task báo changed và notify nó, và mặc định chạy một lần ở cuối play. Nhờ vậy Nginx chỉ reload khi cấu hình thật sự đổi." },
+      { q: "Handler trong Ansible chạy khi nào?", options: ["Mỗi lần chạy playbook, sau task đầu tiên", "Khi được task có thay đổi notify, ở cuối play", "Chỉ khi có task bị lỗi trong play", "Trước mọi task trong play"], answer: 1, explain: "Handler chỉ chạy khi có task báo changed và notify nó, và mặc định chạy một lần ở cuối play. Nhờ vậy Nginx chỉ reload khi cấu hình thật sự đổi." },
       { q: "Chạy cùng một playbook lần thứ hai trên máy đã cấu hình đúng, kết quả mong đợi là gì?", options: ["Mọi task báo changed", "`changed=0`", "Lỗi vì đã cài rồi", "Máy khởi động lại"], answer: 1, explain: "Tính idempotent đảm bảo không có thay đổi khi trạng thái đã đúng. Module chuẩn không báo lỗi khi package đã có." },
-      { q: "Ansible khác Terraform ở điểm nào là chính?", options: ["Ansible chỉ chạy trên Windows", "Ansible chủ yếu cấu hình phần mềm bên trong máy; Terraform chủ yếu tạo và quản lý tài nguyên hạ tầng có state", "Terraform cần agent trên máy", "Ansible không dùng YAML"], answer: 1, explain: "Hai công cụ bổ trợ nhau: Terraform tạo VPC, EC2, DB và lưu state; Ansible cài và cấu hình phần mềm qua SSH. Terraform không cần agent; Ansible dùng YAML." }
+      { q: "Ansible khác Terraform ở điểm nào là chính?", options: ["Ansible chỉ quản lý được máy Windows", "Ansible cấu hình bên trong máy, Terraform tạo hạ tầng", "Terraform cần cài agent trên từng máy", "Ansible viết bằng HCL thay vì YAML"], answer: 1, explain: "Hai công cụ bổ trợ nhau: Terraform tạo VPC, EC2, DB và lưu state; Ansible cài và cấu hình phần mềm qua SSH. Ansible quản lý cả Linux lẫn Windows; Terraform không cần agent; Ansible dùng YAML." }
     ]
   },
   "p09.m3.t1": {
@@ -1801,9 +1806,9 @@ build {
       "Dùng `source_ami` cố định ID cũ thay vì `source_ami_filter` với `most_recent`, image gốc không bao giờ được cập nhật."
     ],
     quiz: [
-      { q: "Packer làm gì khi build một AMI?", options: ["Sửa trực tiếp các EC2 đang chạy", "Tạo máy tạm, chạy provisioner, chụp AMI và xoá máy tạm", "Tạo VPC", "Deploy container lên ECS"], answer: 1, explain: "Packer chỉ tạo image; nó không động tới máy đang chạy, không tạo VPC hay deploy ECS. Việc dùng AMI để tạo máy là của Terraform/ASG." },
-      { q: "Ưu điểm chính của golden image so với cài đặt lúc khởi động?", options: ["Không cần hệ điều hành", "Khởi động nhanh và nhất quán, không phụ thuộc mạng/mirror lúc scale", "Không bao giờ cần build lại", "Không tốn dung lượng"], answer: 1, explain: "Mọi thứ đã có sẵn nên máy lên nhanh và giống nhau. Vẫn cần OS, vẫn phải rebuild để vá lỗi, và AMI có chi phí lưu trữ snapshot." },
-      { q: "Nên xử lý mật khẩu DB thế nào với golden image?", options: ["Ghi vào `/etc/app.env` trong image", "Lấy lúc khởi động hoặc lúc chạy từ Secrets Manager/SSM Parameter Store", "Đặt trong tên AMI", "Đặt trong tag"], answer: 1, explain: "Image có thể được chia sẻ và tồn tại lâu, secret trong image là lộ secret. Tag và tên AMI đều hiển thị công khai với người có quyền xem." }
+      { q: "Packer làm gì khi build một AMI?", options: ["SSH vào các EC2 đang chạy để cập nhật", "Dựng máy tạm, cài đặt, chụp AMI rồi xoá máy", "Tạo VPC và subnet cho máy mới", "Build image rồi deploy lên ECS"], answer: 1, explain: "Packer chỉ tạo image; nó không động tới máy đang chạy, không tạo VPC hay deploy ECS. Việc dùng AMI để tạo máy là của Terraform/ASG." },
+      { q: "Ưu điểm chính của golden image so với cài đặt lúc khởi động?", options: ["Máy mới không cần hệ điều hành", "Máy mới khởi động nhanh và giống hệt nhau", "Image không bao giờ cần build lại", "AMI không tốn chi phí lưu trữ"], answer: 1, explain: "Mọi thứ đã có sẵn nên máy lên nhanh và giống nhau. Vẫn cần OS, vẫn phải rebuild để vá lỗi, và AMI có chi phí lưu trữ snapshot." },
+      { q: "Nên xử lý mật khẩu DB thế nào với golden image?", options: ["Ghi vào `/etc/app.env` khi build image", "Đọc từ Secrets Manager lúc máy chạy", "Mã hoá base64 rồi đặt trong tên AMI", "Đặt trong tag của AMI"], answer: 1, explain: "Image có thể được chia sẻ và tồn tại lâu, secret trong image là lộ secret. Tag và tên AMI đều hiển thị công khai với người có quyền xem." }
     ]
   },
   "p09.m3.t2": {
@@ -1884,9 +1889,9 @@ resource "aws_autoscaling_group" "api" {
       "Dùng `health_check_type = \"EC2\"` nên ASG coi máy là khoẻ dù ứng dụng không phục vụ được; dùng `ELB` để dựa vào health check của load balancer."
     ],
     quiz: [
-      { q: "Configuration drift là gì?", options: ["Server chạy ở nhiều region", "Các server lệch cấu hình dần do sửa tay và cập nhật khác nhau theo thời gian", "Image quá lớn", "Terraform chạy chậm"], answer: 1, explain: "Drift là sự khác biệt tích luỹ giữa các server hoặc giữa server và cấu hình chuẩn. Immutable infrastructure loại bỏ nó bằng cách luôn tạo máy từ image." },
-      { q: "Trong mô hình immutable, cần vá lỗ hổng OpenSSL thì làm gì?", options: ["SSH vào từng máy chạy `apt upgrade`", "Build image mới có bản vá, rồi thay dần máy cũ", "Đợi máy tự khởi động lại", "Tắt OpenSSL"], answer: 1, explain: "Mọi thay đổi đi qua image mới và thay máy. Sửa tay phá vỡ tính immutable; chờ khởi động lại không cập nhật gì." },
-      { q: "Điều kiện tiên quyết để áp dụng immutable infrastructure cho web server?", options: ["Server phải stateless, dữ liệu nằm ở DB/S3 bên ngoài", "Phải dùng Windows", "Không dùng load balancer", "Mỗi server một IP tĩnh"], answer: 0, explain: "Máy bị huỷ bất cứ lúc nào nên dữ liệu phải ở ngoài. Load balancer lại rất cần để chuyển traffic giữa máy cũ và mới; IP tĩnh và OS không phải điều kiện." }
+      { q: "Configuration drift là gì?", options: ["Server được đặt rải rác ở nhiều region", "Các server lệch cấu hình dần do sửa tay", "Image máy lớn dần qua mỗi lần build", "Terraform chạy chậm dần theo thời gian"], answer: 1, explain: "Drift là sự khác biệt tích luỹ giữa các server hoặc giữa server và cấu hình chuẩn. Immutable infrastructure loại bỏ nó bằng cách luôn tạo máy từ image." },
+      { q: "Trong mô hình immutable, cần vá lỗ hổng OpenSSL thì làm gì?", options: ["SSH vào từng máy chạy `apt upgrade`", "Build image mới có bản vá, thay dần máy cũ", "Khởi động lại từng máy để nhận bản vá", "Gỡ OpenSSL khỏi các máy đang chạy"], answer: 1, explain: "Mọi thay đổi đi qua image mới và thay máy. Sửa tay phá vỡ tính immutable; chờ khởi động lại không cập nhật gì." },
+      { q: "Điều kiện tiên quyết để áp dụng immutable infrastructure cho web server?", options: ["Server stateless, dữ liệu nằm ở DB/S3", "Server phải chạy hệ điều hành Windows", "Không đặt load balancer phía trước", "Mỗi server giữ một IP tĩnh riêng"], answer: 0, explain: "Máy bị huỷ bất cứ lúc nào nên dữ liệu phải ở ngoài. Load balancer lại rất cần để chuyển traffic giữa máy cũ và mới; IP tĩnh và OS không phải điều kiện." }
     ]
   },
 });

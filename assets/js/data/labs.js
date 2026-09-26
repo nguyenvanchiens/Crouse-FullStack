@@ -254,7 +254,7 @@ jobs:
       }
     ],
     verify: ["PR có test fail thì không merge được", "Commit mới trên cùng PR tự huỷ run cũ (concurrency)", "Lần build thứ 2 nhanh hơn rõ rệt nhờ cache type=gha", "Image xuất hiện ở tab Packages với tag là SHA"],
-    pitfalls: ["Dùng action theo tag (`@v7`, `@0.28.0`): tag có thể bị ghi đè. Ngày 19/3/2026, 76/77 tag của aquasecurity/trivy-action bị force-push thành mã độc đánh cắp secret. Hãy pin theo commit SHA (kèm comment ghi version) và bật Dependabot để cập nhật SHA", "Cấp `permissions: write-all`: phải cấp quyền tối thiểu cho từng job", "Push image trước khi scan", "Test phụ thuộc thứ tự chạy, dữ liệu dùng chung giữa các test"]
+    pitfalls: ["Dùng action theo tag (`@v7`, `@0.28.0`): tag có thể bị ghi đè. Ngày 19/3/2026, 76/77 tag của aquasecurity/trivy-action bị force-push thành mã độc đánh cắp secret. Hãy pin theo commit SHA (kèm comment ghi version) và bật Dependabot để cập nhật SHA. Lưu ý pin SHA chỉ khoá đúng action đó: các commit trivy-action trước 4/2025 bên trong vẫn gọi setup-trivy theo tag nên vẫn bị nhiễm, vì vậy hãy dùng bản mới (v0.36.0 như trên) và rà cả action con", "Cấp `permissions: write-all`: phải cấp quyền tối thiểu cho từng job", "Push image trước khi scan", "Test phụ thuộc thứ tự chạy, dữ liệu dùng chung giữa các test"]
   },
   {
     id: "lab04",
@@ -395,10 +395,10 @@ echo "Smoke test OK"`
     steps: [
       {
         t: "Backend & provider",
-        d: "State lưu trên S3; từ Terraform 1.10 có thể khoá state bằng S3 native lock (use_lockfile), không cần DynamoDB.",
+        d: "State lưu trên S3 và khoá bằng S3 native lock (`use_lockfile`), tính năng chính thức từ Terraform 1.11 nên không cần DynamoDB nữa. Nhớ bật versioning cho bucket để khôi phục state khi cần.",
         lang: "hcl", file: "infra/envs/staging/main.tf",
         code: `terraform {
-  required_version = ">= 1.10"
+  required_version = ">= 1.11"
   backend "s3" {
     bucket       = "myorg-tfstate"
     key          = "task-api/staging.tfstate"

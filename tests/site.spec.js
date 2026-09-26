@@ -32,7 +32,7 @@ test.describe('Trang chủ', () => {
     await page.goto('/#/');
     await expect(page.locator('.banner h1')).toHaveText('Lộ trình Backend & Fullstack Engineer');
     await expect(page.locator('.banner p')).toContainText('14 khóa học');
-    await expect(page.locator('.banner p')).toContainText('322 bài học');
+    await expect(page.locator('.banner p')).toContainText('339 bài học');
     await expect(page.locator('.course-card')).toHaveCount(14);
     await expect(page.locator('.track')).toHaveCount(5);
     await expect(page.locator('.track').nth(2).locator('.course-card')).toHaveCount(5);
@@ -264,14 +264,14 @@ test.describe('Điều hướng', () => {
 test.describe('Tiến độ', () => {
   test('tick bài học trong trang chương cập nhật % và lưu sau khi reload', async ({ page }) => {
     await page.goto('/#/phase/p06');
-    await expect(page.locator('.enroll [data-phasecount="p06"]')).toHaveText('0/19'); // 13 bài + 3 tiêu chí dự án + 3 checkpoint
+    await expect(page.locator('.enroll [data-phasecount="p06"]')).toHaveText('0/20'); // 14 bài + 3 tiêu chí dự án + 3 checkpoint
     await page.locator('#m1 > summary').click();
     const boxes = page.locator('#m1 .topic');
     await boxes.nth(0).click();
     await boxes.nth(1).click();
-    await expect(page.locator('[data-modcount="p06.m1"]')).toHaveText('2/5');
-    await expect(page.locator('.enroll [data-phasecount="p06"]')).toHaveText('2/19');
-    await expect(page.locator('.enroll .cp-num')).toHaveText('11%');
+    await expect(page.locator('[data-modcount="p06.m1"]')).toHaveText('2/6');
+    await expect(page.locator('.enroll [data-phasecount="p06"]')).toHaveText('2/20');
+    await expect(page.locator('.enroll .cp-num')).toHaveText('10%');
     await page.reload();
     await page.locator('#m1 > summary').click();
     await expect(page.locator('#m1 .topic input').nth(0)).toBeChecked();
@@ -329,7 +329,7 @@ test.describe('Tiến độ', () => {
 
     await page.locator('[data-act="import"]').setInputFiles({ name: 'p.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
     await expect(page.locator('#toast')).toContainText('Đã nhập');
-    await expect(page.locator('.progress-row').first().locator('.pr-count')).toHaveText('2/34');
+    await expect(page.locator('.progress-row').first().locator('.pr-count')).toHaveText('2/36');
 
     await page.locator('[data-act="import"]').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('not json') });
     await expect(page.locator('#toast')).toContainText('không hợp lệ');
@@ -341,7 +341,7 @@ test.describe('Tiến độ', () => {
     await page.goto('/#/progress');
     page.once('dialog', (d) => d.dismiss());
     await page.locator('[data-act="reset"]').click();
-    await expect(page.locator('.progress-row').first().locator('.pr-count')).toHaveText('1/34');
+    await expect(page.locator('.progress-row').first().locator('.pr-count')).toHaveText('1/36');
   });
 
   test('vẫn chạy khi localStorage bị chặn', async ({ page }) => {

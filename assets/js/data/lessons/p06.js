@@ -62,15 +62,15 @@ test/
       },
       {
         q: "Vì sao mô hình trophy nhấn mạnh integration test cho backend?",
-        options: ["Vì integration test luôn nhanh hơn unit test", "Vì nhiều lỗi nằm ở chỗ code gặp DB và dịch vụ thật, mock không bắt được", "Vì không cần unit test nữa", "Vì e2e bị cấm"],
+        options: ["Vì integration test luôn chạy nhanh hơn unit test", "Vì nhiều lỗi nằm ở chỗ nối với DB, mock không bắt được", "Vì đã có integration test thì bỏ hẳn unit test", "Vì e2e test không chạy được trong pipeline CI"],
         answer: 1,
         explain: "Query sai, migration thiếu, transaction lỗi chỉ lộ ra khi chạy với DB thật. Unit test vẫn cần, chỉ không phải phần duy nhất."
       },
       {
         q: "Tầng static trong test trophy gồm những gì?",
-        options: ["Load test", "TypeScript type check và lint", "Test giao diện", "Backup dữ liệu"],
+        options: ["Load test với k6", "Type check và lint", "Test giao diện bằng trình duyệt", "Snapshot test cho response"],
         answer: 1,
-        explain: "Static analysis bắt lỗi kiểu và lỗi phổ biến mà không cần chạy code, là lớp phòng thủ rẻ nhất."
+        explain: "Static analysis (TypeScript, ESLint) bắt lỗi kiểu và lỗi phổ biến mà không cần chạy code, là lớp phòng thủ rẻ nhất. Load test, test giao diện và snapshot test đều phải chạy code."
       }
     ]
   },
@@ -171,7 +171,7 @@ npx vitest run task.policy   # lọc theo tên file`
       },
       {
         q: "Code nào dễ viết unit test nhất?",
-        options: ["Hàm vừa query DB vừa tính toán vừa gửi email", "Hàm thuần nhận dữ liệu và trả kết quả", "Controller có nhiều decorator", "Script migration"],
+        options: ["Hàm vừa query DB, vừa tính toán, vừa gửi email", "Hàm thuần chỉ nhận input và trả output", "Controller gắn nhiều decorator và guard", "Script migration thay đổi schema DB"],
         answer: 1,
         explain: "Hàm thuần không có I/O nên không cần mock, kết quả chỉ phụ thuộc input. Đó là lý do nên tách logic nghiệp vụ khỏi I/O."
       }
@@ -254,13 +254,13 @@ describe('OrderService.confirm', () => {
       },
       {
         q: "Nên mock thành phần nào trong unit test của một service tạo đơn hàng?",
-        options: ["Hàm tính tổng tiền nội bộ", "Cổng thanh toán bên thứ ba và dịch vụ email", "Toàn bộ class của service", "Không mock gì cả"],
+        options: ["Hàm tính tổng tiền nội bộ của service", "Cổng thanh toán bên thứ ba và dịch vụ email", "Toàn bộ class của chính service đang test", "Không mock gì, gọi cả cổng thanh toán thật"],
         answer: 1,
         explain: "Cổng thanh toán và email là biên hệ thống, chậm, tốn tiền, không kiểm soát được. Logic nội bộ nên được chạy thật."
       },
       {
         q: "Cách test ổn định một hàm tính \"hết hạn sau 24 giờ\"?",
-        options: ["Dùng `sleep` 24 giờ", "Dùng fake timer và `vi.setSystemTime` để cố định thời gian", "Bỏ qua test", "Chạy test lúc nửa đêm"],
+        options: ["Cho test chờ thật 24 giờ bằng `sleep`", "Dùng fake timer và `vi.setSystemTime`", "Bỏ qua test này trong CI cho nhanh", "Lên lịch chạy test đúng lúc nửa đêm"],
         answer: 1,
         explain: "Cố định thời gian giúp test cho cùng kết quả mọi lúc và chạy tức thì. Phụ thuộc giờ thật khiến test flaky."
       }
@@ -350,19 +350,19 @@ describe('TasksRepository', () => {
     quiz: [
       {
         q: "Lỗi nào integration test với Postgres thật bắt được nhưng unit test mock repository thì không?",
-        options: ["Sai logic tính tổng tiền", "Vi phạm ràng buộc unique hoặc câu SQL sai cú pháp", "Đặt tên biến sai", "Lỗi định dạng code"],
+        options: ["Sai logic trong hàm tính tổng tiền", "Vi phạm ràng buộc unique hoặc SQL sai", "Tên biến khó hiểu, không đúng quy ước", "Code sai định dạng so với Prettier"],
         answer: 1,
         explain: "Chỉ DB thật mới thực thi SQL và ràng buộc. Logic tính tiền thuần thì unit test đã đủ."
       },
       {
         q: "Cách tổ chức Testcontainers hợp lý về tốc độ?",
-        options: ["Mỗi test một container mới", "Khởi động container một lần, dọn dữ liệu giữa các test", "Dùng DB staging chung", "Không dọn dữ liệu"],
+        options: ["Khởi động container mới cho từng test", "Một container cho cả file, dọn dữ liệu giữa các test", "Dùng chung database staging cho mọi test", "Một container, không bao giờ dọn dữ liệu"],
         answer: 1,
         explain: "Khởi động container tốn vài giây, dọn bằng TRUNCATE hoặc rollback thì chỉ tốn mili giây. DB staging chung khiến test ảnh hưởng lẫn nhau."
       },
       {
         q: "Testcontainers cần gì để chạy trong CI?",
-        options: ["PostgreSQL cài sẵn trên runner", "Một Docker daemon (hoặc runtime tương thích) truy cập được", "Kubernetes", "Tài khoản cloud"],
+        options: ["PostgreSQL cài sẵn trên runner", "Docker hoặc runtime tương thích", "Một cluster Kubernetes", "Tài khoản cloud có quyền tạo VM"],
         answer: 1,
         explain: "Testcontainers điều khiển Docker để chạy container. Runner Ubuntu của GitHub Actions có sẵn Docker."
       }
@@ -462,19 +462,19 @@ async function login(app: INestApplication, email: string): Promise<string> {
     quiz: [
       {
         q: "Lỗi nào API e2e test phù hợp nhất để phát hiện?",
-        options: ["Hàm tính thuế làm tròn sai", "Endpoint quên gắn guard xác thực", "Biến đặt tên chưa rõ", "Thiếu comment"],
+        options: ["Hàm tính thuế làm tròn sai", "Endpoint quên gắn guard xác thực", "Biến đặt tên chưa rõ nghĩa", "Hàm phức tạp thiếu comment"],
         answer: 1,
         explain: "Guard là cấu hình ở tầng HTTP, chỉ lộ ra khi request đi qua toàn bộ pipeline. Lỗi làm tròn thì unit test bắt tốt hơn."
       },
       {
         q: "User B gọi `GET /tasks/42` của user A. API nên trả gì và vì sao cần test?",
-        options: ["200 vì B đã đăng nhập", "403 hoặc 404; cần test để chặn lỗi IDOR thuộc Broken Access Control", "500", "302 về trang chủ"],
+        options: ["200, vì B đã đăng nhập hợp lệ", "403 hoặc 404, để chặn lỗi IDOR", "500, vì đây là lỗi phía server", "302, chuyển B về trang chủ"],
         answer: 1,
         explain: "Đăng nhập không có nghĩa được xem mọi dữ liệu. Trả 404 còn giúp không tiết lộ tài nguyên tồn tại. Đây là nhóm lỗi A01 phổ biến nhất."
       },
       {
         q: "Vì sao trong test phải gọi `useGlobalPipes` giống `main.ts`?",
-        options: ["Để test chạy nhanh hơn", "Vì `createNestApplication` không đọc `main.ts`, thiếu cấu hình thì test một ứng dụng khác production", "Vì Supertest yêu cầu", "Không cần thiết"],
+        options: ["Vì global pipe giúp test chạy nhanh hơn", "Vì cấu hình trong `main.ts` không tự áp dụng", "Vì Supertest báo lỗi nếu thiếu global pipe", "Không cần, NestJS tự nạp lại `main.ts`"],
         answer: 1,
         explain: "Cấu hình trong `main.ts` không tự áp dụng trong test. Cách tốt là tách hàm cấu hình app dùng chung cho cả `main.ts` và test."
       }
@@ -553,19 +553,19 @@ describe('task-api contract', () => {
     quiz: [
       {
         q: "Trong consumer-driven contract testing, ai định nghĩa hợp đồng?",
-        options: ["Provider", "Consumer, qua test mô tả request và response cần", "Đội QA thủ công", "Pact Broker tự sinh"],
+        options: ["Provider, qua tài liệu OpenAPI", "Consumer, qua test của chính nó", "Đội QA, qua test thủ công", "Pact Broker, tự sinh từ log"],
         answer: 1,
         explain: "Consumer khai báo những gì mình cần. Provider verify rằng mình đáp ứng được các hợp đồng đó."
       },
       {
         q: "Vì sao dùng matcher `like()` thay cho giá trị cố định?",
-        options: ["Để test nhanh hơn", "Để kiểm tra kiểu và cấu trúc, tránh hợp đồng vỡ vì dữ liệu khác nhưng hợp lệ", "Để bỏ qua kiểm tra", "Vì Pact bắt buộc"],
+        options: ["Để test consumer chạy nhanh hơn", "Để kiểm tra kiểu và cấu trúc, không ép giá trị", "Để bỏ qua bước verify ở provider", "Vì Pact không cho dùng giá trị cố định"],
         answer: 1,
         explain: "Hợp đồng quan tâm hình dạng dữ liệu. Ràng buộc giá trị cụ thể làm hợp đồng giòn mà không thêm giá trị."
       },
       {
         q: "Khi nào contract testing ít cần thiết nhất?",
-        options: ["Hệ thống 20 microservice của 6 đội", "API công khai có nhiều consumer", "Monolith và frontend cùng repo, cùng deploy, dùng chung type", "Mobile app gọi nhiều backend"],
+        options: ["20 microservice do 6 đội deploy độc lập", "API công khai có nhiều consumer bên ngoài", "Monolith và frontend cùng repo, cùng deploy", "Mobile app gọi nhiều backend của nhiều đội"],
         answer: 2,
         explain: "Khi mọi thứ deploy cùng nhau và dùng chung type, lỗi lệch hợp đồng đã được type check và e2e bắt. Contract testing hữu ích nhất khi deploy độc lập."
       }
@@ -653,7 +653,7 @@ echo $?   # khác 0 nếu vi phạm threshold`
     quiz: [
       {
         q: "Threshold `http_req_duration: ['p(95)<300']` nghĩa là gì?",
-        options: ["Mọi request dưới 300ms", "95% request có thời gian dưới 300ms", "Trung bình dưới 300ms", "Tối đa 95 request mỗi 300ms"],
+        options: ["Mọi request đều dưới 300ms", "95% request có thời gian dưới 300ms", "Thời gian trung bình dưới 300ms", "Tối đa 95 request trong mỗi 300ms"],
         answer: 1,
         explain: "p(95) là percentile 95: 95% request nhanh hơn giá trị này. Nó không yêu cầu mọi request, cũng không phải trung bình."
       },
@@ -665,7 +665,7 @@ echo $?   # khác 0 nếu vi phạm threshold`
       },
       {
         q: "Làm sao để pipeline CI fail khi hiệu năng không đạt?",
-        options: ["Đọc log thủ công", "Đặt threshold trong k6; vi phạm thì k6 thoát mã khác 0", "Dùng `sleep` dài hơn", "Tăng số VU"],
+        options: ["Đọc log k6 thủ công sau mỗi lần chạy", "Đặt threshold để k6 thoát mã khác 0", "Tăng `sleep` trong script cho ổn định", "Tăng số VU cho tới khi hệ thống lỗi"],
         answer: 1,
         explain: "CI dựa vào exit code. Threshold biến tiêu chí hiệu năng thành điều kiện pass/fail tự động."
       }
@@ -755,13 +755,13 @@ export default defineConfig({
       },
       {
         q: "Coverage 95% nói lên điều gì?",
-        options: ["Code không có bug", "95% dòng code được chạy qua khi test, chưa chắc đã được kiểm tra đúng", "95% test pass", "Hiệu năng tốt"],
+        options: ["Code gần như chắc chắn không còn bug", "95% dòng được chạy qua, chưa chắc được kiểm tra", "95% số test trong bộ test đã pass", "Hiệu năng đạt 95% mục tiêu đề ra"],
         answer: 1,
         explain: "Coverage chỉ đo code có được chạy hay không. Test không assert vẫn tăng coverage, nên nó không chứng minh tính đúng."
       },
       {
         q: "Khi nhận một bug report, cách làm theo tinh thần TDD là gì?",
-        options: ["Sửa ngay rồi deploy", "Viết test tái hiện bug (fail), rồi sửa cho test pass", "Tăng coverage", "Xoá test cũ"],
+        options: ["Sửa ngay rồi deploy, viết test sau", "Viết test tái hiện bug, rồi mới sửa", "Viết thêm test để tăng coverage", "Xoá test cũ liên quan để làm lại"],
         answer: 1,
         explain: "Test tái hiện chứng minh bạn hiểu bug, xác nhận bản sửa có hiệu quả, và ngăn bug quay lại sau này."
       }
@@ -780,7 +780,7 @@ export default defineConfig({
       {
         h: "Type-aware lint cho TypeScript",
         p: [
-          "typescript-eslint có hai nhóm rule. Nhóm thường chỉ đọc cú pháp. Nhóm type-aware dùng thông tin kiểu từ trình biên dịch TypeScript nên bắt được những lỗi rất đáng giá ở backend: `no-floating-promises` (quên `await` khiến lỗi bị nuốt và transaction chạy lệch), `no-misused-promises` (truyền hàm async vào chỗ không chờ promise), `no-unsafe-*` (dùng giá trị `any` không kiểm soát). Đổi lại, lint chậm hơn vì phải phân tích kiểu."
+          "typescript-eslint có hai nhóm rule. Nhóm thường chỉ đọc cú pháp. Nhóm type-aware dùng thông tin kiểu từ trình biên dịch TypeScript nên bắt được những lỗi rất đáng giá ở backend: `no-floating-promises` (quên `await` khiến lỗi bị nuốt và transaction chạy lệch), `no-misused-promises` (truyền hàm async vào chỗ không chờ promise), `no-unsafe-*` (dùng giá trị `any` không kiểm soát). Đổi lại, lint chậm hơn vì phải phân tích kiểu.", "Cấu hình dưới đây dùng flat config (`eslint.config.mjs`), định dạng duy nhất từ ESLint v10 (phát hành 2/2026, yêu cầu Node.js 20.19 trở lên); các file `.eslintrc.*` và `.eslintignore` không còn được đọc. Gặp hướng dẫn cũ dùng `.eslintrc.json` thì cần chuyển sang flat config."
         ],
         code: {
           lang: "javascript",
@@ -832,7 +832,7 @@ export default defineConfig(
     summary: [
       "Prettier định dạng code, ESLint tìm lỗi chất lượng; tắt rule định dạng của ESLint bằng eslint-config-prettier.",
       "Type-aware lint bắt lỗi quan trọng như quên `await` với `no-floating-promises`.",
-      "ESLint 9 dùng flat config (`eslint.config.mjs`).",
+      "ESLint dùng flat config (`eslint.config.mjs`); từ ESLint v10 (2/2026) định dạng `.eslintrc` cũ đã bị bỏ hẳn.",
       "Chạy `format:check`, `lint`, `typecheck` trong CI với `--max-warnings=0`."
     ],
     pitfalls: [
@@ -843,19 +843,19 @@ export default defineConfig(
     quiz: [
       {
         q: "Vai trò của `eslint-config-prettier` là gì?",
-        options: ["Định dạng code", "Tắt các rule ESLint xung đột với định dạng của Prettier", "Chạy Prettier trong ESLint", "Kiểm tra kiểu TypeScript"],
+        options: ["Tự định dạng code thay cho Prettier", "Tắt rule ESLint xung đột với Prettier", "Chạy Prettier như một rule của ESLint", "Bật kiểm tra kiểu TypeScript cho ESLint"],
         answer: 1,
         explain: "Gói này chỉ tắt rule định dạng của ESLint, để Prettier là nguồn duy nhất về định dạng. Nó không tự định dạng code."
       },
       {
         q: "Rule `@typescript-eslint/no-floating-promises` bắt lỗi gì?",
-        options: ["Dùng `var`", "Promise được tạo mà không được await hay xử lý lỗi", "Import không dùng", "Tên biến quá dài"],
+        options: ["Khai báo biến bằng `var` thay cho `let`", "Promise không được await hay xử lý lỗi", "Import một module nhưng không dùng tới", "Hàm async không khai báo kiểu trả về"],
         answer: 1,
         explain: "Promise không được chờ có thể làm lỗi bị nuốt và thao tác chạy lệch thứ tự. Rule này cần thông tin kiểu nên thuộc nhóm type-aware."
       },
       {
         q: "Vì sao dùng `--max-warnings=0` trong CI?",
-        options: ["Để lint nhanh hơn", "Để cảnh báo không bị tích tụ, vượt 0 cảnh báo là fail", "Để tắt mọi rule", "Để tự sửa lỗi"],
+        options: ["Để ESLint bỏ qua rule chậm và chạy nhanh hơn", "Để có bất kỳ cảnh báo nào cũng làm lint fail", "Để tắt mọi rule đang ở mức warn", "Để ESLint tự sửa các cảnh báo còn lại"],
         answer: 1,
         explain: "Nếu warning không làm fail, chúng tích tụ tới hàng trăm và không ai đọc nữa. Cờ này biến mọi cảnh báo thành điều kiện chặn."
       }
@@ -924,7 +924,7 @@ echo "export default { extends: ['@commitlint/config-conventional'] };" > commit
     quiz: [
       {
         q: "Vì sao dùng lint-staged thay vì chạy `eslint .` trong pre-commit?",
-        options: ["lint-staged tự sửa mọi bug", "Chỉ chạy trên file đã stage nên nhanh hơn nhiều", "ESLint không chạy được trong hook", "Để bỏ qua Prettier"],
+        options: ["Vì lint-staged tự sửa được mọi bug", "Vì chỉ chạy trên file đã stage nên nhanh", "Vì ESLint không chạy được trong git hook", "Vì lint-staged thay thế luôn Prettier"],
         answer: 1,
         explain: "Lint cả repo mỗi lần commit rất chậm. lint-staged giới hạn phạm vi vào file đang được commit."
       },
@@ -936,7 +936,7 @@ echo "export default { extends: ['@commitlint/config-conventional'] };" > commit
       },
       {
         q: "Vì sao CI vẫn phải chạy lint dù đã có pre-commit hook?",
-        options: ["Vì hook chỉ chạy trên Linux", "Vì hook có thể bị bỏ qua bằng `--no-verify` hoặc chưa được cài", "Vì CI nhanh hơn", "Vì ESLint trong hook khác ESLint trong CI"],
+        options: ["Vì hook chỉ chạy được trên Linux", "Vì hook có thể bị bỏ qua hoặc chưa cài", "Vì CI chạy ESLint nhanh hơn máy dev", "Vì ESLint trong hook là bản khác"],
         answer: 1,
         explain: "Hook chạy trên máy cá nhân và không thể bắt buộc. CI là nơi kiểm soát chất lượng có hiệu lực cho mọi thay đổi."
       }
@@ -1005,11 +1005,12 @@ sonar.organization=my-org
 sonar.sources=src
 sonar.tests=src,test
 sonar.test.inclusions=**/*.spec.ts,**/*.e2e-spec.ts
-sonar.exclusions=**/*.module.ts,src/main.ts
+# sources và tests cùng gốc src nên phải loại file test khỏi phần source
+sonar.exclusions=**/*.spec.ts,**/*.module.ts,src/main.ts
 sonar.javascript.lcov.reportPaths=coverage/lcov.info`
         },
         p: [
-          "Công cụ static analysis có thể báo nhầm (false positive). Khi đó hãy đánh dấu và ghi lý do trên nền tảng, thay vì tắt cả rule cho toàn dự án."
+          "Vì file test nằm cạnh code trong `src/`, `sonar.sources` và `sonar.tests` cùng trỏ vào `src`; khi đó phải dùng `sonar.test.inclusions` để chọn file test và `sonar.exclusions` để loại chúng khỏi phần source, nếu không một file sẽ bị xếp vào cả hai nhóm và phân tích lỗi. Công cụ static analysis có thể báo nhầm (false positive). Khi đó hãy đánh dấu và ghi lý do trên nền tảng, thay vì tắt cả rule cho toàn dự án."
         ]
       }
     ],
@@ -1027,19 +1028,19 @@ sonar.javascript.lcov.reportPaths=coverage/lcov.info`
     quiz: [
       {
         q: "Vì sao nên áp quality gate lên \"code mới\"?",
-        options: ["Vì code cũ không bao giờ có lỗi", "Để mỗi thay đổi không làm chất lượng tệ đi, cải thiện dần mà không chặn dự án", "Vì Sonar không đọc được code cũ", "Để bỏ qua coverage"],
+        options: ["Vì code cũ đã chạy ổn nên không thể có lỗi", "Để mỗi thay đổi không làm chất lượng tệ thêm", "Vì Sonar không phân tích được code cũ", "Để bỏ qua yêu cầu coverage cho cả dự án"],
         answer: 1,
         explain: "Đòi cả dự án cũ đạt chuẩn ngay là không thực tế. Kiểm soát code mới giúp nợ kỹ thuật không tăng và giảm dần theo thời gian."
       },
       {
         q: "Tác dụng của `sonar.qualitygate.wait=true` trong CI?",
-        options: ["Tăng tốc phân tích", "Bước scan chờ kết quả quality gate và fail nếu không đạt", "Bỏ qua quality gate", "Tự sửa code smell"],
+        options: ["Bỏ qua bước tính coverage cho nhanh", "Chờ kết quả quality gate, không đạt thì fail", "Tắt quality gate cho nhánh pull request", "Tự sửa code smell trước khi gửi báo cáo"],
         answer: 1,
         explain: "Mặc định scanner gửi báo cáo rồi kết thúc. Tham số này làm pipeline phản ánh kết quả quality gate."
       },
       {
         q: "Vì sao nên pin GitHub Action theo commit SHA?",
-        options: ["Chạy nhanh hơn", "Tag có thể bị ghi đè trỏ tới mã khác, còn SHA là bất biến", "GitHub bắt buộc", "Để tiết kiệm phút chạy"],
+        options: ["Vì action pin theo SHA chạy nhanh hơn", "Vì tag có thể bị ghi đè, còn SHA thì không", "Vì GitHub từ chối chạy action pin theo tag", "Vì pin SHA giúp tiết kiệm phút chạy CI"],
         answer: 1,
         explain: "Sự cố trivy-action 19/3/2026 cho thấy tag bị ghi đè hàng loạt. Pin SHA đảm bảo bạn chạy đúng mã đã review, thuộc nhóm rủi ro chuỗi cung ứng phần mềm (A03:2025)."
       }
@@ -1112,13 +1113,13 @@ Migration? Biến môi trường mới? Feature flag? Cách rollback?`
       },
       {
         q: "Tiền tố \"nit:\" trong bình luận review có ý nghĩa gì?",
-        options: ["Lỗi nghiêm trọng phải sửa", "Góp ý nhỏ, không bắt buộc, không chặn merge", "Yêu cầu viết lại toàn bộ", "Đánh dấu đã approve"],
+        options: ["Lỗi nghiêm trọng, phải sửa trước khi merge", "Góp ý nhỏ, không bắt buộc, không chặn merge", "Yêu cầu viết lại toàn bộ phần code đó", "Người review đã approve phần code này"],
         answer: 1,
         explain: "Đánh dấu mức độ giúp người viết biết đâu là điều bắt buộc, đâu là gợi ý, tránh sửa lan man."
       },
       {
         q: "Việc nào giúp review hiệu quả nhất từ phía người viết PR?",
-        options: ["Gộp nhiều tính năng vào một PR cho tiện", "Giữ PR nhỏ, một mục đích, mô tả rõ và tự review trước", "Không viết mô tả để người review tự hiểu", "Mở PR khi test còn đỏ"],
+        options: ["Gộp nhiều tính năng vào một PR cho tiện", "Giữ PR nhỏ, một mục đích, tự review trước", "Bỏ mô tả để người review tự đọc code", "Mở PR sớm khi test vẫn còn đỏ"],
         answer: 1,
         explain: "PR nhỏ và rõ giúp người review hiểu nhanh và phát hiện nhiều vấn đề hơn. PR lớn thường bị review hời hợt."
       }
@@ -1212,7 +1213,7 @@ Không dùng MongoDB ở giai đoạn này.
     quiz: [
       {
         q: "Một ADR tối thiểu nên có những phần nào?",
-        options: ["Chỉ tên công nghệ được chọn", "Bối cảnh, quyết định, hệ quả (và trạng thái)", "Toàn bộ source code", "Lịch họp của đội"],
+        options: ["Tên công nghệ được chọn và ngày chọn", "Bối cảnh, quyết định, hệ quả và trạng thái", "Đoạn code mẫu minh hoạ công nghệ mới", "Biên bản họp và danh sách người tham dự"],
         answer: 1,
         explain: "Giá trị của ADR là giải thích vì sao. Thiếu bối cảnh và hệ quả thì người đọc sau không đánh giá được khi nào nên xem lại quyết định."
       },
@@ -1224,10 +1225,93 @@ Không dùng MongoDB ở giai đoạn này.
       },
       {
         q: "Trong C4, mức Container thể hiện gì?",
-        options: ["Chỉ các Docker container", "Các đơn vị chạy riêng biệt như web app, API, worker, database và cách chúng giao tiếp", "Sơ đồ class", "Người dùng và hệ thống bên ngoài"],
+        options: ["Chỉ các Docker container đang chạy", "Các đơn vị chạy riêng: web app, API, database", "Sơ đồ class bên trong từng module", "Người dùng và các hệ thống bên ngoài"],
         answer: 1,
         explain: "Container trong C4 là đơn vị có thể triển khai hoặc chạy riêng, không nhất thiết là Docker. Người dùng và hệ thống ngoài thuộc mức Context."
       }
     ]
   },
+
+  "p06.m1.t5": {
+    "sections": [
+      {
+        "h": "Code tốt chưa đủ, còn phải làm việc nhóm tốt",
+        "p": [
+          "Trong công ty, phần lớn thời gian của bạn không phải gõ code mà là hiểu yêu cầu, chia nhỏ việc, trao đổi với đồng đội và báo cáo tiến độ. Hầu hết các đội phần mềm làm việc theo tinh thần Agile, và khung phổ biến nhất là Scrum.",
+          "Theo Scrum Guide (bản 2020), Scrum Team gồm Product Owner (chịu trách nhiệm tối đa hoá giá trị sản phẩm, quản lý Product Backlog), Scrum Master (giúp đội áp dụng Scrum hiệu quả) và Developers (những người làm ra sản phẩm, gồm cả bạn)."
+        ]
+      },
+      {
+        "h": "Nhịp làm việc của một Sprint",
+        "p": [
+          "Sprint là chu kỳ cố định, tối đa một tháng, thường là hai tuần. Mỗi Sprint có Sprint Planning (chọn việc và đặt Sprint Goal), Daily Scrum (tối đa 15 phút mỗi ngày để điều chỉnh kế hoạch), Sprint Review (trình bày kết quả cho các bên liên quan) và Sprint Retrospective (nhìn lại để cải thiện cách làm).",
+          "Definition of Done là tiêu chí chung để một việc được coi là xong, ví dụ: đã review, có test, CI xanh, đã deploy lên staging. Nhờ nó, chữ \"xong\" có cùng một nghĩa với cả đội."
+        ],
+        "list": [
+          "Product Backlog: danh sách mọi việc có thể làm, được sắp xếp theo độ ưu tiên",
+          "Sprint Backlog: việc đã chọn cho Sprint hiện tại và kế hoạch thực hiện",
+          "Increment: phần sản phẩm hoạt động được, đạt Definition of Done"
+        ]
+      },
+      {
+        "h": "Viết ticket và ước lượng",
+        "p": [
+          "Một ticket tốt cho người đọc biết: vấn đề là gì, vì sao cần làm, tiêu chí chấp nhận (acceptance criteria) và phạm vi không làm. User story hay được viết theo mẫu \"Là [vai trò], tôi muốn [hành động] để [lợi ích]\".",
+          "Ước lượng thường dùng story point, là con số tương đối về độ phức tạp chứ không phải số giờ. Nếu một ticket quá lớn để ước lượng tự tin, hãy chia nhỏ nó. Khi bị chặn, hãy báo sớm kèm lý do và phương án, đừng im lặng tới cuối Sprint."
+        ],
+        "code": {
+          "lang": "text",
+          "file": "ticket mẫu",
+          "src": "Tiêu đề: Cho phép khách hàng huỷ đơn khi đơn chưa giao\n\nLà khách hàng, tôi muốn tự huỷ đơn chưa giao để không phải gọi tổng đài.\n\nTiêu chí chấp nhận:\n- Chỉ huỷ được đơn ở trạng thái PENDING hoặc CONFIRMED\n- Huỷ xong thì hoàn lại tồn kho và gửi email xác nhận\n- API trả 409 nếu đơn đã chuyển sang SHIPPING\n- Có test cho cả 3 trường hợp trên\n\nNgoài phạm vi: hoàn tiền tự động (ticket riêng #512)"
+        }
+      }
+    ],
+    "summary": [
+      "Scrum Team gồm Product Owner, Scrum Master và Developers",
+      "Sprint tối đa một tháng, gồm Planning, Daily Scrum, Review và Retrospective",
+      "Definition of Done giúp cả đội hiểu chữ \"xong\" giống nhau",
+      "Ticket tốt có bối cảnh, tiêu chí chấp nhận và phạm vi rõ ràng",
+      "Báo sớm khi bị chặn, kèm lý do và phương án"
+    ],
+    "pitfalls": [
+      "Nhận ticket mơ hồ rồi làm theo cách hiểu riêng mà không hỏi lại",
+      "Coi story point là số giờ làm việc, dẫn tới so sánh năng suất giữa người với người",
+      "Biến Daily Scrum thành buổi báo cáo dài cho quản lý thay vì điều chỉnh kế hoạch của đội"
+    ],
+    "quiz": [
+      {
+        "q": "Theo Scrum Guide 2020, ai chịu trách nhiệm quản lý Product Backlog?",
+        "options": [
+          "Scrum Master",
+          "Product Owner",
+          "Developers",
+          "Trưởng phòng kỹ thuật"
+        ],
+        "answer": 1,
+        "explain": "Product Owner chịu trách nhiệm quản lý Product Backlog và tối đa hoá giá trị sản phẩm. Scrum Master hỗ trợ đội áp dụng Scrum."
+      },
+      {
+        "q": "Definition of Done dùng để làm gì?",
+        "options": [
+          "Liệt kê các ticket sẽ làm trong Sprint",
+          "Đặt thời hạn cuối cho từng ticket",
+          "Thống nhất tiêu chí để một việc được coi là hoàn thành",
+          "Ghi lại các lỗi phát hiện sau khi phát hành"
+        ],
+        "answer": 2,
+        "explain": "Definition of Done là tiêu chí chất lượng chung, ví dụ đã review, có test, CI xanh, giúp cả đội hiểu chữ \"xong\" giống nhau."
+      },
+      {
+        "q": "Một ticket lớn tới mức cả đội không ước lượng được. Nên làm gì?",
+        "options": [
+          "Chia nhỏ thành các ticket có phạm vi rõ ràng hơn",
+          "Gán số point lớn nhất rồi bắt đầu làm ngay",
+          "Giao cho người có kinh nghiệm nhất tự ước lượng",
+          "Bỏ qua ước lượng cho ticket này"
+        ],
+        "answer": 0,
+        "explain": "Việc không ước lượng được thường do phạm vi quá lớn hoặc chưa rõ. Chia nhỏ giúp hiểu rõ hơn và ước lượng đáng tin cậy hơn."
+      }
+    ]
+  }
 });

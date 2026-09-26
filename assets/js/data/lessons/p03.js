@@ -71,19 +71,19 @@ export async function verifyPassword(plain: string, stored: string) {
     quiz: [
       {
         q: "Thao tác nào sau đây KHÔNG dùng thread pool của libuv?",
-        options: ["fs.readFile", "crypto.pbkdf2", "Nhận dữ liệu từ socket TCP của kết nối PostgreSQL", "zlib.gzip"],
+        options: ["Đọc file bằng fs.readFile", "Hash bằng crypto.pbkdf2", "Nhận dữ liệu từ socket TCP", "Nén bằng zlib.gzip"],
         answer: 2,
         explain: "Network I/O dùng cơ chế thông báo của OS (epoll/kqueue/IOCP). fs, pbkdf2 và zlib chạy trên thread pool."
       },
       {
         q: "Vì sao một process Node đơn luồng vẫn phục vụ được nhiều request đồng thời?",
-        options: ["V8 tự tạo thread cho mỗi request", "Phần lớn thời gian request là chờ I/O, và trong lúc chờ luồng chính xử lý việc khác", "Node luôn chạy cluster mặc định", "Hệ điều hành chạy JavaScript song song"],
+        options: ["V8 tự tạo một thread JavaScript riêng cho mỗi request", "Trong lúc request chờ I/O, luồng chính rảnh để xử lý request khác", "Node mặc định fork nhiều process theo số core của máy", "Hệ điều hành chia code JavaScript ra chạy song song trên các core"],
         answer: 1,
         explain: "Mô hình non-blocking I/O cho phép luồng chính không đứng chờ. JavaScript vẫn chạy trên một luồng."
       },
       {
         q: "Dùng `scryptSync` trong API đăng nhập gây hậu quả gì?",
-        options: ["Không sao, chỉ chậm request đó", "Chặn luồng chính, mọi request khác phải chờ", "Tăng số thread pool", "Lỗi cú pháp trong Node 24"],
+        options: ["Chỉ request đăng nhập đó chậm, request khác không ảnh hưởng", "Luồng chính bị chặn, mọi request khác phải chờ hash xong", "Node tự tăng số thread của pool để bù lại", "Hash chạy trên thread pool nên chỉ chiếm một thread"],
         answer: 1,
         explain: "Hàm Sync chạy trực tiếp trên luồng chính nên toàn bộ server không xử lý được gì khác trong thời gian đó."
       }
@@ -109,7 +109,8 @@ export async function verifyPassword(plain: string, stored: string) {
         h: "Microtask: nextTick và Promise",
         p: [
           "Ngoài các pha, Node còn có hàng đợi microtask. Sau mỗi callback, Node xả hết hàng đợi `process.nextTick` rồi tới hàng đợi Promise (`.then`, phần sau `await`). Vì vậy microtask luôn chạy trước khi event loop chuyển sang callback hoặc pha tiếp theo.",
-          "Trong một callback I/O, `setImmediate` luôn chạy trước `setTimeout(fn, 0)` vì pha check đến ngay sau poll. Ở cấp cao nhất của module, thứ tự hai hàm này không đảm bảo."
+          "Trong một callback I/O, `setImmediate` luôn chạy trước `setTimeout(fn, 0)` vì pha check đến ngay sau poll. Ở cấp cao nhất của module, thứ tự hai hàm này không đảm bảo.",
+          "Một chi tiết mới: từ libuv 1.45 (Node.js 20 trở lên), timer được chạy sau pha poll trong mỗi vòng thay vì trước poll như các bản cũ; libuv vẫn chạy timer một lần trước khi vào vòng lặp để giữ tương thích. Thứ tự các pha liệt kê ở trên là cách mô tả truyền thống và vẫn đúng để suy luận; chỉ đừng viết code phụ thuộc vào thứ tự chính xác giữa timer và `setImmediate` ngoài callback I/O."
         ],
         code: {
           lang: "javascript",
@@ -185,7 +186,7 @@ setInterval(() => {
       },
       {
         q: "Viết `async function` chứa vòng lặp tính toán 3 giây có còn chặn server không?",
-        options: ["Không, vì là async", "Có, vì code đồng bộ trong hàm vẫn chạy trên luồng chính", "Chỉ chặn khi dùng Express", "Chỉ chặn trên Windows"],
+        options: ["Không, vì hàm async tự chạy trên thread pool", "Có, vì vòng lặp đồng bộ vẫn chạy trên luồng chính", "Không, vì Promise tự chia nhỏ việc tính toán", "Chỉ chặn khi hàm được gọi mà không có await"],
         answer: 1,
         explain: "async chỉ cho phép dùng await; phần tính toán đồng bộ vẫn giữ luồng chính cho đến khi xong."
       }
@@ -274,19 +275,19 @@ export class ReportsController {
     quiz: [
       {
         q: "`writable.write(chunk)` trả về `false` nghĩa là gì?",
-        options: ["Ghi thất bại, dữ liệu mất", "Buffer nội bộ đã đầy vượt highWaterMark, nên dừng ghi cho đến sự kiện drain", "Stream đã đóng", "Cần gọi end()"],
+        options: ["Ghi thất bại, chunk vừa ghi đã bị mất", "Buffer nội bộ vượt highWaterMark, nên chờ sự kiện drain", "Stream đã đóng, mọi lần ghi sau sẽ lỗi", "Phải gọi end() ngay để kết thúc stream"],
         answer: 1,
         explain: "false là tín hiệu backpressure. Chunk vẫn được nhận, nhưng bạn nên chờ drain trước khi ghi tiếp."
       },
       {
         q: "Ưu điểm của `pipeline()` so với chuỗi `.pipe()`?",
-        options: ["Nhanh gấp đôi", "Truyền lỗi và huỷ/dọn dẹp mọi stream khi một stream lỗi", "Không cần backpressure", "Chỉ dùng được với file"],
+        options: ["Truyền dữ liệu nhanh gấp đôi nhờ chạy trên thread pool", "Khi một stream lỗi, lỗi được truyền ra và mọi stream được huỷ", "Bỏ hẳn cơ chế backpressure để đọc với tốc độ tối đa", "Tự gom mọi chunk vào bộ nhớ rồi ghi một lần cho gọn"],
         answer: 1,
         explain: "`.pipe()` không chuyển lỗi giữa các stream. `pipeline()` xử lý lỗi và đóng tài nguyên đúng cách."
       },
       {
         q: "Endpoint export file 1GB bằng `readFile` rồi `res.send`, khi 5 người tải cùng lúc sẽ ra sao?",
-        options: ["Không vấn đề", "Process cần khoảng 5GB RAM, dễ bị OOM kill", "Node tự chuyển sang stream", "Chỉ chậm hơn một chút"],
+        options: ["Không vấn đề, file được đọc từ cache của OS", "Process cần khoảng 5GB RAM, dễ bị OOM kill", "Node tự chuyển readFile sang stream khi file lớn", "Chỉ chậm hơn một chút vì đọc đĩa tuần tự"],
         answer: 1,
         explain: "Mỗi request nạp toàn bộ file vào RAM. Dùng stream thì mỗi request chỉ tốn vài chục KB buffer."
       }
@@ -362,13 +363,13 @@ export function fibInWorker(n: number): Promise<number> {
     quiz: [
       {
         q: "Tác vụ nào hưởng lợi rõ nhất từ worker threads?",
-        options: ["Query PostgreSQL", "Gọi API thanh toán", "Tính toán nén/xử lý ảnh bằng JavaScript thuần", "Đọc key từ Redis"],
+        options: ["Chạy query PostgreSQL", "Gọi API thanh toán bên ngoài", "Resize ảnh bằng JavaScript thuần", "Đọc key từ Redis"],
         answer: 2,
         explain: "Worker threads giải quyết tác vụ CPU-bound. Các lựa chọn khác là I/O, vốn không chặn event loop."
       },
       {
         q: "Trên Kubernetes, cách phổ biến để tận dụng nhiều core cho API Node là gì?",
-        options: ["Một process mỗi container, tăng số replica", "Luôn dùng cluster trong mỗi container", "Tăng UV_THREADPOOL_SIZE", "Dùng worker thread cho mỗi request"],
+        options: ["Một process mỗi container, tăng số replica", "Chạy cluster 8 process trong mỗi container", "Tăng UV_THREADPOOL_SIZE bằng số core", "Tạo một worker thread cho mỗi request"],
         answer: 0,
         explain: "Orchestrator scale replica dễ quản lý hơn. Cluster trong container thêm phức tạp và cần cấp CPU tương ứng."
       },
@@ -476,19 +477,19 @@ export class AppModule {}
     quiz: [
       {
         q: "Vì sao nên validate env ngay khi khởi động?",
-        options: ["Để tăng tốc request", "Để phát hiện cấu hình sai sớm, trước khi nhận traffic, thay vì lỗi lúc runtime", "Vì NestJS bắt buộc", "Để mã hoá secret"],
+        options: ["Để request chạy nhanh hơn nhờ cache cấu hình", "Để lỗi cấu hình lộ ra lúc deploy, trước khi nhận traffic", "Vì NestJS không khởi động được nếu thiếu bước này", "Để giá trị secret được mã hoá trong bộ nhớ"],
         answer: 1,
         explain: "Fail fast làm lỗi hiện ra ngay khi deploy, rolling update dừng lại và bản cũ vẫn phục vụ."
       },
       {
         q: "`process.env.PORT` có kiểu gì trong runtime?",
-        options: ["number", "string hoặc undefined", "Tuỳ giá trị", "any số nguyên"],
+        options: ["number", "string hoặc undefined", "number nếu giá trị là số, còn lại string", "boolean hoặc string"],
         answer: 1,
         explain: "Biến môi trường luôn là chuỗi hoặc không tồn tại. Cần `z.coerce.number()` hoặc tự parse."
       },
       {
         q: "Cách cung cấp JWT_SECRET cho production phù hợp nhất?",
-        options: ["Hard-code trong code", "Ghi vào Dockerfile bằng ENV", "Nạp từ secret manager qua orchestrator lúc chạy", "Commit file .env.production"],
+        options: ["Hard-code làm hằng số trong code", "Ghi vào Dockerfile bằng lệnh ENV", "Nạp từ secret manager lúc container chạy", "Commit file .env.production vào repo"],
         answer: 2,
         explain: "Secret không được nằm trong code, image hay git. Orchestrator nạp nó vào môi trường lúc chạy."
       }
@@ -583,13 +584,13 @@ export class EmailWorker implements OnApplicationShutdown {
       },
       {
         q: "Trong NestJS, điều kiện để onApplicationShutdown được gọi khi nhận SIGTERM là gì?",
-        options: ["Không cần gì", "Gọi app.enableShutdownHooks() trong bootstrap", "Dùng @Global()", "Cài thêm PM2"],
+        options: ["Đánh dấu provider bằng @Global() trong module gốc", "Gọi app.enableShutdownHooks() trong bootstrap", "Đăng ký provider vào mảng exports của AppModule", "Chạy ứng dụng qua PM2 để PM2 chuyển tiếp tín hiệu"],
         answer: 1,
         explain: "Nest không tự lắng nghe tín hiệu hệ thống; cần enableShutdownHooks()."
       },
       {
         q: "Vì sao nên có preStop sleep vài giây?",
-        options: ["Để tiết kiệm CPU", "Vì việc gỡ Pod khỏi endpoint và gửi SIGTERM diễn ra song song, cần thời gian để traffic mới ngừng đến", "Để chạy migration", "Để tăng grace period"],
+        options: ["Để Pod giảm CPU trước khi bị dừng hẳn", "Vì gỡ khỏi endpoint và SIGTERM diễn ra song song", "Để kịp chạy migration trước khi Pod mới lên", "Vì thời gian sleep được cộng thêm vào grace period"],
         answer: 1,
         explain: "Load balancer và kube-proxy cần thời gian cập nhật. Đóng server ngay có thể làm request mới bị từ chối."
       }
@@ -677,19 +678,19 @@ declare function findProject(id: string): Promise<unknown>;`
     quiz: [
       {
         q: "Express nhận biết error middleware dựa vào đâu?",
-        options: ["Tên hàm có chữ error", "Hàm có đúng 4 tham số", "Đặt trong file errors.ts", "Dùng app.error()"],
+        options: ["Tên hàm có chứa chữ error", "Hàm khai báo đúng 4 tham số", "Hàm được đăng ký bằng app.error()", "Hàm được đặt sau mọi route"],
         answer: 1,
         explain: "Express kiểm tra số tham số của hàm (function.length). Đúng 4 tham số là error middleware."
       },
       {
         q: "Trong Express 5, handler async ném lỗi thì điều gì xảy ra?",
-        options: ["Process crash", "Request treo", "Lỗi được chuyển tới error middleware", "Express trả 404"],
+        options: ["Process crash vì unhandled rejection", "Request treo tới khi client timeout", "Lỗi được chuyển tới error middleware", "Express bỏ qua và trả 404 mặc định"],
         answer: 2,
         explain: "Express 5 bắt Promise bị reject và gọi next(err). Express 4 thì không."
       },
       {
         q: "Vì sao middleware `express.json()` phải đứng trước route POST?",
-        options: ["Để tăng hiệu năng", "Vì route cần req.body đã được parse, mà middleware chạy theo thứ tự đăng ký", "Vì Express yêu cầu", "Để bật CORS"],
+        options: ["Vì body parser đặt sau sẽ parse lại body hai lần", "Vì middleware chạy theo thứ tự đăng ký, route cần req.body đã parse", "Vì Express báo lỗi khởi động nếu route đứng trước", "Vì express.json() còn bật CORS cho các route phía sau"],
         answer: 1,
         explain: "Route đăng ký trước body parser sẽ nhận req.body là undefined."
       }
@@ -908,13 +909,13 @@ export class TasksModule {}`
       },
       {
         q: "Lợi ích chính của việc service phụ thuộc interface repository thay vì Prisma trực tiếp?",
-        options: ["Query nhanh hơn", "Dễ thay implementation và test unit bằng repository giả", "Giảm kích thước bundle", "Bắt buộc với NestJS"],
+        options: ["Query chạy nhanh hơn vì bỏ qua lớp ORM", "Dễ thay implementation và test bằng repository giả", "Bundle nhỏ hơn vì Prisma không được import", "NestJS bắt buộc mọi provider phải có interface"],
         answer: 1,
         explain: "Dependency inversion cho phép inject bản giả khi test và đổi công nghệ lưu trữ mà không sửa nghiệp vụ."
       },
       {
         q: "Service nên báo lỗi \"vượt giới hạn task\" thế nào?",
-        options: ["throw new ConflictException()", "Trả về res.status(409)", "Ném một domain error riêng, lớp HTTP ánh xạ sang status", "console.error rồi trả null"],
+        options: ["Ném ConflictException của NestJS", "Gọi res.status(409) ngay trong service", "Ném domain error riêng để lớp HTTP ánh xạ", "Ghi console.error rồi trả về null"],
         answer: 2,
         explain: "Domain error giữ service độc lập với HTTP. Exception filter sẽ ánh xạ nó sang 409 hoặc 422."
       }
@@ -1015,19 +1016,19 @@ export const createTaskSchema = z.object({
     quiz: [
       {
         q: "Vì sao khai báo kiểu `@Body() dto: CreateTaskDto` là chưa đủ để an toàn?",
-        options: ["Vì TypeScript chậm", "Vì kiểu TypeScript bị xoá khi biên dịch, không kiểm tra dữ liệu thật lúc runtime", "Vì Nest không hỗ trợ DTO", "Vì cần thêm @Injectable"],
+        options: ["Vì Nest chỉ đọc kiểu DTO khi bật strict mode", "Vì kiểu TypeScript bị xoá khi biên dịch, không kiểm tra lúc chạy", "Vì DTO phải được đánh dấu @Injectable mới được kiểm tra", "Vì @Body() chỉ kiểm tra kiểu với field bắt buộc"],
         answer: 1,
         explain: "Kiểu chỉ tồn tại lúc compile. Cần ValidationPipe hoặc Zod để kiểm tra dữ liệu thực tế."
       },
       {
         q: "`whitelist: true` trong ValidationPipe có tác dụng gì?",
-        options: ["Chỉ cho IP trong whitelist gọi API", "Loại bỏ các field không được khai báo (có decorator) trong DTO", "Bỏ qua validate", "Cho phép mọi field"],
+        options: ["Chỉ cho các IP trong danh sách được gọi API", "Loại bỏ field không có decorator trong DTO", "Chỉ validate các field nằm trong danh sách", "Trả 400 cho mọi request có field lạ"],
         answer: 1,
         explain: "Field không có decorator validation bị loại khỏi object, giúp chặn mass-assignment."
       },
       {
         q: "Mass-assignment là gì?",
-        options: ["Gửi quá nhiều request", "Client ghi được field không được phép vì server truyền nguyên input vào lớp lưu trữ", "Tạo nhiều bản ghi cùng lúc", "Gán nhiều role cho user"],
+        options: ["Client gửi quá nhiều request trong thời gian ngắn", "Client ghi được field cấm vì server đưa nguyên body vào ORM", "Server tạo hàng loạt bản ghi trong một transaction", "Một user được gán nhiều role cùng lúc"],
         answer: 1,
         explain: "Ví dụ gửi thêm role: admin trong body khi server dùng body làm data cập nhật trực tiếp."
       }
@@ -1135,7 +1136,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       },
       {
         q: "Với lỗi 500 không lường trước, response cho client nên chứa gì?",
-        options: ["Stack trace đầy đủ để dễ debug", "Thông báo chung và request-id; chi tiết chỉ ghi vào log", "Câu SQL bị lỗi", "Không trả gì"],
+        options: ["Stack trace đầy đủ để client gửi lại khi báo lỗi", "Thông báo chung kèm request-id; chi tiết chỉ nằm trong log", "Nguyên err.message của thư viện database", "Body rỗng với status 200 để client không hiển thị lỗi"],
         answer: 1,
         explain: "Chi tiết nội bộ chỉ nên nằm trong log. Client cần biết có lỗi và id để báo cáo."
       },
@@ -1153,7 +1154,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         h: "Vì sao log dạng JSON",
         p: [
           "Log dạng chữ tự do như `User 42 created order 99` dễ đọc bằng mắt nhưng khó tìm kiếm khi có hàng triệu dòng. Structured logging ghi mỗi dòng là một object JSON với các field cố định: `level`, `time`, `msg`, `reqId`, `userId`, `orderId`. Hệ thống log (Loki, Elasticsearch, CloudWatch) lọc được theo field: \"mọi log của request abc\", \"mọi lỗi của userId 42 trong 1 giờ qua\".",
-          "Pino là logger phổ biến nhất cho Node vì rất nhanh (ghi JSON tối giản, đẩy việc format sang process khác). Winston linh hoạt hơn về transport nhưng chậm hơn. Với NestJS, `nestjs-pino` tích hợp Pino và tự log mỗi request."
+          "Pino là logger phổ biến nhất cho Node vì rất nhanh (ghi JSON tối giản; việc định dạng hay gửi log đi nơi khác được đẩy sang transport chạy trong worker thread riêng, hoặc để công cụ bên ngoài xử lý). Winston linh hoạt hơn về transport nhưng chậm hơn. Với NestJS, `nestjs-pino` tích hợp Pino và tự log mỗi request."
         ]
       },
       {
@@ -1224,13 +1225,13 @@ export class AppModule {}
     quiz: [
       {
         q: "Ưu điểm chính của structured logging là gì?",
-        options: ["Log đẹp hơn", "Tìm kiếm, lọc, tổng hợp theo field trên hệ thống log", "Không cần lưu log", "Tự sửa lỗi"],
+        options: ["Log dễ đọc bằng mắt hơn khi xem terminal", "Lọc và tổng hợp log theo field trên hệ thống log", "Log chiếm ít dung lượng đĩa hơn log chữ", "Không còn cần đặt log level cho từng dòng"],
         answer: 1,
         explain: "Mỗi dòng là JSON có field nên truy vấn được như dữ liệu."
       },
       {
         q: "Request-id nên được xử lý thế nào khi API đẩy job vào BullMQ?",
-        options: ["Bỏ đi vì job chạy sau", "Đưa vào dữ liệu job để worker gắn vào log của nó", "Tạo id mới không liên quan", "Chỉ ghi vào database"],
+        options: ["Bỏ đi, vì job chạy sau khi request đã kết thúc", "Đưa vào dữ liệu job để worker gắn vào log của nó", "Để worker tự sinh id mới cho mỗi lần xử lý job", "Chỉ lưu vào database cùng bản ghi nghiệp vụ"],
         answer: 1,
         explain: "Truyền id theo job giúp nối log từ request tới lúc worker xử lý."
       },
@@ -1263,7 +1264,7 @@ export class AppModule {}
           "Backing services: DB, Redis, S3 là tài nguyên gắn vào qua URL; đổi từ Postgres local sang RDS chỉ là đổi env.",
           "Build, release, run: tách rõ build image, kết hợp image với config thành release, và chạy release.",
           "Processes: stateless, không lưu dữ liệu cần giữ trong bộ nhớ hay đĩa cục bộ.",
-          "Port binding: ứng dụng tự lắng nghe port, không cần web server nhúng bên ngoài.",
+          "Port binding: ứng dụng tự mở HTTP server và lắng nghe một port (Node làm việc này sẵn), không phụ thuộc vào web server bên ngoài như Apache/Tomcat nạp nó vào.",
           "Concurrency: scale bằng thêm process (api, worker) thay vì làm một process to hơn.",
           "Disposability: khởi động nhanh, tắt êm (graceful shutdown).",
           "Dev/prod parity: dev dùng cùng loại Postgres, Redis như production (Docker Compose).",
@@ -1310,19 +1311,19 @@ await app.listen(Number(process.env.PORT ?? 3000), '0.0.0.0');
     quiz: [
       {
         q: "Theo 12-Factor, ứng dụng nên xử lý log thế nào?",
-        options: ["Ghi file log xoay vòng trong container", "Ghi ra stdout, để nền tảng thu thập", "Gửi email mỗi lỗi", "Lưu vào database chính"],
+        options: ["Ghi file log xoay vòng trong container", "Ghi ra stdout, để nền tảng thu thập", "Gửi thẳng tới hệ thống log qua SDK", "Lưu vào một bảng trong database chính"],
         answer: 1,
         explain: "Ứng dụng coi log là luồng sự kiện ra stdout; Docker/Kubernetes và agent log lo thu thập."
       },
       {
         q: "Vì sao session không nên lưu trong RAM của process khi scale nhiều replica?",
-        options: ["RAM đắt", "Request sau có thể tới replica khác không có session đó, và session mất khi process restart", "Node không hỗ trợ Map", "Vì lý do bảo mật TLS"],
+        options: ["Vì RAM của container đắt hơn RAM của Redis", "Vì request sau có thể tới replica không có session đó", "Vì Map trong Node không an toàn khi có nhiều request", "Vì TLS yêu cầu session lưu ngoài process"],
         answer: 1,
         explain: "Process phải stateless; state dùng chung đặt ở backing service như Redis."
       },
       {
         q: "Nguyên tắc \"Backing services\" nghĩa là gì?",
-        options: ["Luôn tự host database", "DB, cache, queue là tài nguyên gắn vào qua cấu hình, có thể thay mà không sửa code", "Chỉ dùng dịch vụ managed", "Không dùng database"],
+        options: ["Luôn tự host database cùng máy với ứng dụng", "DB, cache, queue gắn vào qua cấu hình, đổi được mà không sửa code", "Chỉ được dùng dịch vụ managed của nhà cung cấp cloud", "Mỗi service phải chạy database riêng trong cùng container"],
         answer: 1,
         explain: "Đổi từ Postgres local sang RDS chỉ cần đổi DATABASE_URL."
       }
@@ -1406,7 +1407,7 @@ export class TasksController {
     quiz: [
       {
         q: "Endpoint nào theo đúng quy ước REST để tạo task trong một project?",
-        options: ["POST /createTask", "GET /projects/1/tasks/create", "POST /projects/1/tasks", "PUT /task"],
+        options: ["POST /createTask", "GET /projects/1/tasks/create", "POST /projects/1/tasks", "PUT /projects/1/task"],
         answer: 2,
         explain: "POST lên collection con để tạo mới. Các lựa chọn khác dùng động từ trong URL hoặc sai method."
       },
@@ -1418,7 +1419,7 @@ export class TasksController {
       },
       {
         q: "URL `/orgs/1/projects/2/tasks/3/comments/4` có vấn đề gì?",
-        options: ["Không có vấn đề", "Lồng quá sâu, nên truy cập comment trực tiếp theo id hoặc qua /tasks/3/comments", "Phải dùng số ít", "Thiếu version"],
+        options: ["Không có vấn đề, URL càng chi tiết càng rõ nghĩa", "Lồng quá sâu, nên truy cập qua /tasks/3/comments", "Sai quy ước, tên resource phải dùng số ít", "Thiếu tiền tố version nên không hợp lệ"],
         answer: 1,
         explain: "Quá nhiều cấp làm URL dài, client phải biết mọi id cha. Giới hạn khoảng 2 cấp."
       }
@@ -1508,19 +1509,19 @@ declare class ProjectsService {
     quiz: [
       {
         q: "User đã đăng nhập gọi API xoá project của người khác và không có quyền. Mã phù hợp?",
-        options: ["401", "403 (hoặc 404 nếu muốn ẩn sự tồn tại)", "400", "500"],
+        options: ["401 Unauthorized", "403 Forbidden", "400 Bad Request", "409 Conflict"],
         answer: 1,
-        explain: "User đã xác thực nhưng thiếu quyền là 403. 401 chỉ dành cho chưa xác thực hoặc token không hợp lệ."
+        explain: "User đã xác thực nhưng thiếu quyền là 403 (một số API trả 404 để ẩn việc resource tồn tại). 401 chỉ dành cho chưa xác thực hoặc token không hợp lệ."
       },
       {
         q: "Đăng ký với email đã tồn tại, mã nào hợp lý nhất?",
-        options: ["200", "404", "409", "503"],
+        options: ["200 OK", "404 Not Found", "409 Conflict", "503 Service Unavailable"],
         answer: 2,
         explain: "Request hợp lệ nhưng xung đột với trạng thái hiện có: 409 Conflict."
       },
       {
         q: "`GET /projects?status=archived` không có kết quả nào. Nên trả gì?",
-        options: ["404", "204", "200 với mảng rỗng", "400"],
+        options: ["404 Not Found", "204 No Content", "200 OK với mảng rỗng", "400 Bad Request"],
         answer: 2,
         explain: "Collection tồn tại, chỉ là rỗng. 200 kèm [] giữ cấu trúc response nhất quán cho client."
       }
@@ -1603,19 +1604,19 @@ LIMIT 21;`
     quiz: [
       {
         q: "Vì sao `OFFSET 500000` chậm trên PostgreSQL?",
-        options: ["Vì thiếu LIMIT", "Vì database vẫn phải duyệt và bỏ qua 500000 dòng trước đó", "Vì offset không dùng được index", "Vì PostgreSQL giới hạn offset"],
+        options: ["Vì câu query thiếu mệnh đề LIMIT đi kèm", "Vì database vẫn phải duyệt qua 500000 dòng bị bỏ", "Vì PostgreSQL chặn offset lớn hơn 100000", "Vì OFFSET luôn buộc sắp xếp lại cả bảng"],
         answer: 1,
         explain: "Offset phải đếm qua các dòng bị bỏ. Keyset pagination dùng điều kiện WHERE để nhảy thẳng tới vị trí."
       },
       {
         q: "Vì sao cursor thường kết hợp `created_at` với `id`?",
-        options: ["Để URL dài hơn", "Để thứ tự sắp xếp duy nhất, tránh bỏ sót/lặp khi có giá trị created_at trùng", "Vì id là số", "Để bảo mật"],
+        options: ["Để cursor khó đoán, tránh client tự ghép", "Để thứ tự là duy nhất khi created_at bị trùng", "Vì PostgreSQL chỉ tạo index được trên cột id", "Để query dùng được OFFSET song song với cursor"],
         answer: 1,
         explain: "Cột sắp xếp phải phân biệt tuyệt đối từng dòng; id phá hoà khi timestamp trùng."
       },
       {
         q: "Trường hợp nào offset pagination vẫn phù hợp?",
-        options: ["Feed mạng xã hội hàng triệu bài", "Bảng quản trị nhỏ cần nhảy tới trang cụ thể và hiện tổng số trang", "API công khai lượng lớn", "Infinite scroll"],
+        options: ["Feed mạng xã hội có hàng triệu bài viết", "Bảng quản trị nhỏ cần nhảy tới trang bất kỳ", "API công khai trả danh sách rất lớn", "Danh sách infinite scroll trên app mobile"],
         answer: 1,
         explain: "Với dữ liệu nhỏ, nhược điểm của offset không đáng kể, còn tính năng nhảy trang hữu ích."
       }
@@ -1697,7 +1698,7 @@ Link: <https://docs.example.com/migrate-v2>; rel="deprecation"`
     quiz: [
       {
         q: "Thay đổi nào là tương thích ngược?",
-        options: ["Đổi tên field name thành title", "Thêm field tuỳ chọn mới vào response", "Đổi price từ number sang string", "Thêm tham số bắt buộc"],
+        options: ["Đổi tên field name thành title", "Thêm một field mới vào response", "Đổi price từ number sang string", "Thêm một tham số query bắt buộc"],
         answer: 1,
         explain: "Client tuân thủ tolerant reader bỏ qua field mới. Các thay đổi còn lại làm client cũ hỏng."
       },
@@ -1709,7 +1710,7 @@ Link: <https://docs.example.com/migrate-v2>; rel="deprecation"`
       },
       {
         q: "Ưu điểm chính của URL versioning so với header versioning?",
-        options: ["URL ngắn hơn", "Rõ ràng, dễ test, dễ định tuyến và cache", "Bảo mật hơn", "Không cần tài liệu"],
+        options: ["URL ngắn và gọn hơn", "Dễ thấy, dễ gọi bằng curl và dễ định tuyến", "Ẩn được version khỏi người dùng", "Không cần cập nhật tài liệu OpenAPI"],
         answer: 1,
         explain: "Version nằm ngay trong URL nên dễ thấy, dễ gọi bằng trình duyệt/curl và dễ cấu hình ở gateway."
       }
@@ -1727,13 +1728,14 @@ Link: <https://docs.example.com/migrate-v2>; rel="deprecation"`
       {
         h: "Idempotency-Key cho POST",
         p: [
-          "Giải pháp phổ biến (Stripe và nhiều API thanh toán dùng, và đang được IETF chuẩn hoá dưới dạng bản nháp) là header `Idempotency-Key`: client sinh một UUID cho mỗi thao tác nghiệp vụ và gửi lại đúng key đó khi retry. Server lưu key cùng kết quả xử lý lần đầu:"
+          "Giải pháp phổ biến (Stripe và nhiều API thanh toán dùng) là header `Idempotency-Key`: client sinh một UUID cho mỗi thao tác nghiệp vụ và gửi lại đúng key đó khi retry. IETF đang chuẩn hoá header này trong bản nháp `draft-ietf-httpapi-idempotency-key-header`; tới thời điểm viết bài nó vẫn là Internet-Draft, chưa thành RFC, nên chi tiết có thể còn đổi. Server lưu key cùng kết quả xử lý lần đầu:"
         ],
         list: [
           "Key chưa có: xử lý bình thường, lưu kết quả (status, body) gắn với key.",
           "Key đã có và đã xử lý xong: trả lại đúng kết quả đã lưu, không xử lý lại.",
           "Key đang được xử lý (request đầu chưa xong): trả 409 để client thử lại sau.",
-          "Cùng key nhưng body khác: trả lỗi (thường 422), vì client dùng sai key.",
+          "Cùng key nhưng body khác: trả lỗi (bản nháp gợi ý 422), vì client dùng sai key.",
+          "Endpoint bắt buộc có key mà request thiếu header: trả 400 (theo bản nháp).",
           "Key có thời hạn lưu (ví dụ 24 giờ) để bảng không phình vô hạn."
         ]
       },
@@ -1798,13 +1800,13 @@ async createPayment(key: string, dto: CreatePaymentDto) {
       },
       {
         q: "Client retry `POST /payments` với cùng Idempotency-Key sau khi request đầu đã thành công. Server nên làm gì?",
-        options: ["Tạo thanh toán mới", "Trả lại đúng kết quả đã lưu của lần đầu", "Trả 500", "Xoá thanh toán cũ"],
+        options: ["Tạo thanh toán mới vì đây là request mới", "Trả lại đúng kết quả đã lưu của lần đầu", "Trả 409 vì key đã được dùng", "Huỷ thanh toán cũ rồi xử lý lại từ đầu"],
         answer: 1,
         explain: "Mục đích của key là cho phép retry an toàn: trả lại kết quả cũ, không trừ tiền lần hai."
       },
       {
         q: "Cơ chế nào chống hai request cùng key chạy đồng thời hiệu quả nhất?",
-        options: ["SELECT trước rồi INSERT", "Ràng buộc unique/primary key trên cột key trong database", "setTimeout ngẫu nhiên", "Biến toàn cục trong Node"],
+        options: ["SELECT kiểm tra key trước, chưa có mới INSERT", "Ràng buộc unique trên cột key trong database", "Chờ setTimeout ngẫu nhiên trước khi xử lý", "Lưu key đang xử lý trong một Set toàn cục của Node"],
         answer: 1,
         explain: "Database đảm bảo chỉ một insert thành công. Kiểm tra bằng SELECT có race condition; biến toàn cục không dùng chung giữa instance."
       }
@@ -1898,19 +1900,19 @@ oasdiff breaking openapi.main.yaml openapi.yaml`
     quiz: [
       {
         q: "Khác biệt giữa OpenAPI và Swagger hiện nay?",
-        options: ["Là hai chuẩn cạnh tranh", "OpenAPI là đặc tả; Swagger là bộ công cụ làm việc với đặc tả", "Swagger dành cho GraphQL", "OpenAPI chỉ cho Java"],
+        options: ["Là hai chuẩn cạnh tranh do hai tổ chức khác nhau duy trì", "OpenAPI là đặc tả; Swagger là tên bộ công cụ xung quanh", "Swagger là bản mới của OpenAPI, hỗ trợ thêm GraphQL", "OpenAPI dùng YAML, còn Swagger chỉ dùng JSON"],
         answer: 1,
         explain: "Swagger Specification được đổi tên thành OpenAPI; tên Swagger được giữ cho các công cụ."
       },
       {
         q: "Lợi ích của API-first với đội FE và BE?",
-        options: ["BE không cần viết test", "Hai bên thống nhất hợp đồng trước và làm song song, FE dùng mock từ spec", "Không cần validate input", "API tự động nhanh hơn"],
+        options: ["BE không cần viết test vì spec đã mô tả đủ", "Hai bên chốt hợp đồng trước rồi làm song song", "Spec tự validate input nên BE bỏ được DTO", "API chạy nhanh hơn vì được sinh từ spec"],
         answer: 1,
         explain: "Hợp đồng rõ ràng từ đầu giảm phụ thuộc chờ đợi và hiểu nhầm."
       },
       {
         q: "Cách phát hiện breaking change API sớm nhất?",
-        options: ["Chờ người dùng báo lỗi", "So sánh spec OpenAPI với nhánh main trong CI", "Đọc log production", "Tăng version mỗi lần deploy"],
+        options: ["Theo dõi lỗi người dùng báo sau khi release", "So sánh spec OpenAPI với nhánh main trong CI", "Theo dõi tỷ lệ lỗi 4xx trong log production", "Tăng major version ở mỗi lần deploy"],
         answer: 1,
         explain: "Diff spec trong CI chặn thay đổi phá vỡ ngay tại PR."
       }
@@ -2005,19 +2007,19 @@ export function createLoaders() {
     quiz: [
       {
         q: "DataLoader giải quyết N+1 bằng cách nào?",
-        options: ["Cache vĩnh viễn toàn bộ bảng", "Gom các lời gọi load() trong cùng tick thành một lần gọi hàm batch", "Chạy query song song trên nhiều thread", "Chuyển sang REST"],
+        options: ["Nạp sẵn toàn bộ bảng users vào cache khi khởi động", "Gom các lời gọi load() trong cùng tick thành một batch", "Chạy N query con song song trên nhiều worker thread", "Tự viết lại resolver thành một câu JOIN duy nhất"],
         answer: 1,
         explain: "DataLoader trì hoãn đến cuối tick để gom id, rồi gọi một query cho tất cả."
       },
       {
         q: "Vì sao DataLoader nên được tạo mới cho mỗi request?",
-        options: ["Vì tạo lại nhanh hơn", "Vì cache của nó theo id có thể giữ dữ liệu cũ và lộ dữ liệu giữa người dùng khác quyền", "Vì DataLoader không hỗ trợ singleton", "Vì GraphQL yêu cầu"],
+        options: ["Vì instance cũ bị khoá sau khi batch đầu tiên chạy", "Vì cache theo id có thể giữ dữ liệu cũ và lộ giữa người dùng", "Vì DataLoader không chạy được khi là singleton", "Vì GraphQL server từ chối context dùng chung"],
         answer: 1,
         explain: "Cache của DataLoader dành cho phạm vi một request."
       },
       {
         q: "Trường hợp nào GraphQL ít phù hợp nhất?",
-        options: ["App web và mobile cần dữ liệu khác nhau", "Dashboard tổng hợp nhiều nguồn", "API công khai đơn giản cần cache mạnh ở CDN", "Lớp BFF gom nhiều microservice"],
+        options: ["App web và mobile cần dữ liệu khác nhau", "Dashboard tổng hợp dữ liệu từ nhiều nguồn", "API công khai cần cache mạnh ở CDN", "Lớp BFF gom dữ liệu từ nhiều microservice"],
         answer: 2,
         explain: "GraphQL thường dùng POST một endpoint nên khó tận dụng cache HTTP/CDN như REST GET."
       }
@@ -2121,13 +2123,13 @@ export class OrdersGrpcController {
       },
       {
         q: "Trong Protobuf, thay đổi nào an toàn với client cũ?",
-        options: ["Đổi field number của field hiện có", "Đổi kiểu từ string sang int64", "Thêm field mới với field number chưa dùng", "Dùng lại số của field đã xoá"],
+        options: ["Đổi field number của một field đang dùng", "Đổi kiểu một field từ string sang int64", "Thêm field mới với field number chưa dùng", "Dùng lại field number của field đã xoá"],
         answer: 2,
         explain: "Client cũ bỏ qua field không biết. Đổi số/kiểu hoặc dùng lại số cũ làm giải mã sai."
       },
       {
         q: "Vì sao gRPC ít dùng cho API công khai gọi từ trình duyệt?",
-        options: ["Vì chậm", "Vì trình duyệt không hỗ trợ gRPC gốc, cần gRPC-Web qua proxy", "Vì không có schema", "Vì không hỗ trợ TLS"],
+        options: ["Vì Protobuf chậm hơn JSON khi parse", "Vì trình duyệt không gọi được gRPC gốc", "Vì gRPC không có schema cho client", "Vì gRPC không hỗ trợ kết nối TLS"],
         answer: 1,
         explain: "Trình duyệt không cho kiểm soát HTTP/2 framing cần thiết; gRPC-Web là lớp chuyển đổi."
       }
@@ -2233,19 +2235,19 @@ export class RedisIoAdapter extends IoAdapter {
     quiz: [
       {
         q: "Vì sao cần Redis adapter khi chạy Socket.IO trên nhiều instance?",
-        options: ["Để lưu tin nhắn vĩnh viễn", "Để emit từ một instance tới được socket đang kết nối ở instance khác", "Để mã hoá kết nối", "Để giảm dung lượng message"],
+        options: ["Để lưu lại mọi tin nhắn đã gửi trong Redis", "Để emit tới được socket kết nối ở instance khác", "Để mã hoá dữ liệu giữa client và server", "Để giữ kết nối khi instance bị restart"],
         answer: 1,
         explain: "Mỗi instance chỉ biết socket của mình. Redis pub/sub phát sự kiện tới mọi instance."
       },
       {
         q: "Server trả status nào để đồng ý nâng cấp kết nối lên WebSocket?",
-        options: ["200", "101 Switching Protocols", "204", "302"],
+        options: ["200 OK", "101 Switching Protocols", "204 No Content", "426 Upgrade Required"],
         answer: 1,
         explain: "101 Switching Protocols xác nhận chuyển từ HTTP sang giao thức WebSocket."
       },
       {
         q: "Khi nào load balancer cần sticky session cho Socket.IO?",
-        options: ["Luôn luôn", "Khi dùng transport HTTP long-polling (fallback)", "Khi dùng Redis adapter", "Không bao giờ"],
+        options: ["Luôn luôn, với mọi transport", "Khi bật transport HTTP long-polling", "Chỉ khi dùng Redis adapter", "Không bao giờ, vì Socket.IO tự xử lý"],
         answer: 1,
         explain: "Long-polling gồm nhiều request HTTP của cùng một phiên, phải đến cùng instance giữ phiên đó."
       }
@@ -2346,13 +2348,13 @@ export class NotificationsController {
       },
       {
         q: "Tính năng nào phù hợp nhất với SSE?",
-        options: ["Game nhiều người chơi realtime", "Stream từng token câu trả lời AI xuống trình duyệt", "Chat hai chiều tần suất cao", "Truyền file nhị phân lớn từ client"],
+        options: ["Game nhiều người chơi cập nhật liên tục", "Stream từng token câu trả lời AI xuống", "Chat hai chiều với tần suất rất cao", "Client gửi file nhị phân lớn lên server"],
         answer: 1,
         explain: "Đó là luồng một chiều server → client dạng text, đúng thế mạnh của SSE."
       },
       {
         q: "Client SSE mất kết nối rồi kết nối lại. Cơ chế nào giúp server gửi tiếp từ sự kiện còn thiếu?",
-        options: ["Cookie session", "Header Last-Event-ID do EventSource gửi", "Header Retry-After", "ETag"],
+        options: ["Cookie session do trình duyệt gửi", "Header Last-Event-ID do EventSource gửi", "Header Retry-After do server trả về", "Header If-None-Match kèm ETag"],
         answer: 1,
         explain: "EventSource gửi id của sự kiện cuối đã nhận để server tiếp tục từ đó."
       }
@@ -2458,19 +2460,19 @@ declare function generateReportIfMissing(id: string): Promise<void>;`
     quiz: [
       {
         q: "Vì sao job BullMQ cần idempotent?",
-        options: ["Để chạy nhanh hơn", "Vì job có thể được xử lý hơn một lần (at-least-once) khi retry hoặc worker crash", "Vì Redis yêu cầu", "Để giảm bộ nhớ"],
+        options: ["Để BullMQ xử lý job nhanh hơn nhờ bỏ qua kiểm tra", "Vì một job có thể bị xử lý hơn một lần khi retry hay crash", "Vì Redis từ chối lưu job không có jobId cố định", "Để job chiếm ít bộ nhớ Redis hơn khi đang chờ"],
         answer: 1,
         explain: "Hệ thống queue thường chỉ đảm bảo ít nhất một lần; xử lý trùng phải an toàn."
       },
       {
         q: "Exponential backoff giúp gì?",
-        options: ["Chạy job song song nhiều hơn", "Giãn dần thời gian giữa các lần retry, tránh dồn dập vào dịch vụ đang lỗi", "Xoá job lỗi", "Ưu tiên job mới"],
+        options: ["Tăng số job worker chạy song song khi có lỗi", "Giãn dần khoảng cách giữa các lần retry", "Tự xoá job sau một số lần thất bại", "Ưu tiên job mới hơn job đang retry"],
         answer: 1,
         explain: "Ví dụ 2s, 4s, 8s... cho dịch vụ phía sau thời gian hồi phục."
       },
       {
         q: "Job gặp lỗi dữ liệu không hợp lệ, retry cũng không thể thành công. Nên làm gì?",
-        options: ["Tăng attempts lên 100", "Ném UnrecoverableError để dừng retry và đánh dấu failed", "Nuốt lỗi và báo thành công", "Khởi động lại Redis"],
+        options: ["Tăng attempts lên 100 cho chắc", "Ném UnrecoverableError để dừng retry", "Bắt lỗi rồi return như thành công", "Đặt backoff dài hơn để chờ dữ liệu tự đúng"],
         answer: 1,
         explain: "Retry lỗi vĩnh viễn chỉ tốn tài nguyên. Đánh dấu failed ngay để điều tra."
       }
@@ -2530,7 +2532,8 @@ const RELEASE = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call
 
 export async function withLock(redis: RedisClientType, key: string, ttlMs: number, fn: () => Promise<void>) {
   const token = randomUUID();
-  const ok = await redis.set(key, token, { NX: true, PX: ttlMs });
+  // node-redis v5; tương đương lệnh: SET key token NX PX ttlMs
+  const ok = await redis.set(key, token, { condition: 'NX', expiration: { type: 'PX', value: ttlMs } });
   if (ok !== 'OK') return false;            // instance khác đang giữ khoá
   try {
     await fn();
@@ -2579,19 +2582,19 @@ await digestQueue.upsertJobScheduler(
     quiz: [
       {
         q: "API chạy 3 replica, mỗi replica có `@Cron` gửi báo cáo. Điều gì xảy ra?",
-        options: ["Chỉ replica đầu tiên chạy", "Báo cáo được gửi 3 lần", "NestJS tự chọn một replica", "Cron bị tắt"],
+        options: ["Chỉ replica khởi động đầu tiên chạy", "Báo cáo được gửi 3 lần", "NestJS tự bầu một replica để chạy", "Cron tự tắt khi phát hiện trùng"],
         answer: 1,
         explain: "@nestjs/schedule chạy độc lập trong mỗi process, không có điều phối giữa các instance."
       },
       {
         q: "Vì sao khoá Redis cần giá trị token ngẫu nhiên thay vì chỉ `SET key 1`?",
-        options: ["Để tiết kiệm bộ nhớ", "Để khi giải phóng chỉ xoá khoá do chính mình giữ", "Vì Redis yêu cầu", "Để khoá không bao giờ hết hạn"],
+        options: ["Để key chiếm ít bộ nhớ hơn trong Redis", "Để khi giải phóng chỉ xoá khoá mình đang giữ", "Vì SET NX chỉ nhận giá trị dạng chuỗi ngẫu nhiên", "Để khoá tự gia hạn khi job chạy lâu"],
         answer: 1,
         explain: "Nếu khoá của bạn đã hết hạn và instance khác lấy lại, DEL mù sẽ xoá nhầm khoá của họ."
       },
       {
         q: "Tuỳ chọn `NX` trong lệnh `SET` của Redis nghĩa là gì?",
-        options: ["Không hết hạn", "Chỉ đặt khi key chưa tồn tại", "Ghi đè luôn", "Xoá sau khi đọc"],
+        options: ["Đặt key không bao giờ hết hạn", "Chỉ đặt khi key chưa tồn tại", "Chỉ đặt khi key đã tồn tại", "Xoá key ngay sau lần đọc đầu"],
         answer: 1,
         explain: "NX = Not eXists. Kết hợp PX (thời hạn mili giây) tạo khoá có tự hết hạn."
       }
@@ -2632,7 +2635,7 @@ export class AvatarsController {
       {
         h: "Kiểm tra MIME đúng cách",
         p: [
-          "Header `Content-Type` của từng phần và phần mở rộng file do client gửi, nên giả mạo được: đổi `shell.php` thành `shell.png` là xong. Cách chắc chắn hơn là kiểm tra magic bytes (vài byte đầu file đặc trưng cho từng định dạng, ví dụ PNG bắt đầu bằng `89 50 4E 47`), bằng thư viện như `file-type`. Với ảnh, xử lý lại bằng thư viện ảnh (resize, re-encode) còn loại bỏ được metadata EXIF và nội dung ẩn.",
+          "Header `Content-Type` của từng phần và phần mở rộng file do client gửi, nên giả mạo được: đổi `shell.php` thành `shell.png` là xong. Cách chắc chắn hơn là kiểm tra magic bytes (vài byte đầu file đặc trưng cho từng định dạng, ví dụ PNG bắt đầu bằng `89 50 4E 47`), bằng thư viện như `file-type`. Ở các bản NestJS hiện hành, `FileTypeValidator` mặc định đã xác định MIME từ magic number của nội dung file (cần file nằm trong bộ nhớ như ví dụ trên); với Fastify hay khi stream, nó không đọc được buffer và phải cấu hình `skipMagicNumbersValidation`, lúc đó bạn cần tự kiểm tra ở bước sau. Với ảnh, xử lý lại bằng thư viện ảnh (resize, re-encode) còn loại bỏ được metadata EXIF và nội dung ẩn.",
           "Ngoài ra: không dùng tên file của người dùng làm đường dẫn lưu (nguy cơ path traversal như `../../etc/passwd`), hãy sinh tên mới bằng UUID; phục vụ file người dùng tải lên từ domain riêng hoặc với `Content-Disposition: attachment` để tránh XSS."
         ]
       },
@@ -2693,19 +2696,19 @@ export async function createUploadUrl(userId: string, contentType: string) {
     quiz: [
       {
         q: "Vì sao không nên chỉ dựa vào Content-Type do client gửi để kiểm tra loại file?",
-        options: ["Vì Content-Type luôn sai", "Vì client có thể tự đặt bất kỳ giá trị nào", "Vì Multer không đọc được", "Vì S3 bỏ qua nó"],
+        options: ["Vì trình duyệt luôn gửi sai Content-Type", "Vì client có thể tự đặt bất kỳ giá trị nào", "Vì Multer không đọc được header của từng phần", "Vì S3 ghi đè Content-Type khi lưu file"],
         answer: 1,
         explain: "Header do client kiểm soát. Kiểm tra magic bytes hoặc xử lý lại file cho kết quả đáng tin hơn."
       },
       {
         q: "Lợi ích chính của presigned URL khi upload file lớn?",
-        options: ["File được nén tự động", "Byte file đi thẳng từ client lên S3, không qua API server", "Không cần xác thực", "File được quét virus sẵn"],
+        options: ["S3 tự nén file trước khi lưu", "Byte file đi thẳng lên S3, không qua API", "Client không cần xác thực với API nữa", "S3 tự quét virus cho mọi file tải lên"],
         answer: 1,
         explain: "API chỉ ký URL; băng thông và kết nối dài không đè lên server ứng dụng."
       },
       {
         q: "Lưu file upload với tên gốc `../../app/main.js` gây rủi ro gì?",
-        options: ["Không rủi ro", "Path traversal ghi đè file ngoài thư mục upload", "Chỉ làm tên file dài", "SQL injection"],
+        options: ["Không rủi ro, hệ điều hành tự chuẩn hoá tên", "Ghi đè file nằm ngoài thư mục upload", "Chỉ làm tên file dài và khó đọc", "SQL injection khi lưu tên vào database"],
         answer: 1,
         explain: "Tên chứa ../ có thể thoát khỏi thư mục đích. Hãy sinh tên mới bằng UUID."
       }
@@ -2790,22 +2793,238 @@ export class EmailWorker extends WorkerHost {
     quiz: [
       {
         q: "Vì sao nên gửi email qua queue thay vì trong request?",
-        options: ["Email sẽ đẹp hơn", "Request phản hồi nhanh, có retry khi SMTP lỗi, và lỗi email không làm hỏng nghiệp vụ", "Queue gửi email miễn phí", "SMTP chỉ chạy trong worker"],
+        options: ["Vì queue giúp email hiển thị đúng trên mọi client", "Vì request trả lời nhanh và email được retry khi lỗi", "Vì gửi qua queue không tốn phí nhà cung cấp", "Vì thư viện SMTP chỉ chạy được trong worker"],
         answer: 1,
         explain: "Tách việc chậm và dễ lỗi ra khỏi request giúp API ổn định và email không bị mất."
       },
       {
         q: "Thời điểm đúng để đẩy job gửi email xác nhận đăng ký?",
-        options: ["Trước khi bắt đầu transaction", "Giữa transaction", "Sau khi transaction tạo user đã commit (hoặc qua outbox)", "Khi user đăng nhập lần đầu"],
+        options: ["Trước khi bắt đầu transaction tạo user", "Ngay sau lệnh INSERT, trong transaction", "Sau khi transaction tạo user đã commit", "Khi user đăng nhập lần đầu tiên"],
         answer: 2,
-        explain: "Gửi trước commit có thể gửi email cho dữ liệu bị rollback."
+        explain: "Gửi trước commit có thể gửi email cho dữ liệu bị rollback. Muốn chắc chắn không mất job khi đẩy queue lỗi sau commit, dùng outbox pattern."
       },
       {
         q: "SPF, DKIM, DMARC dùng để làm gì?",
-        options: ["Mã hoá nội dung email", "Xác thực domain gửi, giúp email không bị coi là giả mạo/spam", "Nén file đính kèm", "Tăng tốc SMTP"],
+        options: ["Mã hoá nội dung email trên đường truyền", "Xác thực email thật sự đến từ domain gửi", "Giới hạn dung lượng file đính kèm", "Tăng tốc kết nối tới máy chủ SMTP"],
         answer: 1,
         explain: "Các bản ghi DNS này cho máy chủ nhận kiểm tra email có thực sự đến từ domain của bạn."
       }
     ]
   },
+
+  "p03.m2.t8": {
+    "sections": [
+      {
+        "h": "Vì sao backend vẫn phải biết SOAP",
+        "p": [
+          "SOAP là giao thức trao đổi thông điệp XML có từ đầu những năm 2000. Dự án mới hiếm khi chọn SOAP, nhưng rất nhiều hệ thống lõi ngân hàng, cổng thanh toán, bảo hiểm, hải quan và dịch vụ công vẫn cung cấp API dạng SOAP. Khi tích hợp với các đối tác này ở Việt Nam, bạn gần như chắc chắn sẽ gặp nó.",
+          "Khác REST, SOAP có hợp đồng chặt chẽ mô tả bằng file WSDL: danh sách operation, kiểu dữ liệu đầu vào và đầu ra, địa chỉ endpoint. Mọi thông điệp đều nằm trong một Envelope gồm Header (tuỳ chọn, thường chứa thông tin bảo mật như WS-Security) và Body. Lỗi được trả về dưới dạng phần tử Fault trong Body."
+        ],
+        "code": {
+          "lang": "text",
+          "file": "SOAP 1.1 request",
+          "src": "POST /PaymentService HTTP/1.1\nContent-Type: text/xml; charset=utf-8\nSOAPAction: \"http://bank.example.com/GetBalance\"\n\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Header/>\n  <soap:Body>\n    <GetBalance xmlns=\"http://bank.example.com/\">\n      <AccountNo>0123456789</AccountNo>\n    </GetBalance>\n  </soap:Body>\n</soap:Envelope>"
+        }
+      },
+      {
+        "h": "Gọi dịch vụ SOAP từ Node.js",
+        "p": [
+          "Thư viện `soap` trên npm đọc WSDL và sinh sẵn các hàm tương ứng với từng operation. Hàm `createClientAsync(url)` trả về client; mỗi operation có phiên bản `<TênOperation>Async` trả về Promise, và kết quả là một mảng mà phần tử đầu là dữ liệu đã chuyển từ XML sang object.",
+          "SOAP 1.1 dùng Content-Type `text/xml` kèm header `SOAPAction`, còn SOAP 1.2 dùng `application/soap+xml`. Thư viện tự xử lý chi tiết này dựa trên WSDL."
+        ],
+        "code": {
+          "lang": "typescript",
+          "file": "src/bank/bank-soap.client.ts",
+          "src": "import * as soap from 'soap';\n\nexport async function getBalance(accountNo: string): Promise<number> {\n  const client = await soap.createClientAsync(process.env.BANK_WSDL_URL!, {\n    wsdl_options: { timeout: 5000 },\n  });\n  try {\n    const [result] = await client.GetBalanceAsync({ AccountNo: accountNo });\n    return Number(result.Balance);\n  } catch (err: any) {\n    // SOAP Fault: đọc mã lỗi của đối tác để map sang lỗi nghiệp vụ của mình\n    const fault = err?.root?.Envelope?.Body?.Fault;\n    throw new Error(`Bank SOAP fault: ${fault?.faultstring ?? err.message}`);\n  }\n}"
+        }
+      },
+      {
+        "h": "Bọc hệ thống cũ bằng Anti-Corruption Layer",
+        "p": [
+          "Đừng để kiểu dữ liệu và tên gọi của hệ thống cũ lan khắp code của bạn. Hãy tạo một lớp adapter duy nhất, gọi là Anti-Corruption Layer, chuyển dữ liệu SOAP thành model trong domain của bạn và chuyển SOAP Fault thành lỗi nghiệp vụ rõ ràng.",
+          "Hệ thống của đối tác thường chậm và kém ổn định hơn hệ thống của bạn. Hãy luôn đặt timeout, retry có giới hạn cho thao tác đọc, dùng circuit breaker, ghi log request và response (đã che thông tin nhạy cảm), và cache WSDL thay vì tải lại mỗi request."
+        ]
+      }
+    ],
+    "summary": [
+      "SOAP vẫn phổ biến ở ngân hàng, thanh toán và dịch vụ công",
+      "WSDL mô tả hợp đồng; thông điệp là XML Envelope gồm Header và Body",
+      "Lỗi trả về dạng SOAP Fault, cần map sang lỗi nghiệp vụ",
+      "Bọc hệ thống cũ bằng một Anti-Corruption Layer duy nhất",
+      "Luôn đặt timeout, retry có giới hạn và circuit breaker khi gọi đối tác"
+    ],
+    "pitfalls": [
+      "Tạo SOAP client mới cho mỗi request, tải lại WSDL nên rất chậm",
+      "Để object sinh từ WSDL đi thẳng vào controller và database, khiến code phụ thuộc chặt vào đối tác",
+      "Retry thao tác ghi như chuyển tiền mà không có mã giao dịch duy nhất, gây giao dịch trùng"
+    ],
+    "quiz": [
+      {
+        "q": "Trong SOAP, file WSDL dùng để làm gì?",
+        "options": [
+          "Mô tả các operation, kiểu dữ liệu và endpoint của dịch vụ",
+          "Lưu khoá bí mật dùng để ký thông điệp XML",
+          "Nén thông điệp XML trước khi gửi qua mạng",
+          "Ghi log mọi request gửi tới dịch vụ SOAP"
+        ],
+        "answer": 0,
+        "explain": "WSDL là hợp đồng mô tả dịch vụ. Thư viện đọc WSDL để sinh hàm gọi tương ứng với từng operation."
+      },
+      {
+        "q": "Dịch vụ SOAP trả về lỗi nghiệp vụ. Lỗi đó nằm ở đâu?",
+        "options": [
+          "Trong header HTTP tên X-SOAP-Error",
+          "Trong phần tử Fault bên trong Body",
+          "Trong phần tử Header của Envelope",
+          "Trong query string của URL phản hồi"
+        ],
+        "answer": 1,
+        "explain": "SOAP trả lỗi bằng phần tử Fault đặt trong Body của Envelope, chứa mã lỗi và mô tả lỗi."
+      },
+      {
+        "q": "Vì sao nên có một Anti-Corruption Layer khi tích hợp hệ thống cũ?",
+        "options": [
+          "Để tăng tốc độ phân tích XML",
+          "Để không cần đặt timeout khi gọi đối tác",
+          "Để model và lỗi của hệ thống cũ không lan vào domain của bạn",
+          "Để chuyển SOAP thành GraphQL tự động"
+        ],
+        "answer": 2,
+        "explain": "Anti-Corruption Layer là lớp adapter chuyển dữ liệu và lỗi của hệ thống cũ sang ngôn ngữ domain của bạn, giữ phần còn lại của code độc lập với đối tác."
+      }
+    ]
+  },
+  "p03.m0.t6": {
+    sections: [
+      {
+        h: "CPU profile và flame graph",
+        p: [
+          "Khi API chậm hoặc CPU lên 100%, đừng đoán rồi sửa. Hãy đo. Node có sẵn công cụ chẩn đoán, không cần cài gì thêm. Cờ `--cpu-prof` bật CPU profiler của V8 lúc khởi động và ghi file `.cpuprofile` khi process thoát. Mặc định file nằm ở thư mục hiện tại với tên dạng `CPU.<ngày>.<giờ>.<pid>...cpuprofile`; đổi thư mục bằng `--cpu-prof-dir`.",
+          "Quy trình thực tế: chạy app với cờ này, bắn tải vào endpoint nghi ngờ, rồi cho process thoát bình thường. Mở file trong Chrome DevTools (tab Performance, kéo thả file vào) hoặc speedscope để xem flame graph. Trục ngang là tổng thời gian CPU của hàm, không phải thứ tự thời gian; khối càng rộng càng tốn CPU. Tìm khối rộng nằm trong code của bạn, ví dụ `JSON.stringify` một object khổng lồ, regex phức tạp hay vòng lặp tính toán chặn event loop."
+        ],
+        code: {
+          lang: "bash",
+          file: "terminal",
+          src: `npm run build
+node --cpu-prof --cpu-prof-dir=./profiles dist/main.js
+
+# Terminal khác: bắn tải 20 giây vào endpoint nghi ngờ
+npx autocannon -c 50 -d 20 http://localhost:3000/reports
+
+# Dừng app để profile được ghi ra ./profiles/*.cpuprofile
+# Để chắc chắn, app nên bắt SIGINT/SIGTERM rồi gọi process.exit()`
+        }
+      },
+      {
+        h: "Heap snapshot để tìm memory leak",
+        p: [
+          "Dấu hiệu memory leak: bộ nhớ tăng dần qua nhiều giờ, không giảm sau GC, cuối cùng container bị OOM kill. Heap snapshot chụp lại toàn bộ object trong heap cùng quan hệ ai đang giữ ai.",
+          "Chạy app với `--heapsnapshot-signal=SIGUSR2`, sau đó gửi `kill -USR2 <pid>` để Node ghi file `.heapsnapshot` (không dùng SIGUSR1 vì Node dành nó để bật inspector). Chụp ba lần: sau khi khởi động, sau một đợt tải, sau đợt tải thứ hai. Mở trong tab Memory của Chrome DevTools, chọn chế độ Comparison để xem loại object nào tăng mãi, rồi xem mục Retainers để biết cái gì giữ chúng. Thủ phạm hay gặp: `Map` dùng làm cache không giới hạn, listener đăng ký theo từng request mà không gỡ, closure giữ request cũ.",
+          "Nếu leak chỉ lộ ra lúc sắp hết bộ nhớ, dùng `--heapsnapshot-near-heap-limit=1` để Node tự ghi snapshot khi heap gần chạm giới hạn."
+        ]
+      },
+      {
+        h: "Đo event loop delay",
+        p: [
+          "Event loop delay là thời gian callback phải chờ vì luồng chính đang bận. Chỉ số này tăng là mọi request đều chậm theo, kể cả health check. `perf_hooks.monitorEventLoopDelay()` trả về histogram với đơn vị nano giây, `resolution` mặc định 10 ms. Histogram được cập nhật bằng timer nên giá trị lúc rảnh xấp xỉ bằng `resolution`; hãy theo dõi phần vượt lên trên mức đó và xu hướng của p99, rồi đẩy vào hệ thống metrics để cảnh báo."
+        ],
+        code: {
+          lang: "typescript",
+          file: "src/observability/event-loop.ts",
+          src: `import { monitorEventLoopDelay } from 'node:perf_hooks';
+
+const RESOLUTION_MS = 20;
+const histogram = monitorEventLoopDelay({ resolution: RESOLUTION_MS });
+histogram.enable();
+
+const toMs = (ns: number) => Number((ns / 1e6).toFixed(1));
+
+setInterval(() => {
+  console.log(JSON.stringify({
+    metric: 'event_loop_delay_ms',
+    p50: toMs(histogram.percentile(50)),
+    p99: toMs(histogram.percentile(99)),
+    max: toMs(histogram.max),
+  }));
+  histogram.reset(); // mỗi chu kỳ đo lại từ đầu
+}, 10_000).unref(); // không giữ process sống chỉ vì timer này`
+        }
+      },
+      {
+        h: "AsyncLocalStorage cho request context",
+        p: [
+          "Khi đọc log production, bạn cần biết dòng log nào thuộc request nào. Truyền `requestId` qua mọi hàm thì rất phiền. `AsyncLocalStorage` (module `node:async_hooks`, đã stable) giữ một store đi theo chuỗi thao tác bất đồng bộ: mọi `await`, timer, callback tạo ra bên trong `run()` đều đọc được cùng store bằng `getStore()`. Ngoài `run()` thì `getStore()` trả về `undefined`, ví dụ trong cron job hay lúc khởi động."
+        ],
+        code: {
+          lang: "typescript",
+          file: "src/common/request-context.ts",
+          src: `import { AsyncLocalStorage } from 'node:async_hooks';
+import { randomUUID } from 'node:crypto';
+import type { NextFunction, Request, Response } from 'express';
+
+type RequestContext = { requestId: string; userId?: string };
+export const requestContext = new AsyncLocalStorage<RequestContext>();
+
+// main.ts: app.use(requestContextMiddleware);
+export function requestContextMiddleware(req: Request, res: Response, next: NextFunction) {
+  const requestId = req.header('x-request-id') ?? randomUUID();
+  res.setHeader('x-request-id', requestId);
+  requestContext.run({ requestId }, () => next());
+}
+
+export function log(message: string, extra: Record<string, unknown> = {}) {
+  const ctx = requestContext.getStore(); // undefined nếu ở ngoài request
+  console.log(JSON.stringify({ time: new Date().toISOString(), requestId: ctx?.requestId, message, ...extra }));
+}`
+        }
+      }
+    ],
+    summary: [
+      "Đo trước khi tối ưu: --cpu-prof ghi file .cpuprofile, xem bằng flame graph để tìm hàm tốn CPU",
+      "Trong flame graph, khối càng rộng càng tốn CPU; trục ngang không phải dòng thời gian",
+      "Heap snapshot chụp nhiều lần rồi so sánh bằng Comparison và Retainers để tìm memory leak",
+      "monitorEventLoopDelay đo độ trễ event loop theo nano giây; theo dõi p99 để phát hiện code chặn luồng chính",
+      "AsyncLocalStorage mang requestId qua mọi await mà không cần truyền tham số thủ công"
+    ],
+    pitfalls: [
+      "Chụp heap snapshot trên production mà không tính trước: thao tác đồng bộ, chặn event loop và cần bộ nhớ khoảng gấp đôi heap, có thể làm container bị OOM kill",
+      "Để `--cpu-prof` bật thường trực trên production hoặc kill process bằng SIGKILL rồi thắc mắc vì sao không có file profile",
+      "Dùng `enterWith()` thay cho `run()` khiến context rò sang code chạy sau trong cùng luồng; `enterWith` vẫn đang experimental"
+    ],
+    quiz: [
+      {
+        q: "Trong flame graph tạo từ file `.cpuprofile`, độ rộng của một khối thể hiện điều gì?",
+        options: [
+          "Thứ tự thời điểm hàm được gọi",
+          "Lượng bộ nhớ mà hàm đã cấp phát",
+          "Tổng thời gian CPU dành cho hàm đó",
+          "Số dòng code bên trong hàm đó"
+        ],
+        answer: 2,
+        explain: "Flame graph gộp các stack giống nhau, độ rộng tỉ lệ với thời gian CPU. Trục ngang không phải dòng thời gian, và CPU profile không đo bộ nhớ cấp phát."
+      },
+      {
+        q: "Vì sao nên dùng `--heapsnapshot-signal=SIGUSR2` thay vì SIGUSR1?",
+        options: [
+          "SIGUSR1 đã được Node dùng để bật inspector",
+          "SIGUSR1 không tồn tại trên hệ điều hành Linux",
+          "SIGUSR2 tạo ra file snapshot nhỏ hơn nhiều",
+          "SIGUSR2 là tín hiệu mặc định Docker gửi đi"
+        ],
+        answer: 0,
+        explain: "Node dành SIGUSR1 để kích hoạt inspector cho debugger. SIGUSR2 còn trống nên dùng cho heap snapshot; kích thước file không phụ thuộc vào tín hiệu."
+      },
+      {
+        q: "`requestContext.getStore()` trả về gì khi được gọi trong một cron job chạy ngoài mọi `run()`?",
+        options: [
+          "Store của request gần nhất vừa xử lý",
+          "Một object rỗng được tạo tự động",
+          "Ném lỗi vì chưa khởi tạo context",
+          "Giá trị `undefined` vì không có context"
+        ],
+        answer: 3,
+        explain: "Ngoài ngữ cảnh do `run()` hoặc `enterWith()` tạo ra, `getStore()` trả về `undefined`. Vì vậy code log phải xử lý trường hợp không có requestId."
+      }
+    ]
+  }
 });

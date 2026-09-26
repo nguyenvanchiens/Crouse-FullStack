@@ -67,7 +67,7 @@ docker rm -f demo`
       },
       {
         q: "Vì sao container khởi động nhanh hơn VM rất nhiều?",
-        options: ["Vì container dùng ổ SSD riêng", "Vì container không cần khởi động một kernel/OS riêng, chỉ khởi chạy process trên kernel host", "Vì container luôn được nén", "Vì Docker cache sẵn RAM"],
+        options: ["Vì container được cấp ổ SSD riêng khi chạy", "Vì container chỉ là process trên kernel có sẵn của host", "Vì image container luôn được nén rất nhỏ", "Vì Docker giữ sẵn container trong RAM"],
         answer: 1,
         explain: "Container là process trên kernel có sẵn của host nên không phải boot OS. Các lựa chọn khác không phải lý do cốt lõi."
       },
@@ -143,19 +143,19 @@ docker image inspect task-api:dev --format '{{json .RootFS.Layers}}'`
     quiz: [
       {
         q: "Bạn COPY một file 200MB, rồi ở lệnh RUN kế tiếp xoá nó. Kích thước image thay đổi thế nào?",
-        options: ["Giảm 200MB", "Vẫn chứa 200MB đó vì file còn ở layer trước", "Docker tự nén nên không đáng kể", "Build bị lỗi"],
+        options: ["Giảm 200MB vì file đã bị xoá", "Vẫn chứa 200MB vì file còn ở layer COPY", "Không đáng kể vì Docker tự nén layer", "Giảm một nửa nhờ copy-on-write"],
         answer: 1,
         explain: "Layer là bất biến. Lệnh xoá chỉ tạo một whiteout ở layer mới, còn dữ liệu vẫn nằm ở layer COPY. Muốn tránh, dùng multi-stage build hoặc không đưa file vào."
       },
       {
         q: "Khi bạn sửa một file source và build lại Dockerfile ở ví dụ trên, bước nào được lấy từ cache?",
-        options: ["Không bước nào", "Chỉ COPY . .", "FROM, WORKDIR, COPY package*.json và RUN npm ci", "Chỉ RUN npm run build"],
+        options: ["Không bước nào, vì context đã thay đổi", "Chỉ bước COPY . . và RUN npm run build", "Các bước từ FROM tới RUN npm ci", "Mọi bước, trừ RUN npm run build"],
         answer: 2,
         explain: "Các lệnh trước `COPY . .` có input không đổi nên dùng cache. Từ `COPY . .` trở đi input thay đổi nên phải build lại."
       },
       {
         q: "Copy-on-write nghĩa là gì trong ngữ cảnh container?",
-        options: ["Mọi file được sao chép khi container khởi động", "File chỉ được chép lên writable layer khi container sửa nó lần đầu", "Container ghi trực tiếp vào layer của image", "Docker sao lưu dữ liệu mỗi lần ghi"],
+        options: ["Mọi file của image được chép khi container khởi động", "File chỉ được chép lên lớp ghi khi container sửa nó", "Container ghi trực tiếp vào layer gốc của image", "Docker chụp snapshot container sau mỗi lần ghi"],
         answer: 1,
         explain: "Chỉ khi cần sửa, file mới được chép lên lớp ghi được. Nhờ vậy nhiều container dùng chung một image mà không tốn thêm dung lượng."
       }
@@ -218,24 +218,24 @@ FROM node:24-alpine@sha256:<digest-lay-tu-registry>`
     pitfalls: [
       "Truyền mật khẩu bằng `-p` trên dòng lệnh: lộ trong lịch sử shell và log CI. Dùng `--password-stdin`.",
       "Deploy bằng tag có thể bị ghi đè rồi không biết production đang chạy bản nào. Hãy ghi lại digest hoặc dùng tag bất biến theo git SHA.",
-      "Để image private nhưng repository GHCR mặc định kế thừa quyền sai: kiểm tra visibility của package sau lần push đầu."
+      "Không kiểm tra visibility của package GHCR sau lần push đầu: package mới thường mặc định là private (tuỳ cách liên kết với repository và cấu hình của tổ chức), nên server deploy cần token có quyền `read:packages`; ngược lại, nếu ai đó chuyển package sang public thì image nội bộ bị lộ."
     ],
     quiz: [
       {
         q: "Điều gì đảm bảo hai lần pull cho ra đúng cùng một nội dung image?",
-        options: ["Cùng tag", "Cùng digest sha256", "Cùng tên repository", "Cùng ngày build"],
+        options: ["Cùng tên tag", "Cùng digest sha256", "Cùng tên repository", "Cùng thời điểm build"],
         answer: 1,
         explain: "Digest là hash nội dung nên bất biến. Tag có thể bị trỏ sang image khác bất kỳ lúc nào."
       },
       {
         q: "`docker pull redis:8-alpine` thực chất kéo image từ đâu?",
-        options: ["ghcr.io/redis", "docker.io/library/redis:8-alpine", "Registry nội bộ của máy", "quay.io/redis"],
+        options: ["ghcr.io/redis/redis:8-alpine", "docker.io/library/redis:8-alpine", "localhost/library/redis:8-alpine", "quay.io/redis/redis:8-alpine"],
         answer: 1,
         explain: "Không ghi registry thì mặc định là Docker Hub (docker.io), và image chính thức nằm trong namespace `library`."
       },
       {
         q: "Cách đăng nhập registry an toàn nhất trong script CI là gì?",
-        options: ["docker login -p mật_khẩu", "Ghi mật khẩu vào Dockerfile", "echo token | docker login --password-stdin", "Để registry public"],
+        options: ["docker login -u user -p \"$TOKEN\"", "Ghi token vào Dockerfile bằng ENV", "echo \"$TOKEN\" | docker login -u user --password-stdin", "Lưu token trong file .env commit vào repo"],
         answer: 2,
         explain: "`--password-stdin` không đưa secret vào tham số dòng lệnh nên không lộ qua lịch sử hay danh sách process. Ghi vào Dockerfile là nhúng secret vào image."
       }
@@ -301,19 +301,19 @@ sudo crictl images`
     quiz: [
       {
         q: "Thành phần nào trực tiếp gọi kernel để tạo namespaces và cgroups cho container?",
-        options: ["Docker CLI", "dockerd", "runc", "Registry"],
+        options: ["Docker CLI", "dockerd", "runc", "containerd-shim"],
         answer: 2,
         explain: "runc là low-level runtime theo OCI Runtime Spec, thực hiện việc tạo container ở tầng kernel. CLI và dockerd chỉ điều phối."
       },
       {
         q: "Khi Kubernetes gỡ dockershim, image build bằng Docker có còn chạy được không?",
-        options: ["Không, phải build lại bằng Podman", "Có, vì image Docker tuân chuẩn OCI image", "Chỉ khi đổi sang Windows node", "Chỉ khi dùng tag latest"],
+        options: ["Không, phải build lại bằng Podman hoặc Buildah", "Có, vì image Docker build ra theo chuẩn OCI", "Chỉ khi cài thêm Docker Engine trên mỗi node", "Chỉ khi image được chuyển đổi sang định dạng CRI"],
         answer: 1,
         explain: "Image Docker là image OCI, containerd và CRI-O đều chạy được. Chỉ cách Kubernetes nói chuyện với runtime thay đổi."
       },
       {
         q: "Vai trò của OCI Distribution Spec là gì?",
-        options: ["Định nghĩa định dạng Dockerfile", "Định nghĩa API push/pull giữa client và registry", "Định nghĩa cách giới hạn CPU", "Định nghĩa Compose file"],
+        options: ["Định nghĩa cú pháp của Dockerfile", "Định nghĩa API push/pull với registry", "Định nghĩa cách giới hạn CPU và RAM", "Định nghĩa định dạng file Compose"],
         answer: 1,
         explain: "Distribution Spec chuẩn hoá API registry. Dockerfile và Compose không thuộc OCI; giới hạn CPU là việc của runtime/cgroups."
       }
@@ -337,7 +337,7 @@ sudo crictl images`
         code: {
           lang: "dockerfile",
           file: "Dockerfile",
-          src: `# syntax=docker/dockerfile:1.7
+          src: `# syntax=docker/dockerfile:1
 ARG NODE_VERSION=24
 
 FROM node:\${NODE_VERSION}-alpine AS deps
@@ -400,19 +400,19 @@ docker image ls task-api`
     quiz: [
       {
         q: "Trong multi-stage build, image kết quả chứa gì?",
-        options: ["Toàn bộ layer của mọi stage", "Chỉ các layer của stage cuối (hoặc stage chọn bằng --target)", "Chỉ stage đầu tiên", "Chỉ các file trong .dockerignore"],
+        options: ["Layer của mọi stage, xếp chồng theo thứ tự", "Layer của stage cuối hoặc stage chọn bằng --target", "Layer của stage đầu tiên cộng file được COPY --from", "Layer của stage có nhiều lệnh RUN nhất"],
         answer: 1,
         explain: "Các stage trung gian chỉ dùng để tạo artifact. Image cuối là stage được chọn làm target, mặc định là stage cuối cùng."
       },
       {
         q: "Vì sao stage runtime bắt đầu bằng một FROM mới thay vì FROM build?",
-        options: ["Để build nhanh hơn", "Để có base sạch, không mang theo source, compiler và devDependencies", "Vì Docker bắt buộc", "Để dùng được USER"],
+        options: ["Để stage runtime build song song nhanh hơn", "Để không kế thừa source, compiler, devDependencies", "Vì Docker không cho FROM một stage đã đặt tên", "Vì lệnh USER chỉ dùng được sau FROM image gốc"],
         answer: 1,
         explain: "FROM build sẽ kế thừa mọi layer của stage build, gồm cả những thứ không cần khi chạy. Bắt đầu lại từ base giúp image gọn."
       },
       {
         q: "Lệnh `docker build --target build .` dùng để làm gì?",
-        options: ["Chỉ build stage tên build và dừng ở đó", "Build rồi push lên registry", "Build mọi stage trừ build", "Đổi tên image thành build"],
+        options: ["Build tới stage tên build và lấy nó làm image", "Build toàn bộ rồi push stage build lên registry", "Build mọi stage trừ stage tên build", "Gắn tag build cho image của stage cuối"],
         answer: 0,
         explain: "`--target` chọn stage làm image kết quả. Thường dùng để tạo image dev hoặc image chạy test từ cùng một Dockerfile."
       }
@@ -492,24 +492,24 @@ docker build --progress=plain -t task-api:dev . 2>&1 | grep -E "CACHED|npm ci"`
     pitfalls: [
       "Dùng `npm install` thay `npm ci` trong image: kết quả có thể khác lockfile. `npm ci` cài đúng theo lockfile và báo lỗi nếu không khớp.",
       "Thiếu `.dockerignore` nên `node_modules` từ macOS/Windows bị copy vào image Linux, gây lỗi native module.",
-      "Đặt `ARG` hoặc `ENV` có giá trị thay đổi mỗi lần build (như build time) ở đầu Dockerfile: mọi layer sau mất cache."
+      "Đặt `ARG` hoặc `ENV` có giá trị thay đổi mỗi lần build (như build time) ở đầu Dockerfile: với `ENV` mọi layer sau mất cache; với `ARG`, cache miss từ lệnh đầu tiên dùng nó, mà mọi lệnh `RUN` sau `ARG` đều ngầm nhận nó như biến môi trường. Khai báo các giá trị này càng gần cuối càng tốt."
     ],
     quiz: [
       {
         q: "Thứ tự nào tận dụng cache tốt nhất cho dự án Node?",
-        options: ["COPY . . → npm ci → build", "COPY package*.json → npm ci → COPY source → build", "npm ci → COPY package*.json → build", "COPY source → COPY package*.json → npm ci"],
+        options: ["COPY . . → npm ci → COPY package*.json → build", "COPY package*.json → npm ci → COPY source → build", "npm ci → COPY package*.json → COPY source → build", "COPY source → COPY package*.json → npm ci → build"],
         answer: 1,
         explain: "Dependency chỉ cài lại khi file khai báo thay đổi. Các thứ tự khác làm npm ci chạy lại mỗi lần sửa code hoặc không chạy được."
       },
       {
         q: "Ngoài tăng tốc, .dockerignore còn giúp gì?",
-        options: ["Mã hoá image", "Ngăn file nhạy cảm như .env lọt vào build context và image", "Giới hạn RAM khi build", "Tự động tag image"],
+        options: ["Mã hoá các layer của image khi push", "Ngăn file như .env lọt vào context và image", "Giới hạn RAM mà builder dùng khi build", "Loại file khỏi image đã build trước đó"],
         answer: 1,
         explain: "File bị ignore không được gửi cho builder nên không thể bị COPY vào image."
       },
       {
         q: "Vì sao build trên CI thường không thấy CACHED dù Dockerfile tối ưu?",
-        options: ["CI không hỗ trợ BuildKit", "Runner CI thường là máy mới, không có cache cục bộ nếu không cấu hình cache ngoài", "Do dùng alpine", "Do thiếu EXPOSE"],
+        options: ["Vì runner CI không hỗ trợ BuildKit", "Vì runner thường là máy mới, chưa có cache cục bộ", "Vì base alpine không lưu được layer cache", "Vì BuildKit tắt cache khi biến CI=true"],
         answer: 1,
         explain: "Cache lưu trên máy build. Runner ephemeral cần import/export cache qua gha hoặc registry."
       }
@@ -532,7 +532,7 @@ docker build --progress=plain -t task-api:dev . 2>&1 | grep -E "CACHED|npm ci"`
         h: "Không chạy bằng root",
         p: [
           "Mặc định process trong container chạy với UID 0. Nếu kẻ tấn công khai thác được lỗ hổng trong ứng dụng, họ có quyền root trong container, dễ ghi đè file và dễ leo thang hơn nếu có lỗ hổng runtime. Image `node` chính thức có sẵn user `node` (UID 1000), bạn chỉ cần `USER node` và cấp quyền file đúng bằng `--chown`.",
-          "Chạy non-root có một hệ quả: ứng dụng không bind được port dưới 1024 theo mặc định. Hãy để API nghe port 3000 và ánh xạ ra ngoài."
+          "Trên Linux truyền thống, user thường không bind được port dưới 1024 (privileged port). Docker Engine từ 20.10 đặt sysctl `net.ipv4.ip_unprivileged_port_start=0` trong container nên non-root vẫn bind được port 80, nhưng không phải runtime hay cluster nào cũng cấu hình như vậy. Quy ước an toàn và dễ mang đi là để API nghe port cao như 3000 rồi ánh xạ ra ngoài."
         ],
         code: {
           lang: "dockerfile",
@@ -586,21 +586,21 @@ docker run -d --env-file .env.production task-api:dev`
     quiz: [
       {
         q: "Vì sao không nên truyền secret qua ARG khi build?",
-        options: ["ARG không hỗ trợ ký tự đặc biệt", "Giá trị có thể lộ qua metadata/history của image", "ARG làm build chậm", "ARG chỉ dùng được trong FROM"],
+        options: ["Vì ARG không nhận ký tự đặc biệt trong token", "Vì giá trị có thể lộ qua history của image", "Vì ARG làm mất toàn bộ cache của build", "Vì ARG chỉ dùng được trong lệnh FROM"],
         answer: 1,
         explain: "Giá trị ARG dùng trong RUN được ghi lại trong lịch sử build, ai có image đều xem được. Dùng secret mount của BuildKit."
       },
       {
         q: "Nhược điểm chính của distroless image là gì?",
-        options: ["Kích thước lớn", "Không có shell nên khó exec vào để debug", "Không chạy được Node", "Không hỗ trợ non-root"],
+        options: ["Phải tự cài Node bằng apt khi build", "Không có shell nên khó exec vào debug", "Chỉ chạy được Node bản LTS cũ", "Không có user nào khác ngoài root"],
         answer: 1,
         explain: "Distroless bỏ shell và package manager để giảm bề mặt tấn công, đánh đổi là debug khó hơn. Nó vẫn chạy Node và có user nonroot."
       },
       {
-        q: "Sau khi thêm `USER node`, ứng dụng báo lỗi không bind được port 80. Cách xử lý hợp lý?",
-        options: ["Quay lại chạy root", "Cho ứng dụng nghe port 3000 trong container và ánh xạ port ra ngoài", "Tắt firewall", "Xoá EXPOSE"],
+        q: "Sau khi thêm `USER node`, ứng dụng báo `EACCES` khi bind port 80 trên một runtime không cho non-root dùng privileged port. Cách xử lý hợp lý?",
+        options: ["Bỏ USER node, quay lại chạy bằng root", "Nghe port 3000 trong container và map ra ngoài", "Tắt firewall trên host đang chạy container", "Xoá lệnh EXPOSE 80 khỏi Dockerfile"],
         answer: 1,
-        explain: "User thường không bind port dưới 1024 theo mặc định. Nghe port cao trong container rồi map ra ngoài (ví dụ -p 80:3000) là cách chuẩn."
+        explain: "Port dưới 1024 cần quyền đặc biệt trừ khi runtime hạ ngưỡng `ip_unprivileged_port_start` (Docker 20.10+ làm vậy, nhiều nơi khác thì không). Nghe port cao trong container rồi map ra ngoài (ví dụ -p 80:3000) chạy được ở mọi nơi. EXPOSE chỉ là metadata, không ảnh hưởng việc bind."
       }
     ]
   },
@@ -617,7 +617,7 @@ docker run -d --env-file .env.production task-api:dev`
         h: "Dạng exec và dạng shell của CMD",
         p: [
           "`CMD npm start` (dạng shell) thực chất chạy `/bin/sh -c \"npm start\"`. PID 1 là shell, không phải Node. Tuỳ shell, SIGTERM có thể không được chuyển tới Node, container bị treo tới khi hết thời gian chờ rồi bị SIGKILL. Chạy qua `npm start` còn thêm một tầng process nữa.",
-          "Dạng exec `CMD [\"node\", \"dist/main.js\"]` chạy trực tiếp Node làm PID 1, tín hiệu tới thẳng ứng dụng. Để an toàn hơn, dùng init nhỏ như `tini` làm PID 1: nó chuyển tiếp tín hiệu và dọn zombie. Có thể thêm tini trong image hoặc dùng cờ `docker run --init`."
+          "Dạng exec `CMD [\"node\", \"dist/main.js\"]` chạy trực tiếp Node làm PID 1, tín hiệu tới thẳng ứng dụng. Nhưng nhớ đặc điểm PID 1 ở trên: Node mặc định không đăng ký handler cho SIGTERM, nên nếu code của bạn không tự bắt SIGTERM (ví dụ NestJS chưa gọi `app.enableShutdownHooks()`), tín hiệu bị bỏ qua và container vẫn chờ tới SIGKILL. Để an toàn hơn, dùng init nhỏ như `tini` làm PID 1: nó chuyển tiếp tín hiệu và dọn zombie. Có thể thêm tini trong image hoặc dùng cờ `docker run --init`. Khi Node không còn là PID 1, SIGTERM không bị bỏ qua nữa: không có handler thì Node thoát ngay (không graceful), có handler thì code shutdown của bạn được chạy."
         ],
         code: {
           lang: "dockerfile",
@@ -677,13 +677,13 @@ docker inspect api --format '{{.State.ExitCode}}'`
       },
       {
         q: "`docker stop` luôn mất khoảng 10 giây. Nguyên nhân khả dĩ nhất?",
-        options: ["Image quá lớn", "Ứng dụng không nhận/xử lý SIGTERM nên bị SIGKILL sau thời gian chờ", "Thiếu EXPOSE", "Healthcheck quá dày"],
+        options: ["Image quá lớn nên gỡ layer chậm", "SIGTERM không được xử lý nên chờ tới SIGKILL", "Thiếu EXPOSE nên Docker không đóng được port", "Healthcheck chạy quá dày chặn lệnh stop"],
         answer: 1,
         explain: "10 giây là thời gian chờ mặc định trước SIGKILL. Dừng đúng mốc đó nghĩa là tín hiệu không được xử lý."
       },
       {
         q: "Kubernetes xử lý HEALTHCHECK trong Dockerfile thế nào?",
-        options: ["Dùng thay liveness probe", "Bỏ qua, dùng liveness/readiness probe khai báo trong manifest", "Chuyển thành readiness probe", "Báo lỗi khi deploy"],
+        options: ["Tự dùng nó làm liveness probe", "Bỏ qua, chỉ dùng probe khai báo trong Pod", "Tự chuyển nó thành readiness probe", "Từ chối deploy image có HEALTHCHECK"],
         answer: 1,
         explain: "Kubernetes không dùng HEALTHCHECK của image; bạn khai báo probe trong spec của Pod."
       }
@@ -762,19 +762,19 @@ docker buildx imagetools create -t $IMAGE:1.4.0 $IMAGE:$SHA`
     quiz: [
       {
         q: "Vì sao tag theo git SHA giúp rollback dễ dàng?",
-        options: ["Vì SHA ngắn hơn", "Vì mỗi tag bất biến ứng với một commit, bản cũ vẫn còn nguyên để deploy lại", "Vì registry tự rollback", "Vì SHA nén tốt hơn"],
+        options: ["Vì tag SHA ngắn nên dễ gõ lại khi sự cố", "Vì mỗi tag ứng với một commit và không bị ghi đè", "Vì registry tự rollback khi image mới lỗi", "Vì image tag theo SHA được nén nhỏ hơn"],
         answer: 1,
         explain: "Tag bất biến giữ nguyên image cũ. Rollback chỉ là deploy lại tag SHA trước đó."
       },
       {
         q: "Thực hành đúng khi đưa code từ staging lên production là gì?",
-        options: ["Build lại image từ cùng commit", "Dùng lại chính image (cùng tag/digest) đã chạy ở staging", "Dùng tag latest", "Build trên máy dev rồi push"],
+        options: ["Build lại image từ cùng commit cho production", "Dùng lại chính image đã chạy ở staging", "Deploy tag latest vừa được cập nhật", "Build trên máy dev rồi push thẳng lên"],
         answer: 1,
         explain: "Promote cùng một artifact đảm bảo production chạy đúng thứ đã được kiểm thử."
       },
       {
         q: "Tag `latest` thực chất là gì?",
-        options: ["Luôn trỏ tới image build gần nhất trên registry", "Tag mặc định khi không chỉ định tag, trỏ tới image nào là do người push quyết định", "Tag được registry quản lý tự động", "Digest của image"],
+        options: ["Tag registry tự trỏ tới image push gần nhất", "Tag mặc định khi không ghi tag, trỏ đâu do người push", "Tag bất biến, được khoá sau lần push đầu tiên", "Bí danh của digest sha256 mới nhất"],
         answer: 1,
         explain: "latest chỉ là quy ước tên. Nếu ai đó push tag khác mà không cập nhật latest, latest vẫn trỏ về image cũ."
       }
@@ -849,19 +849,19 @@ docker buildx build \\
     quiz: [
       {
         q: "Cách an toàn để dùng token npm private khi build image?",
-        options: ["ARG NPM_TOKEN", "ENV NPM_TOKEN", "RUN --mount=type=secret", "COPY file token rồi xoá"],
+        options: ["ARG NPM_TOKEN rồi dùng trong RUN", "ENV NPM_TOKEN rồi unset ở cuối", "RUN --mount=type=secret,id=npm_token", "COPY file token rồi RUN rm ngay sau"],
         answer: 2,
         explain: "Secret mount chỉ tồn tại trong lúc chạy lệnh RUN, không vào layer. ARG/ENV/COPY đều để lại dấu vết trong image."
       },
       {
         q: "Deploy image lên server báo `exec format error`. Nguyên nhân thường gặp?",
-        options: ["Thiếu biến môi trường", "Image build cho kiến trúc CPU khác với server", "Port bị trùng", "Healthcheck sai"],
+        options: ["Container thiếu biến môi trường bắt buộc", "Image build cho kiến trúc CPU khác server", "Port của container bị trùng trên host", "Healthcheck của image trả về exit code 1"],
         answer: 1,
         explain: "Binary cho arm64 không chạy trên amd64 và ngược lại. Build đa kiến trúc hoặc chỉ định platform đúng."
       },
       {
         q: "`--cache-to type=registry,mode=max` có tác dụng gì?",
-        options: ["Nén image", "Xuất cache mọi layer, gồm cả stage trung gian, lên registry để lần build sau dùng", "Xoá cache cũ", "Chỉ cache stage cuối"],
+        options: ["Nén layer cache ở mức tối đa trước khi push", "Xuất cache cả layer của stage trung gian lên registry", "Xuất cả nội dung cache mount lên registry", "Chỉ xuất cache layer của image kết quả"],
         answer: 1,
         explain: "mode=max lưu cả layer stage trung gian; mode=min (mặc định) chỉ lưu layer của image kết quả."
       }
@@ -971,7 +971,7 @@ docker compose down            # dừng, giữ volume`
     quiz: [
       {
         q: "Để API chỉ khởi động khi Postgres đã nhận kết nối, bạn cấu hình gì?",
-        options: ["depends_on: [db]", "depends_on với condition: service_healthy và healthcheck cho db", "restart: always", "links: db"],
+        options: ["depends_on: [db] dạng danh sách", "healthcheck cho db + condition: service_healthy", "restart: always cho service api", "links: [db] trong service api"],
         answer: 1,
         explain: "Dạng danh sách chỉ đảm bảo thứ tự khởi động container. Cần healthcheck kết hợp condition service_healthy để chờ sẵn sàng."
       },
@@ -983,7 +983,7 @@ docker compose down            # dừng, giữ volume`
       },
       {
         q: "Trường `version: \"3.8\"` ở đầu compose.yaml hiện nay thế nào?",
-        options: ["Bắt buộc", "Lỗi thời, Compose bỏ qua và có thể cảnh báo", "Quyết định phiên bản Docker", "Chỉ cần cho Windows"],
+        options: ["Bắt buộc, thiếu thì Compose báo lỗi", "Lỗi thời, Compose bỏ qua và in cảnh báo", "Quyết định phiên bản Docker Engine cần dùng", "Chọn giữa Compose v1 và Compose v2"],
         answer: 1,
         explain: "Compose Specification không dùng trường version nữa; Docker Compose v2 bỏ qua nó."
       }
@@ -1081,13 +1081,13 @@ docker compose exec api getent hosts db   # kiểm tra DNS nội bộ`
       },
       {
         q: "Loại lưu trữ nào phù hợp cho dữ liệu PostgreSQL khi chạy Compose?",
-        options: ["Writable layer của container", "Named volume", "tmpfs", "Build context"],
+        options: ["Writable layer của container", "Named volume do Docker quản lý", "tmpfs mount trong RAM", "Thư mục trong build context"],
         answer: 1,
         explain: "Named volume bền qua việc xoá/tạo lại container và do Docker quản lý. tmpfs mất khi dừng, writable layer mất khi xoá container."
       },
       {
         q: "Hai service trong cùng network Compose có cần khai báo `ports` để gọi nhau không?",
-        options: ["Có, luôn luôn", "Không, ports chỉ để công bố ra host", "Chỉ khi dùng TCP", "Chỉ khi dùng bind mount"],
+        options: ["Có, thiếu ports thì service khác không kết nối được", "Không, ports chỉ để công bố port ra host", "Chỉ cần khi hai service dùng giao thức TCP", "Chỉ cần khi service đích nằm ở network internal"],
         answer: 1,
         explain: "Giao tiếp nội bộ đi qua network của Compose tới port container. `ports` chỉ ánh xạ ra host."
       }
@@ -1182,13 +1182,13 @@ TAG=a1b2c3d docker compose up -d`
     quiz: [
       {
         q: "File `.env` nằm cạnh compose.yaml mặc định được dùng để làm gì?",
-        options: ["Tự nạp vào mọi container", "Nội suy biến trong file compose.yaml", "Lưu secret mã hoá", "Chỉ định profile"],
+        options: ["Tự nạp biến vào mọi container", "Nội suy biến trong chính file compose.yaml", "Lưu secret dưới dạng mã hoá", "Chỉ nạp biến cho service có profile"],
         answer: 1,
         explain: "File .env của project dùng cho interpolation trong YAML. Muốn biến vào container cần env_file hoặc environment."
       },
       {
         q: "Service có `profiles: [tools]` sẽ chạy khi nào?",
-        options: ["Luôn chạy", "Chỉ khi bật profile tools (ví dụ --profile tools)", "Chỉ khi chạy trên CI", "Khi có compose.override.yaml"],
+        options: ["Luôn chạy cùng các service khác", "Khi profile tools được bật", "Chỉ khi biến CI=true được đặt", "Khi có file compose.override.yaml"],
         answer: 1,
         explain: "Service gắn profile chỉ được khởi động khi profile đó được kích hoạt, hoặc khi bạn chạy trực tiếp service đó."
       },
@@ -1269,19 +1269,19 @@ docker network inspect task-api_default`
     quiz: [
       {
         q: "Container thoát với exit code 137. Điều đó thường nghĩa là gì?",
-        options: ["Lỗi cú pháp JavaScript", "Process bị SIGKILL, hay gặp do vượt giới hạn memory (OOM)", "Thoát bình thường", "Thiếu biến môi trường"],
+        options: ["Lỗi cú pháp JavaScript khi khởi động", "Process bị SIGKILL, hay gặp do OOM", "Process thoát bình thường sau SIGTERM", "Không tìm thấy lệnh trong CMD"],
         answer: 1,
         explain: "137 = 128 + 9 (SIGKILL). Kiểm tra `State.OOMKilled` để biết có phải do OOM."
       },
       {
         q: "API trong container báo `getaddrinfo ENOTFOUND db`. Kiểm tra gì trước?",
-        options: ["Dung lượng ổ đĩa", "Service db có cùng network và tên service đúng không", "Phiên bản Node", "Tag image"],
+        options: ["Dung lượng ổ đĩa còn trống của host", "Hai service có chung network và đúng tên không", "Phiên bản Node trong image của API", "Tag image của Postgres có đúng không"],
         answer: 1,
         explain: "ENOTFOUND là lỗi phân giải DNS. Trong Compose, tên service chỉ phân giải được khi hai container chung network."
       },
       {
         q: "Container chạy nhưng từ host gọi localhost:3000 không được, dù đã map `3000:3000`. Nguyên nhân khả dĩ?",
-        options: ["Ứng dụng chỉ nghe 127.0.0.1 bên trong container", "Thiếu volume", "Healthcheck chưa khai báo", "Image quá lớn"],
+        options: ["Ứng dụng chỉ nghe 127.0.0.1 trong container", "Service chưa khai báo volume cho /app", "Dockerfile chưa có lệnh HEALTHCHECK", "Dockerfile thiếu lệnh EXPOSE 3000"],
         answer: 0,
         explain: "127.0.0.1 trong container là loopback riêng của container, traffic từ port mapping đi vào interface khác. Ứng dụng cần nghe 0.0.0.0."
       }
@@ -1340,7 +1340,7 @@ kubectl describe pod <pod>          # Last State: Terminated, Reason: OOMKilled`
         list: [
           "Đo memory lúc tải bình thường và lúc cao điểm trong staging, đặt limit cao hơn đỉnh một khoảng an toàn.",
           "Với Node, một process chủ yếu dùng một core cho JavaScript; cấp nhiều CPU cho một process ít lợi, nên scale bằng nhiều replica.",
-          "Đặt giới hạn cho cả Postgres và Redis, và cấu hình `maxmemory` cho Redis để nó tự evict thay vì bị kill."
+          "Đặt giới hạn cho cả Postgres và Redis, và cấu hình `maxmemory` thấp hơn memory limit của container Redis để Redis tự xử lý khi đầy thay vì bị kill. Redis làm cache thì chọn policy evict (ví dụ `allkeys-lru`); Redis dùng cho BullMQ phải để `noeviction` (khi đầy, lệnh ghi báo lỗi thay vì âm thầm xoá job)."
         ],
         p: [
           "Giới hạn quá chặt gây OOM và throttle liên tục; quá lỏng thì mất tác dụng bảo vệ. Hãy xem đây là con số cần điều chỉnh theo dữ liệu thực."
@@ -1361,19 +1361,19 @@ kubectl describe pod <pod>          # Last State: Terminated, Reason: OOMKilled`
     quiz: [
       {
         q: "Container vượt giới hạn CPU thì điều gì xảy ra?",
-        options: ["Bị OOM kill", "Bị throttle, chạy chậm lại", "Tự khởi động lại", "Bị xoá"],
+        options: ["Bị kernel OOM kill", "Bị throttle, chạy chậm lại", "Bị Docker khởi động lại", "Bị chuyển sang core khác"],
         answer: 1,
         explain: "CPU là tài nguyên nén được; cgroups giới hạn thời gian CPU nên process chạy chậm hơn chứ không bị giết."
       },
       {
         q: "Vì sao nên đặt `--max-old-space-size` thấp hơn memory limit?",
-        options: ["Để build nhanh hơn", "Chừa chỗ cho bộ nhớ ngoài heap (buffer, stack, native) và để Node báo lỗi rõ ràng trước khi bị kernel kill", "Để tăng số core", "Vì Docker bắt buộc"],
+        options: ["Để garbage collector chạy ít hơn và nhanh hơn", "Để chừa chỗ cho bộ nhớ ngoài heap như buffer", "Để Node dùng được nhiều core CPU hơn", "Vì Docker từ chối chạy nếu heap bằng limit"],
         answer: 1,
         explain: "Tổng memory của process lớn hơn heap V8. Heap thấp hơn limit giúp tránh OOM kill âm thầm."
       },
       {
         q: "Cách xác nhận container dừng vì OOM?",
-        options: ["docker logs", "docker inspect xem State.OOMKilled", "docker images", "docker volume ls"],
+        options: ["docker logs xem dòng log cuối", "docker inspect xem State.OOMKilled", "docker stats xem MEM USAGE hiện tại", "docker events lọc theo tên image"],
         answer: 1,
         explain: "State.OOMKilled = true (thường kèm exit code 137) xác nhận OOM. Log ứng dụng thường không ghi được gì vì process bị kill đột ngột."
       }
@@ -1450,19 +1450,19 @@ grype task-api:dev --fail-on critical`
     quiz: [
       {
         q: "Trong pipeline CI, bước quét image nên nằm ở đâu?",
-        options: ["Sau khi deploy production", "Sau build, trước push", "Trước khi build", "Chỉ chạy thủ công hằng tháng"],
+        options: ["Sau khi deploy lên production", "Sau khi build, trước khi push", "Trước khi build, quét Dockerfile", "Sau khi push, trước khi deploy"],
         answer: 1,
         explain: "Quét trước push đảm bảo image có lỗ hổng nghiêm trọng không vào registry dùng để deploy."
       },
       {
         q: "`--ignore-unfixed` trong Trivy làm gì?",
-        options: ["Bỏ qua CVE chưa có bản vá", "Bỏ qua mọi CVE", "Tự vá lỗ hổng", "Chỉ quét layer cuối"],
+        options: ["Ẩn CVE chưa có bản vá", "Ẩn CVE mức LOW và MEDIUM", "Tự nâng package lên bản đã vá", "Bỏ qua CVE trong base image"],
         answer: 0,
         explain: "Nó ẩn các CVE chưa có phiên bản sửa, giúp tập trung vào lỗ hổng bạn thực sự xử lý được."
       },
       {
         q: "CVE nằm trong openssl của base image. Cách xử lý phù hợp nhất?",
-        options: ["Tắt trình quét", "Nâng lên base image bản mới đã vá hoặc chọn base tối giản hơn", "Xoá openssl bằng RUN rm", "Đổi tag thành latest"],
+        options: ["Thêm CVE vào .trivyignore vĩnh viễn", "Nâng base image lên bản đã vá", "Xoá thư viện openssl bằng RUN rm", "Đổi FROM sang tag latest của base"],
         answer: 1,
         explain: "Lỗ hổng nằm ở base nên cần base đã vá. Xoá file ở layer sau không loại nó khỏi image và có thể làm hỏng ứng dụng."
       }

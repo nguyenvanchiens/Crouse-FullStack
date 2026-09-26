@@ -65,19 +65,19 @@ app.use(session({
     quiz: [
       {
         q: "Vì sao service cần stateless để scale ngang dễ dàng?",
-        options: ["Vì stateless chạy nhanh hơn trên CPU","Vì load balancer chỉ hỗ trợ service stateless","Vì stateless không cần database","Vì request có thể vào bất kỳ instance nào mà không phụ thuộc dữ liệu cục bộ"],
+        options: ["Vì code stateless được V8 tối ưu tốt hơn nên tốn ít CPU hơn","Vì load balancer chỉ định tuyến được tới service không có state","Vì service stateless không cần kết nối tới database nào","Vì request vào instance nào cũng được, không cần dữ liệu cục bộ"],
         answer: 3,
         explain: "Stateless nghĩa là không có dữ liệu người dùng nằm riêng trong một instance, nên thêm/bớt/mất instance không ảnh hưởng. Stateless vẫn cần DB; nó không nhanh hơn về CPU; load balancer vẫn làm việc được với service có state (qua sticky session) nhưng đó là cách nên tránh."
       },
       {
         q: "Nhược điểm chính của scale dọc là gì?",
-        options: ["Phải viết lại toàn bộ code", "Không dùng được với PostgreSQL", "Có giới hạn phần cứng, chi phí tăng mạnh ở cấu hình cao và vẫn là một điểm lỗi duy nhất", "Không thể tăng RAM"],
+        options: ["Luôn phải viết lại code để chạy trên máy lớn hơn","Không áp dụng được cho database như PostgreSQL","Có trần phần cứng, giá cao cấp tăng nhanh, vẫn là một điểm lỗi","Hệ điều hành không nhận thêm RAM sau khi đã cài đặt"],
         answer: 2,
         explain: "Scale dọc không đòi đổi code và rất hợp với DB, nhưng máy lớn nhất vẫn có trần, giá cao cấp đắt, và một máy chết là hệ thống chết."
       },
       {
         q: "Ứng dụng NestJS lưu file upload vào thư mục `./uploads` trên máy. Khi scale lên 3 pod, điều gì xảy ra?",
-        options: ["File chỉ tồn tại ở pod đã nhận upload, các pod khác trả 404 khi đọc","Không có vấn đề gì","Kubernetes tự đồng bộ thư mục giữa các pod","Load balancer tự chuyển request về đúng pod"],
+        options: ["File chỉ có ở pod nhận upload, pod khác đọc sẽ báo 404","Không có vấn đề gì vì ba pod dùng chung một image","Kubernetes tự đồng bộ thư mục ./uploads giữa các pod","Load balancer tự chuyển request đọc file về đúng pod"],
         answer: 0,
         explain: "Ổ đĩa của pod là cục bộ (và mất khi pod bị thay). Kubernetes không tự đồng bộ, load balancer không biết file nằm ở đâu. Giải pháp là object storage như S3/MinIO."
       }
@@ -102,7 +102,7 @@ app.use(session({
           "Weighted round robin: server mạnh nhận nhiều hơn theo trọng số, hữu ích khi các máy không đồng đều hoặc khi canary.",
           "Least connections: gửi vào server đang có ít kết nối nhất. Tốt khi thời gian xử lý chênh lệch lớn, ví dụ WebSocket hoặc request dài.",
           "IP hash / consistent hash: cùng một khóa (IP, userId) luôn vào cùng server. Dùng cho cache cục bộ hoặc khi bắt buộc có affinity.",
-          "Power of two choices: chọn ngẫu nhiên 2 server rồi lấy server tải thấp hơn. Gần tốt như least connections nhưng rẻ hơn khi có nhiều LB."
+          "Power of two choices: chọn ngẫu nhiên 2 server rồi lấy server tải thấp hơn. Gần tốt như least connections nhưng rẻ hơn, và tránh được hiện tượng nhiều LB (mỗi LB có thông tin tải hơi cũ) cùng dồn request vào một server “ít tải nhất”."
         ],
         code: {
           lang: "nginx",
@@ -162,7 +162,7 @@ server {
       },
       {
         q: "Vì sao nên tránh sticky session cho REST API?",
-        options: ["Vì nó gây lệch tải, mất session khi server chết và khó autoscale","Vì nó làm TLS không hoạt động","Vì trình duyệt không hỗ trợ cookie","Vì nó bắt buộc dùng L4"],
+        options: ["Vì gây lệch tải, mất session khi server chết, khó autoscale","Vì cookie affinity làm TLS termination ngừng hoạt động","Vì trình duyệt hiện đại chặn cookie do load balancer đặt","Vì sticky session chỉ làm được trên load balancer L4"],
         answer: 0,
         explain: "Sticky session gắn user với một máy, nên tải không đều và state mất theo máy. TLS và cookie vẫn hoạt động bình thường; sticky thường làm ở L7 bằng cookie."
       }
@@ -204,7 +204,7 @@ async function getProduct(id: string): Promise<Product | null> {
   // Thêm jitter vào TTL để các key không hết hạn cùng lúc
   const ttl = TTL + Math.floor(Math.random() * 60);
   // Cache cả kết quả rỗng (negative cache) để chặn truy vấn lặp vào id không tồn tại
-  await redis.set(key, JSON.stringify(row), { EX: row ? ttl : 30 });
+  await redis.set(key, JSON.stringify(row), { expiration: { type: 'EX', value: row ? ttl : 30 } });
   return row;
 }
 
@@ -248,7 +248,7 @@ async function updateProduct(id: string, data: Partial<Product>) {
       },
       {
         q: "Vì sao thêm jitter ngẫu nhiên vào TTL?",
-        options: ["Để các key được nạp cùng lúc không hết hạn cùng lúc","Để tiết kiệm RAM","Để Redis chạy nhanh hơn","Để dữ liệu luôn nhất quán tuyệt đối"],
+        options: ["Để các key nạp cùng lúc không hết hạn cùng một thời điểm","Để Redis giải phóng bớt RAM sớm hơn cho key ít dùng","Để Redis xử lý lệnh GET nhanh hơn nhờ phân tán key","Để cache và DB luôn nhất quán tuyệt đối với nhau"],
         answer: 0,
         explain: "Nhiều key được nạp cùng thời điểm (ví dụ sau deploy) sẽ hết hạn đồng loạt và dồn tải vào DB. Jitter trải thời điểm hết hạn ra. Nó không đảm bảo nhất quán hay tiết kiệm RAM."
       }
@@ -301,24 +301,24 @@ SELECT now() - pg_last_xact_replay_timestamp() AS replay_delay;`
     pitfalls: [
       "Chuyển toàn bộ truy vấn đọc sang replica mà không xét lag: luồng “tạo xong rồi redirect sang trang chi tiết” trả 404. Đọc từ primary cho các luồng ngay sau ghi.",
       "Không giám sát replication lag: replica trễ nhiều phút mà không ai biết. Cảnh báo theo `replay_lag`.",
-      "Failover tự động mà không fencing leader cũ: hai node cùng nghĩ mình là leader (split-brain) và cùng nhận ghi."
+      "Failover tự động mà không fencing leader cũ (fencing là cô lập hẳn leader cũ, ví dụ tắt máy hoặc chặn kết nối, để nó không nhận ghi được nữa): hai node cùng nghĩ mình là leader (split-brain) và cùng nhận ghi."
     ],
     quiz: [
       {
         q: "User cập nhật avatar, trang tải lại vẫn hiện avatar cũ vài giây. Nguyên nhân khả dĩ nhất?",
-        options: ["Leader bị lỗi","Index bị hỏng","Đọc từ replica bất đồng bộ đang bị replication lag","Transaction bị rollback"],
+        options: ["Leader vừa bị lỗi và đang failover sang node khác","Index trên bảng users bị hỏng nên trả dòng cũ","Trang đọc từ replica bất đồng bộ đang bị trễ","Transaction cập nhật avatar đã bị rollback"],
         answer: 2,
         explain: "Ghi đã vào leader nhưng replica chưa kịp áp dụng. Nếu transaction rollback thì sẽ không bao giờ thấy ảnh mới; đây chỉ là trễ tạm thời."
       },
       {
         q: "Nhược điểm của replication đồng bộ là gì?",
-        options: ["Có thể mất giao dịch đã commit khi failover","Không dùng được với PostgreSQL","Không đọc được từ replica","Ghi chậm hơn và có thể bị chặn nếu replica đồng bộ không phản hồi"],
+        options: ["Có thể mất giao dịch đã commit khi leader bị failover","PostgreSQL không hỗ trợ chế độ đồng bộ cho replica","Replica đồng bộ không được phép phục vụ truy vấn đọc","Ghi chậm hơn và có thể treo khi replica không phản hồi"],
         answer: 3,
         explain: "Đồng bộ phải chờ replica xác nhận nên thêm độ trễ và phụ thuộc vào replica. Việc mất giao dịch khi failover là nhược điểm của bất đồng bộ."
       },
       {
         q: "Thách thức riêng lớn nhất của multi-leader so với single-leader là gì?",
-        options: ["Xử lý xung đột khi nhiều leader cùng ghi một bản ghi","Không scale đọc được","Không chịu được lỗi một node","Không dùng được WAL"],
+        options: ["Giải quyết xung đột khi hai leader cùng ghi một bản ghi","Không thể scale đọc bằng cách thêm follower","Mất một node bất kỳ là toàn bộ hệ thống ngừng ghi","Không dùng được WAL để gửi thay đổi sang node khác"],
         answer: 0,
         explain: "Khi hai leader nhận ghi đồng thời cho cùng dữ liệu, hệ thống phải có chiến lược giải quyết xung đột. Single-leader tránh được điều này vì mọi ghi đi qua một chỗ."
       }
@@ -344,7 +344,7 @@ SELECT now() - pg_last_xact_replay_timestamp() AS replay_delay;`
       {
         h: "Consistent hashing",
         p: [
-          "Consistent hashing đặt cả node và key lên một vòng hash. Mỗi key thuộc về node đầu tiên gặp khi đi theo chiều kim đồng hồ. Khi thêm hoặc bớt một node, chỉ các key trong đoạn vòng liền kề bị chuyển, khoảng 1/N số key, thay vì gần như tất cả như `mod N`. Mỗi node thật được đặt nhiều virtual node trên vòng để phân bố đều hơn. Kỹ thuật này dùng trong Cassandra, DynamoDB và nhiều client cache. Redis Cluster dùng biến thể khác: 16384 hash slot cố định chia cho các node."
+          "Consistent hashing đặt cả node và key lên một vòng hash. Mỗi key thuộc về node đầu tiên gặp khi đi theo chiều kim đồng hồ. Khi thêm hoặc bớt một node, chỉ các key trong đoạn vòng liền kề bị chuyển, trung bình khoảng K/N key (K là tổng số key, N là số node), thay vì gần như tất cả như `mod N`. Mỗi node thật được đặt nhiều virtual node (vnode, nhiều điểm trên vòng cho cùng một máy) để phân bố đều hơn và để khi một node rời đi, tải của nó được chia cho nhiều node khác thay vì dồn vào một node kế bên. Kỹ thuật này được phổ biến bởi bài báo Dynamo của Amazon (2007) và dùng trong Cassandra, Riak cùng nhiều client cache (ví dụ ketama cho Memcached). Redis Cluster dùng biến thể khác: 16384 hash slot cố định chia cho các node."
         ],
         code: {
           lang: "typescript",
@@ -403,15 +403,15 @@ export class HashRing {
       },
       {
         q: "Lợi ích chính của consistent hashing so với `hash(key) mod N`?",
-        options: ["Hash nhanh hơn","Không cần replication","Hỗ trợ truy vấn theo khoảng","Khi thêm/bớt node chỉ một phần nhỏ key phải di chuyển"],
+        options: ["Hàm hash chạy nhanh hơn phép chia lấy dư","Không còn cần replication cho từng shard","Truy vấn theo khoảng khóa trở nên hiệu quả","Thêm/bớt node chỉ làm một phần nhỏ key di chuyển"],
         answer: 3,
         explain: "Với mod N, đổi N làm hầu hết key đổi vị trí. Consistent hashing chỉ chuyển các key ở đoạn vòng bị ảnh hưởng. Nó không giúp truy vấn khoảng và không thay replication."
       },
       {
         q: "Một sản phẩm flash sale nhận 90% lượt đọc. Cách xử lý phù hợp nhất?",
-        options: ["Cache mạnh key đó (kể cả cache cục bộ ngắn hạn) và cân nhắc nhân bản key","Tăng số shard lên gấp đôi","Chuyển sang range partitioning","Xóa sản phẩm"],
+        options: ["Cache mạnh key đó, kể cả cache cục bộ vài giây trong app","Tăng gấp đôi số shard để chia tải cho key đó","Chuyển sang range partitioning theo mã sản phẩm","Tách sản phẩm sang một bảng riêng trong cùng shard"],
         answer: 0,
-        explain: "Thêm shard không giúp vì một key vẫn nằm ở một shard. Hot key cần cache hoặc nhân bản để rải tải đọc."
+        explain: "Thêm shard, đổi kiểu partition hay tách bảng trong cùng shard đều không giúp, vì một key vẫn nằm ở một shard. Hot key cần cache (cả Redis lẫn cache cục bộ ngắn hạn) hoặc nhân bản để rải tải đọc."
       }
     ]
   },
@@ -435,7 +435,8 @@ export class HashRing {
         h: "Các mô hình nhất quán",
         list: [
           "Strong (linearizable): như có một bản dữ liệu duy nhất; ghi xong thì mọi người đọc đều thấy. Đắt, cần đồng thuận hoặc quorum.",
-          "Sequential/causal: các thao tác có quan hệ nhân quả được thấy theo đúng thứ tự (thấy câu trả lời thì phải thấy câu hỏi). Rẻ hơn strong.",
+          "Sequential: mọi node thấy tất cả thao tác theo cùng một thứ tự chung (tôn trọng thứ tự trong từng client), nhưng thứ tự đó không buộc khớp với thời gian thực như linearizable.",
+          "Causal: chỉ các thao tác có quan hệ nhân quả mới phải được thấy theo đúng thứ tự (thấy câu trả lời thì phải thấy câu hỏi); các thao tác độc lập có thể được thấy theo thứ tự khác nhau. Yếu hơn sequential nhưng rẻ hơn nhiều, và vẫn sẵn sàng khi có partition.",
           "Read-your-writes, monotonic reads: đảm bảo ở góc nhìn một phiên người dùng.",
           "Eventual: nếu ngừng ghi, các replica cuối cùng sẽ hội tụ. Không nói trước bao lâu, có thể đọc dữ liệu cũ."
         ],
@@ -563,13 +564,13 @@ Cache: 20% bài nóng trong ngày = 4M x 1 KB ≈ 4 GB -> vừa một Redis`
       },
       {
         q: "Ước lượng cho thấy ảnh chiếm hàng trăm TB và băng thông vài Gbps. Quyết định hợp lý nhất?",
-        options: ["Lưu ảnh trên object storage và phục vụ qua CDN","Lưu ảnh dạng BYTEA trong PostgreSQL","Lưu ảnh trong Redis","Lưu ảnh trên ổ đĩa của API server"],
-        answer: 0,
+        options: ["Lưu ảnh dạng BYTEA trong bảng PostgreSQL","Lưu ảnh trên object storage, phục vụ qua CDN","Lưu ảnh trong Redis để đọc cho nhanh","Lưu ảnh trên ổ đĩa local của API server"],
+        answer: 1,
         explain: "Object storage rẻ và gần như không giới hạn dung lượng; CDN gánh băng thông gần người dùng. DB và Redis quá đắt cho blob lớn; ổ đĩa server không scale ngang được."
       },
       {
         q: "Vì sao cần tính QPS lúc peak chứ không chỉ trung bình?",
-        options: ["Vì trung bình luôn bằng 0","Vì peak dễ tính hơn","Vì hệ thống phải chịu được lúc tải cao nhất, thường gấp vài lần trung bình","Vì người phỏng vấn không quan tâm trung bình"],
+        options: ["Vì QPS trung bình thường không đo được chính xác","Vì peak dễ tính hơn trung bình khi thiếu số liệu","Vì hệ thống phải chịu được lúc tải cao nhất trong ngày","Vì người phỏng vấn chỉ chấm điểm con số peak"],
         answer: 2,
         explain: "Tải thực tế dao động theo giờ trong ngày và sự kiện. Thiết kế theo trung bình thì giờ cao điểm sẽ quá tải."
       }
@@ -642,13 +643,13 @@ export class OrderService {
     quiz: [
       {
         q: "Đặc điểm nào phân biệt modular monolith với monolith thông thường?",
-        options: ["Deploy thành nhiều container","Không dùng database","Mỗi module dùng ngôn ngữ lập trình khác","Các module có ranh giới rõ, sở hữu dữ liệu riêng và chỉ giao tiếp qua API công khai"],
+        options: ["Được deploy thành nhiều container chạy độc lập","Các module gọi nhau qua HTTP nội bộ thay vì gọi hàm","Mỗi module viết bằng một ngôn ngữ lập trình khác","Module có ranh giới rõ, chỉ gọi nhau qua API công khai"],
         answer: 3,
         explain: "Modular monolith vẫn là một đơn vị deploy; khác biệt nằm ở kỷ luật ranh giới bên trong."
       },
       {
         q: "Lý do nào là lý do tốt để tách một phần thành microservice?",
-        options: ["Vì microservices là xu hướng", "Vì đội muốn thử Kubernetes", "Phần đó cần scale và tài nguyên rất khác (ví dụ xử lý video cần GPU)", "Vì file code quá dài"],
+        options: ["Microservices là xu hướng mà các công ty lớn đang dùng","Đội muốn có dịp thử nghiệm Kubernetes trong production","Phần đó cần tài nguyên rất khác, ví dụ xử lý video cần GPU","File service của phần đó đã dài hơn vài nghìn dòng"],
         answer: 2,
         explain: "Nhu cầu scale/tài nguyên khác biệt là lý do kỹ thuật thật. File dài hay xu hướng giải quyết bằng tổ chức code tốt hơn, không cần tách mạng."
       },
@@ -729,7 +730,7 @@ export class PlaceOrderUseCase {
     quiz: [
       {
         q: "Trong Hexagonal Architecture, `PaymentGateway` interface nằm ở tầng nào?",
-        options: ["Infrastructure","Controller","Application/domain (port), do tầng nghiệp vụ định nghĩa","Trong thư viện của Stripe"],
+        options: ["Infrastructure, cạnh adapter Stripe cài đặt nó","Controller, vì controller là nơi gọi thanh toán","Application/domain, do tầng nghiệp vụ định nghĩa","Thư viện SDK của Stripe, vì Stripe cung cấp nó"],
         answer: 2,
         explain: "Port được định nghĩa bởi tầng trong theo nhu cầu nghiệp vụ; adapter ở tầng ngoài cài đặt nó. Nhờ vậy phụ thuộc hướng vào trong."
       },
@@ -741,7 +742,7 @@ export class PlaceOrderUseCase {
       },
       {
         q: "Lợi ích thực tế lớn nhất của việc domain không phụ thuộc DB là gì?",
-        options: ["Test logic nghiệp vụ nhanh với adapter giả mà không cần DB thật","Chạy nhanh hơn trên production","Không cần viết migration","Không cần transaction"],
+        options: ["Test use case nhanh bằng adapter giả, không cần DB thật","Production chạy nhanh hơn vì bớt một tầng gọi hàm","Không còn cần viết migration khi đổi schema","Không còn cần transaction khi ghi nhiều bảng"],
         answer: 0,
         explain: "Tách phụ thuộc giúp unit test use case trong bộ nhớ. Nó không làm production nhanh hơn và vẫn cần migration, transaction ở adapter."
       }
@@ -814,7 +815,7 @@ export class PlaceOrderUseCase {
     quiz: [
       {
         q: "Vì sao nên để các aggregate tham chiếu nhau bằng ID thay vì giữ object?",
-        options: ["Để tiết kiệm RAM","Vì TypeScript không hỗ trợ tham chiếu object","Để giữ ranh giới nhất quán và transaction nhỏ, tránh sửa nhiều aggregate cùng lúc","Để dùng được UUID"],
+        options: ["Để tiết kiệm RAM khi nạp aggregate từ database","Vì TypeScript không cho class giữ tham chiếu object khác","Để mỗi transaction chỉ sửa một aggregate, giữ ranh giới rõ","Để có thể dùng UUID làm khóa chính cho mọi bảng"],
         answer: 2,
         explain: "Tham chiếu bằng ID ngăn code vô tình sửa aggregate khác trong cùng transaction, giữ mỗi aggregate là một đơn vị nhất quán độc lập."
       },
@@ -826,8 +827,8 @@ export class PlaceOrderUseCase {
       },
       {
         q: "Từ “Customer” có thuộc tính khác nhau trong Sales và Support. Theo DDD, cách xử lý là gì?",
-        options: ["Mỗi bounded context có mô hình Customer riêng, liên kết bằng ID","Gộp tất cả thuộc tính vào một class Customer chung","Đổi tên để tránh trùng","Chỉ giữ mô hình của Sales"],
-        answer: 0,
+        options: ["Gộp mọi thuộc tính vào một class Customer dùng chung","Mỗi context có mô hình Customer riêng, liên kết bằng ID","Đổi tên một bên thành Client để tránh trùng tên","Chỉ giữ mô hình của Sales, Support đọc từ đó"],
+        answer: 1,
         explain: "Bounded context cho phép cùng một khái niệm có mô hình khác nhau theo ngữ cảnh, tránh class khổng lồ và coupling giữa các đội."
       }
     ]
@@ -891,19 +892,19 @@ SELECT type, data FROM events WHERE stream_id = $1 ORDER BY version;`
     quiz: [
       {
         q: "Trong CQRS với kho đọc riêng, hệ quả phổ biến là gì?",
-        options: ["Phía đọc nhất quán cuối cùng so với phía ghi", "Không thể dùng SQL", "Phía ghi không kiểm tra quy tắc", "Không cần database"],
+        options: ["Phía đọc chỉ nhất quán cuối cùng với phía ghi","Phía đọc không thể dùng SQL mà phải dùng NoSQL","Phía ghi không cần kiểm tra quy tắc nghiệp vụ nữa","Phía ghi không cần database, chỉ cần message broker"],
         answer: 0,
         explain: "Kho đọc được cập nhật bất đồng bộ từ event nên có độ trễ. Phía ghi vẫn kiểm tra quy tắc và cả hai phía đều có thể dùng SQL."
       },
       {
         q: "Khóa chính `(stream_id, version)` trong bảng event dùng để làm gì?",
-        options: ["Tăng tốc truy vấn full-text","Nén dữ liệu","Phát hiện hai lệnh ghi đồng thời lên cùng stream (optimistic concurrency)","Tự động tạo snapshot"],
+        options: ["Tăng tốc truy vấn full-text trên cột data","Giúp PostgreSQL nén các event cùng stream","Phát hiện hai lệnh ghi đồng thời lên một stream","Tự động tạo snapshot sau mỗi N version"],
         answer: 2,
         explain: "Nếu hai tiến trình cùng muốn ghi version 8, chỉ một thành công; tiến trình kia nhận lỗi unique, phải đọc lại và thử lại."
       },
       {
         q: "Khi nào Event Sourcing đáng dùng nhất?",
-        options: ["Trang quản trị danh mục đơn giản","Cache session","Blog cá nhân","Sổ cái tài chính cần audit và tái hiện trạng thái theo thời gian"],
+        options: ["Trang quản trị danh mục sản phẩm dạng CRUD","Lưu session đăng nhập có thời hạn ngắn","Blog cá nhân với vài trăm bài viết","Sổ cái tài chính cần audit và tái hiện lịch sử"],
         answer: 3,
         explain: "Lịch sử đầy đủ và khả năng replay là giá trị cốt lõi của Event Sourcing, rất hợp với sổ cái. Các trường hợp còn lại dùng CRUD là đủ."
       }
@@ -980,19 +981,19 @@ export class HomeController {
     quiz: [
       {
         q: "Việc nào KHÔNG nên đặt ở API Gateway?",
-        options: ["Kiểm tra JWT", "Rate limit theo API key", "Tính giá đơn hàng theo khuyến mãi", "Terminate TLS"],
+        options: ["Kiểm tra chữ ký và hạn của JWT","Rate limit theo API key của đối tác","Tính giá đơn hàng theo khuyến mãi","Terminate TLS và chuyển tiếp HTTP"],
         answer: 2,
         explain: "Tính giá là logic nghiệp vụ, thuộc về service. Ba việc còn lại là mối quan tâm chung, rất hợp với gateway."
       },
       {
         q: "Vì sao ứng dụng mobile hưởng lợi từ BFF?",
-        options: ["Vì BFF gom nhiều lời gọi thành một response gọn, giảm round-trip trên mạng chậm","Vì mobile không hỗ trợ HTTP","Vì BFF thay thế database","Vì BFF bắt buộc dùng GraphQL"],
+        options: ["BFF gom nhiều lời gọi thành một response gọn cho màn hình","Ứng dụng mobile không gọi trực tiếp được REST API","BFF lưu dữ liệu thay cho database của các service","BFF bắt buộc dùng GraphQL nên payload luôn nhỏ hơn"],
         answer: 0,
         explain: "Mạng di động có độ trễ cao, nên gom dữ liệu phía server và cắt bớt trường thừa giúp màn hình tải nhanh hơn. BFF không bắt buộc GraphQL."
       },
       {
         q: "Ai thường sở hữu BFF?",
-        options: ["Đội hạ tầng","Nhà cung cấp cloud","Đội frontend của loại client tương ứng","Đội database"],
+        options: ["Đội hạ tầng vận hành gateway","Nhà cung cấp cloud đang dùng","Đội frontend của client đó","Đội quản trị database"],
         answer: 2,
         explain: "BFF gắn chặt với nhu cầu màn hình, nên đội frontend tương ứng sở hữu để thay đổi nhanh theo UI."
       }
@@ -1034,7 +1035,8 @@ export const handler = async (event: S3Event) => {
         h: "Những giới hạn cần biết",
         list: [
           "Cold start: lần gọi đầu (hoặc khi scale thêm) phải khởi động môi trường, tải code, chạy init; có thể thêm từ trăm ms đến vài giây tùy runtime và kích thước bundle. Giảm bằng bundle nhỏ, init ít, hoặc provisioned concurrency (tốn tiền).",
-          "Giới hạn thời gian chạy: ví dụ Lambda tối đa 15 phút. Job dài phải chia nhỏ hoặc dùng container/workflow.",
+          "Giới hạn thời gian chạy: một lần gọi Lambda thông thường tối đa 15 phút (900 giây). Job dài phải chia nhỏ hoặc dùng container/workflow (Step Functions, Temporal).",
+          "Giới hạn tài nguyên khác của Lambda: bộ nhớ từ 128 MB đến 10.240 MB (CPU cấp theo tỉ lệ bộ nhớ), /tmp từ 512 MB đến 10.240 MB, payload gọi đồng bộ tối đa 6 MB cho request và response, gọi bất đồng bộ tối đa 1 MB. Số lần chạy đồng thời mặc định 1.000 mỗi region (quota, có thể xin tăng). Các con số này thay đổi theo thời gian, nên luôn kiểm tra trang quota chính thức.",
           "Không có state cục bộ bền vững; bộ nhớ và /tmp chỉ tái sử dụng may rủi giữa các lần gọi.",
           "Kết nối DB: hàng nghìn instance đồng thời có thể làm cạn connection của PostgreSQL. Cần connection pooler (RDS Proxy, PgBouncer) và giới hạn concurrency.",
           "Vendor lock-in: trigger, IAM, cấu hình gắn chặt với một cloud. Giữ logic nghiệp vụ tách khỏi handler để dễ di chuyển."
@@ -1065,19 +1067,19 @@ export const handler = async (event: S3Event) => {
     quiz: [
       {
         q: "Cold start là gì?",
-        options: ["Lỗi khi hàm hết bộ nhớ","Thời gian chờ khi DB khởi động","Hàm chạy ở vùng có nhiệt độ thấp","Độ trễ thêm khi nền tảng phải khởi tạo môi trường mới cho hàm"],
+        options: ["Lỗi xảy ra khi hàm dùng vượt quá bộ nhớ cấp phát","Thời gian chờ database khởi động lại sau sự cố","Độ trễ khi gọi hàm từ một region ở xa người dùng","Độ trễ thêm khi nền tảng phải tạo môi trường mới"],
         answer: 3,
         explain: "Khi chưa có instance ấm, nền tảng phải tạo môi trường và chạy code khởi tạo, làm lần gọi đó chậm hơn."
       },
       {
         q: "Một job xử lý video mất 40 phút. Lựa chọn nào hợp lý?",
-        options: ["Chạy trên container/batch job hoặc chia nhỏ thành nhiều bước ngắn","Một Lambda duy nhất","Tăng RAM cho Lambda để vượt giới hạn thời gian","Dùng Cloud Function với cron"],
+        options: ["Chạy bằng container/batch job hoặc chia thành nhiều bước","Chạy trong một Lambda duy nhất với timeout mặc định","Tăng RAM cho Lambda để được chạy quá 15 phút","Dùng Cloud Function kích hoạt bằng cron mỗi giờ"],
         answer: 0,
         explain: "Lambda có giới hạn thời gian tối đa 15 phút; tăng RAM không nới giới hạn đó. Job dài hợp với container hoặc được chia bước bằng workflow."
       },
       {
         q: "Vì sao serverless có thể làm cạn connection PostgreSQL?",
-        options: ["Vì Lambda không hỗ trợ TCP","Vì PostgreSQL chặn cloud","Vì mỗi instance đồng thời mở connection riêng và số instance có thể tăng rất nhanh","Vì serverless dùng UDP"],
+        options: ["Vì Lambda chỉ hỗ trợ kết nối qua HTTP, không có TCP","Vì PostgreSQL chặn kết nối đến từ dải IP của cloud","Vì mỗi instance mở connection riêng và số instance tăng nhanh","Vì driver PostgreSQL trên serverless phải dùng UDP"],
         answer: 2,
         explain: "Scale tự động tạo nhiều instance, mỗi cái giữ connection riêng. Cần pooler như RDS Proxy/PgBouncer và giới hạn concurrency."
       }
@@ -1147,7 +1149,7 @@ PUB/SUB
       },
       {
         q: "Event `OrderPaid` cần được Inventory và Notification cùng xử lý. Cách đúng là gì?",
-        options: ["Pub/sub: mỗi service có queue hoặc consumer group riêng nhận bản sao event","Cho hai service đọc chung một queue","Gọi HTTP lần lượt từ producer","Ghi event vào file log"],
+        options: ["Mỗi service có queue hoặc consumer group riêng","Cho hai service cùng đọc chung một queue","Producer gọi HTTP lần lượt tới từng service","Ghi event vào file log để hai service tự đọc"],
         answer: 0,
         explain: "Đọc chung một queue thì mỗi message chỉ tới một service. Pub/sub cho mỗi subscriber một bản."
       },
@@ -1178,13 +1180,13 @@ PUB/SUB
         h: "Ack, prefetch và độ bền",
         p: [
           "Consumer nên dùng manual ack: xử lý xong mới `ack`. Nếu lỗi, `nack` với `requeue=false` để chuyển sang dead-letter, hoặc để kết nối đóng thì message được giao lại. `prefetch` giới hạn số message chưa ack mà một consumer giữ cùng lúc, giúp chia đều tải và không làm tràn bộ nhớ worker.",
-          "Để message không mất khi broker restart: khai báo queue durable, gửi message persistent, và bật publisher confirms để producer biết broker đã nhận. Với RabbitMQ hiện đại, nên dùng quorum queue (replicate bằng Raft) thay cho classic mirrored queue đã bị loại bỏ. RabbitMQ cũng có Streams cho nhu cầu đọc lại kiểu log."
+          "Để message không mất khi broker restart: khai báo queue durable, gửi message persistent, và bật publisher confirms để producer biết broker đã nhận. Với RabbitMQ hiện đại, nên dùng quorum queue (replicate bằng Raft) thay cho classic mirrored queue (đã bị loại bỏ hoàn toàn từ RabbitMQ 4.0). Raft là thuật toán đồng thuận: một bản ghi chỉ được coi là đã lưu khi đa số node xác nhận, nên mất một node thiểu số vẫn không mất message. RabbitMQ cũng có Streams cho nhu cầu đọc lại kiểu log."
         ]
       },
       {
         h: "Dead-letter exchange và retry",
         p: [
-          "Dead-letter exchange (DLX) nhận message bị reject không requeue, hết hạn TTL, hoặc vượt giới hạn độ dài queue. Mẫu phổ biến: message lỗi đi vào queue retry có TTL, hết TTL thì dead-letter quay lại queue chính; thử quá N lần thì đưa vào parking queue để người xem xét. Quorum queue còn hỗ trợ `x-delivery-limit` để giới hạn số lần giao lại."
+          "Dead-letter exchange (DLX) nhận message bị reject/nack không requeue, hết hạn TTL, bị đẩy ra do vượt giới hạn độ dài queue, hoặc (với quorum queue) bị giao lại quá `x-delivery-limit` lần. Mẫu phổ biến: message lỗi đi vào queue retry có TTL, hết TTL thì dead-letter quay lại queue chính; thử quá N lần thì đưa vào parking queue để người xem xét. Từ RabbitMQ 4.0, quorum queue mặc định có delivery limit là 20; vượt giới hạn thì message bị dead-letter nếu có cấu hình DLX, còn không thì bị xóa. Vì vậy hãy luôn cấu hình DLX cho quorum queue nếu không muốn mất message lỗi một cách âm thầm."
         ],
         code: {
           lang: "typescript",
@@ -1244,21 +1246,21 @@ await ch.consume('billing.order-paid', async (msg) => {
     quiz: [
       {
         q: "Với topic exchange, binding `order.#` khớp routing key nào?",
-        options: ["Chỉ `order`","Chỉ `order.paid`","`order.paid` và `order.paid.vn`","`payment.order`"],
+        options: ["Chỉ `order`, không khớp khóa nhiều từ","Chỉ khóa hai từ như `order.paid`","`order.paid` và `order.paid.vn`","`payment.order` và `order.paid`"],
         answer: 2,
         explain: "`#` khớp không hoặc nhiều từ, nên `order`, `order.paid`, `order.paid.vn` đều khớp. Lựa chọn nói “chỉ” là sai; `payment.order` không bắt đầu bằng `order`."
       },
       {
         q: "Vì sao nên dùng manual ack thay cho auto-ack?",
-        options: ["Để tăng tốc độ","Vì auto-ack không tồn tại","Để bỏ qua dead-letter","Để message chỉ bị xóa sau khi xử lý xong, tránh mất khi consumer chết"],
+        options: ["Để consumer nhận message nhanh hơn","Vì RabbitMQ đã bỏ chế độ auto-ack","Để message lỗi không đi vào dead-letter","Để broker chỉ xóa message sau khi xử lý xong"],
         answer: 3,
         explain: "Với auto-ack, broker xóa message ngay khi giao. Manual ack đảm bảo at-least-once."
       },
       {
         q: "Message nào sẽ đi tới dead-letter exchange?",
-        options: ["Message bị reject/nack với requeue=false, hết TTL hoặc vượt giới hạn queue","Message được ack thành công","Mọi message sau 24 giờ","Message có routing key sai"],
+        options: ["Message bị nack với requeue=false hoặc hết TTL","Message đã được consumer ack thành công","Mọi message nằm trong queue quá 24 giờ","Message có routing key không khớp binding nào"],
         answer: 0,
-        explain: "Đó là các điều kiện dead-letter chuẩn. Message routing key không khớp binding nào thì bị bỏ (hoặc trả về nếu dùng cờ mandatory / alternate exchange), không đi DLX."
+        explain: "Nack/reject với requeue=false và hết TTL là điều kiện dead-letter chuẩn (cùng với vượt giới hạn độ dài queue và vượt delivery limit của quorum queue). Message đã ack thì bị xóa; không có TTL mặc định 24 giờ; message có routing key không khớp binding nào thì bị bỏ (hoặc trả về nếu dùng cờ mandatory / alternate exchange), không đi DLX."
       }
     ]
   },
@@ -1269,14 +1271,15 @@ await ch.consume('billing.order-paid', async (msg) => {
         h: "Kafka là một log phân tán",
         p: [
           "Kafka không phải queue theo nghĩa truyền thống mà là commit log phân tán. Topic được chia thành nhiều partition; mỗi partition là một dãy message chỉ ghi nối, mỗi message có offset tăng dần. Message không bị xóa khi đọc; nó ở lại đến khi hết retention (theo thời gian hoặc dung lượng), hoặc được giữ bản mới nhất theo key nếu bật log compaction.",
-          "Mỗi partition có một leader và các follower replica trên broker khác (`replication.factor`, thường 3). Producer dùng `acks=all` cùng `min.insync.replicas=2` để chỉ coi là ghi thành công khi đủ replica đồng bộ đã nhận. Kafka hiện đại dùng KRaft để quản lý metadata thay cho ZooKeeper."
+          "Mỗi partition có một leader và các follower replica trên broker khác (`replication.factor`, thường 3). Producer dùng `acks=all` cùng `min.insync.replicas=2` để chỉ coi là ghi thành công khi đủ replica đồng bộ đã nhận. Tập các replica đang theo kịp leader gọi là ISR (in-sync replicas); với `min.insync.replicas=2`, nếu ISR còn dưới 2 thì producer dùng `acks=all` bị từ chối ghi thay vì âm thầm mất độ bền. Kafka dùng KRaft (cơ chế đồng thuận dựa trên Raft tích hợp sẵn) để quản lý metadata; từ Kafka 4.0, ZooKeeper đã bị loại bỏ hoàn toàn."
         ]
       },
       {
         h: "Key, partition và thứ tự",
         p: [
           "Producer chọn partition theo key: cùng key luôn vào cùng partition (với số partition không đổi). Kafka chỉ đảm bảo thứ tự trong một partition, không đảm bảo thứ tự giữa các partition của topic. Vì vậy nếu các event của một đơn hàng cần đúng thứ tự, dùng `orderId` làm key.",
-          "Chú ý: tăng số partition làm thay đổi ánh xạ key sang partition, nên thứ tự cho các key bị ảnh hưởng có thể bị phá trong giai đoạn chuyển. Hãy chọn số partition đủ lớn từ đầu. Retry của producer có thể đảo thứ tự hoặc tạo trùng; bật idempotent producer (mặc định trong các bản gần đây) để tránh."
+          "Chú ý: tăng số partition làm thay đổi ánh xạ key sang partition, nên thứ tự cho các key bị ảnh hưởng có thể bị phá trong giai đoạn chuyển. Hãy chọn số partition đủ lớn từ đầu. Retry của producer có thể đảo thứ tự hoặc tạo trùng; bật idempotent producer để tránh: broker gán cho producer một id và theo dõi số thứ tự của từng message theo partition, nên bản gửi lại bị loại bỏ. Với client Java chính thức, `enable.idempotence=true` và `acks=all` là mặc định từ Kafka 3.0; client khác cần kiểm tra tài liệu riêng.",
+          "Về thư viện Node.js: `kafkajs` dùng trong ví dụ dưới có API dễ đọc, nhưng đã không còn phát hành bản mới từ 2023 và tùy chọn `idempotent` của nó vẫn ghi là thử nghiệm. Với dự án mới, hãy cân nhắc `@confluentinc/kafka-javascript` (dựa trên librdkafka, có lớp API tương thích KafkaJS). Khái niệm trong bài không đổi dù dùng thư viện nào."
         ]
       },
       {
@@ -1343,13 +1346,13 @@ await consumer.run({
       },
       {
         q: "Topic có 6 partition, group có 8 consumer. Điều gì xảy ra?",
-        options: ["Mỗi consumer đọc 0,75 partition","Kafka tự tạo thêm 2 partition","6 consumer mỗi cái nhận một partition, 2 consumer rảnh","Lỗi không khởi động được"],
+        options: ["Mỗi consumer đọc khoảng 0,75 partition","Kafka tự tạo thêm 2 partition cho group","6 consumer nhận mỗi cái một partition, 2 rảnh","Group báo lỗi và không khởi động được"],
         answer: 2,
         explain: "Trong một group, một partition chỉ giao cho một consumer. Consumer dư sẽ chờ làm dự phòng khi rebalance."
       },
       {
         q: "Vì sao Kafka cho phép replay dữ liệu còn queue truyền thống thường không?",
-        options: ["Vì Kafka nén dữ liệu","Vì Kafka chỉ có một consumer","Vì Kafka dùng HTTP","Vì message được giữ theo retention và consumer tự quản lý offset"],
+        options: ["Vì Kafka nén dữ liệu nên lưu được lâu hơn","Vì mỗi topic Kafka chỉ có một consumer đọc","Vì Kafka dùng HTTP nên request có thể gửi lại","Vì đọc không xóa message; offset chỉ là con trỏ"],
         answer: 3,
         explain: "Đọc không xóa message; offset chỉ là con trỏ của từng group. Reset con trỏ là đọc lại được."
       }
@@ -1427,7 +1430,7 @@ export async function handleOrderPaid(msg: { id: string; orderId: string; amount
       },
       {
         q: "Consumer Kafka ghi vào PostgreSQL. Cách thực tế để đạt hiệu ứng đúng một lần là gì?",
-        options: ["Chỉ cần bật transactions trong Kafka producer","Tăng số partition","Dùng auto commit","At-least-once cộng consumer idempotent (khử trùng bằng message id trong cùng transaction DB)"],
+        options: ["Chỉ cần bật transactions ở Kafka producer","Tăng số partition để giảm trùng lặp","Bật auto commit để offset luôn được lưu","At-least-once cộng consumer idempotent"],
         answer: 3,
         explain: "Transactions của Kafka không bao phủ PostgreSQL. Cách đúng là cho phép giao lại và làm việc xử lý idempotent."
       },
@@ -1509,19 +1512,19 @@ export async function relayOnce(batch = 100) {
     quiz: [
       {
         q: "Outbox giải quyết vấn đề gì?",
-        options: ["Không nhất quán giữa ghi DB và publish event khi lỗi xảy ra giữa hai bước","Truy vấn chậm","Cache stampede","Thiếu partition trong Kafka"],
+        options: ["Lệch giữa ghi DB và publish event khi lỗi giữa hai bước","Truy vấn chậm trên bảng orders khi dữ liệu lớn","Cache stampede khi key nóng hết hạn cùng lúc","Topic Kafka thiếu partition để chia tải consumer"],
         answer: 0,
         explain: "Ghi event cùng transaction với dữ liệu biến hai thao tác thành một thao tác nguyên tử trong DB; việc publish được làm lại cho tới khi thành công."
       },
       {
         q: "Vì sao consumer vẫn cần idempotent khi đã có outbox?",
-        options: ["Vì outbox làm mất event","Không cần","Vì Kafka tự nhân đôi message","Vì relay có thể publish một event nhiều lần nếu chết trước khi đánh dấu đã gửi"],
+        options: ["Vì bảng outbox có thể làm mất event khi DB lỗi","Không cần, outbox đã đảm bảo đúng một lần","Vì Kafka tự nhân đôi mọi message để dự phòng","Vì relay có thể publish lại nếu chết trước khi đánh dấu"],
         answer: 3,
         explain: "Outbox đảm bảo không mất (at-least-once) chứ không đảm bảo không trùng."
       },
       {
         q: "`FOR UPDATE SKIP LOCKED` trong relay polling giúp gì?",
-        options: ["Cho nhiều relay chạy song song, mỗi relay lấy các dòng khác nhau mà không chờ khóa của nhau","Tăng tốc INSERT","Xóa dòng đã gửi","Tạo index"],
+        options: ["Relay song song, mỗi cái lấy các dòng khác nhau","Tăng tốc lệnh INSERT vào bảng outbox","Tự xóa các dòng đã publish sau khi commit","Tự tạo index một phần cho cột published_at"],
         answer: 0,
         explain: "Dòng đang bị relay khác khóa sẽ bị bỏ qua thay vì chờ, nên các relay chia việc mà không publish trùng cùng lúc."
       }
@@ -1541,7 +1544,7 @@ export async function relayOnce(batch = 100) {
         h: "Choreography và orchestration",
         p: [
           "Choreography: không có bộ điều phối trung tâm. Mỗi service nghe event và phát event tiếp theo: `OrderCreated` làm Inventory giữ hàng và phát `StockReserved`, Payment nghe và phát `PaymentFailed`, Inventory nghe để nhả hàng. Đơn giản khi ít bước, coupling thấp, nhưng khi luồng dài thì khó thấy toàn cảnh, khó debug và dễ có vòng phụ thuộc event.",
-          "Orchestration: một orchestrator ra lệnh cho từng bước và quyết định bù trừ. Luồng nằm tập trung ở một chỗ, dễ đọc, dễ theo dõi trạng thái và timeout. Nhược điểm: orchestrator biết nhiều service. Workflow engine như Temporal lưu trạng thái workflow bền vững, tự retry activity, và tiếp tục đúng chỗ sau khi process chết, nên bạn viết saga như code tuần tự bình thường."
+          "Orchestration: một orchestrator ra lệnh cho từng bước và quyết định bù trừ. Luồng nằm tập trung ở một chỗ, dễ đọc, dễ theo dõi trạng thái và timeout. Nhược điểm: orchestrator biết nhiều service. Workflow engine như Temporal lưu trạng thái workflow bền vững, tự retry activity, và tiếp tục đúng chỗ sau khi process chết, nên bạn viết saga như code tuần tự bình thường. Cơ chế phía sau là event history: Temporal ghi lại kết quả mỗi activity, khi worker khởi động lại thì chạy lại (replay) code workflow và dùng kết quả đã ghi thay vì gọi lại activity. Vì vậy code workflow phải deterministic (chạy lại cho cùng kết quả): không gọi mạng hay I/O trực tiếp; mọi tác dụng phụ (gọi API, ghi DB) phải nằm trong activity. TypeScript SDK chạy workflow trong sandbox và tự thay `Date.now`/`Math.random` bằng bản deterministic, nhưng với SDK ngôn ngữ khác bạn phải dùng API thời gian/ngẫu nhiên của SDK."
         ],
         code: {
           lang: "typescript",
@@ -1596,7 +1599,7 @@ export async function placeOrder(orderId: string): Promise<void> {
     quiz: [
       {
         q: "Vì sao saga thường được chọn thay cho 2PC giữa microservices?",
-        options: ["Vì saga đảm bảo isolation đầy đủ","Vì 2PC không tồn tại","Vì saga không cần xử lý lỗi","Vì 2PC chặn khi coordinator lỗi và giảm availability, còn saga dùng transaction cục bộ"],
+        options: ["Vì saga đảm bảo isolation đầy đủ như ACID","Vì PostgreSQL không hỗ trợ two-phase commit","Vì saga không cần xử lý lỗi hay bù trừ","Vì 2PC giữ khóa, bị chặn khi coordinator lỗi"],
         answer: 3,
         explain: "2PC giữ khóa và chờ coordinator, dễ bị chặn. Saga không có isolation đầy đủ; đó là điểm yếu chứ không phải ưu điểm."
       },
@@ -1608,7 +1611,7 @@ export async function placeOrder(orderId: string): Promise<void> {
       },
       {
         q: "Ưu điểm chính của orchestration so với choreography là gì?",
-        options: ["Không cần service nào biết nhau","Luôn nhanh hơn","Không cần message broker hay workflow engine","Luồng nghiệp vụ tập trung một chỗ, dễ theo dõi trạng thái, timeout và bù trừ"],
+        options: ["Các service không cần biết đến nhau","Luôn có độ trễ thấp hơn choreography","Không cần message broker hay workflow engine","Luồng tập trung một chỗ, dễ theo dõi và bù trừ"],
         answer: 3,
         explain: "Orchestrator nắm toàn bộ luồng. Đổi lại nó biết các service tham gia, nên coupling cao hơn choreography."
       }
@@ -1681,13 +1684,13 @@ export function remainingMs(deadline: number, reserveMs = 50) {
     quiz: [
       {
         q: "Vì sao một phụ thuộc chậm (treo) thường nguy hiểm hơn một phụ thuộc chết hẳn?",
-        options: ["Vì request chờ lâu giữ tài nguyên (connection, bộ nhớ) và có thể làm cạn pool, còn chết hẳn thì lỗi trả về nhanh","Vì chậm tốn điện hơn","Vì chết hẳn tự phục hồi","Vì chậm không thể đo được"],
+        options: ["Request treo giữ connection, bộ nhớ và làm cạn pool","Service chậm tiêu thụ nhiều điện năng hơn","Service chết hẳn luôn tự phục hồi sau vài giây","Độ trễ của service chậm không đo được bằng metrics"],
         answer: 0,
         explain: "Connection refused trả lỗi ngay; treo thì giữ tài nguyên cho tới khi hết timeout, hoặc mãi mãi nếu không có timeout."
       },
       {
         q: "Gateway có deadline 2 giây, service A đã dùng 1,6 giây. A nên gọi B với timeout thế nào?",
-        options: ["5 giây để chắc chắn", "Không đặt timeout", "Khoảng thời gian còn lại, dưới 0,4 giây", "Đúng 2 giây"],
+        options: ["5 giây để chắc chắn B kịp trả lời","Không đặt timeout, để B tự quyết định","Thời gian còn lại, tức dưới 0,4 giây","Đúng 2 giây, bằng deadline của gateway"],
         answer: 2,
         explain: "Sau 2 giây client đã bỏ đi, nên chờ lâu hơn thời gian còn lại là vô ích. Deadline propagation dùng phần thời gian còn lại."
       },
@@ -1712,7 +1715,7 @@ export function remainingMs(deadline: number, reserveMs = 50) {
       {
         h: "Exponential backoff và jitter",
         p: [
-          "Retry ngay lập tức làm dịch vụ đang quá tải càng quá tải. Exponential backoff tăng thời gian chờ theo cấp số nhân: 100 ms, 200 ms, 400 ms, 800 ms, có giới hạn trần. Nhưng nếu 10.000 client cùng lỗi lúc 12:00:00 thì chúng cùng retry lúc 12:00:00.1, rồi 12:00:00.3, tạo các đợt sóng đồng bộ. Jitter thêm ngẫu nhiên để trải đều. “Full jitter” chờ một giá trị ngẫu nhiên từ 0 đến mức backoff hiện tại, và được phân tích trong bài của AWS Builders' Library là cách hiệu quả để giảm tranh chấp."
+          "Retry ngay lập tức làm dịch vụ đang quá tải càng quá tải. Exponential backoff tăng thời gian chờ theo cấp số nhân: 100 ms, 200 ms, 400 ms, 800 ms, có giới hạn trần. Nhưng nếu 10.000 client cùng lỗi lúc 12:00:00 thì chúng cùng retry lúc 12:00:00.1, rồi 12:00:00.3, tạo các đợt sóng đồng bộ. Jitter thêm ngẫu nhiên để trải đều. “Full jitter” chờ một giá trị ngẫu nhiên từ 0 đến mức backoff hiện tại, và được bài “Exponential Backoff And Jitter” trên AWS Architecture Blog so sánh bằng mô phỏng, cho thấy đây là cách giảm mạnh tổng số lời gọi và tranh chấp; bài “Timeouts, retries, and backoff with jitter” của AWS Builders' Library cũng khuyến nghị kết hợp backoff với jitter."
         ],
         code: {
           lang: "typescript",
@@ -1771,18 +1774,18 @@ await retry(
     quiz: [
       {
         q: "Vì sao cần jitter trong backoff?",
-        options: ["Để các client lỗi cùng lúc không retry đồng loạt tạo đợt tải dồn","Để retry nhanh hơn","Để giảm số lần retry","Để thay thế timeout"],
+        options: ["Để các client không retry cùng một thời điểm","Để mỗi lần retry diễn ra nhanh hơn","Để giảm tổng số lần retry của client","Để thay thế cho timeout của lời gọi"],
         answer: 0,
         explain: "Không có jitter, các client đồng bộ nhau và cùng đánh vào server theo từng đợt. Jitter trải đều thời điểm retry."
       },
       {
         q: "Lỗi nào KHÔNG nên retry?",
-        options: ["503 Service Unavailable", "Timeout kết nối", "422 Unprocessable Entity do dữ liệu không hợp lệ", "429 Too Many Requests (sau Retry-After)"],
-        answer: 2,
+        options: ["503 Service Unavailable khi server quá tải", "422 Unprocessable Entity do dữ liệu sai", "Timeout khi đang thiết lập kết nối", "429 Too Many Requests (sau Retry-After)"],
+        answer: 1,
         explain: "422 là lỗi dữ liệu phía client; gửi lại y hệt vẫn lỗi. Các lỗi còn lại có thể là tạm thời."
       },
       {
-        q: "Ba tầng dịch vụ, mỗi tầng retry tối đa 3 lần (tổng 3 lần thử). Trường hợp xấu nhất, tầng dưới cùng nhận bao nhiêu lời gọi cho một request của người dùng?",
+        q: "Ba tầng dịch vụ, mỗi tầng thử tối đa 3 lần (1 lần đầu + 2 lần retry). Trường hợp xấu nhất, tầng dưới cùng nhận bao nhiêu lời gọi cho một request của người dùng?",
         options: ["3", "9", "27", "6"],
         answer: 2,
         explain: "Số lần thử nhân qua từng tầng: 3 x 3 x 3 = 27. Đây là lý do cần giới hạn retry ở một tầng và dùng retry budget."
@@ -1886,19 +1889,19 @@ export class CircuitBreaker {
     quiz: [
       {
         q: "Ở trạng thái Open, circuit breaker làm gì với lời gọi mới?",
-        options: ["Gọi phụ thuộc với timeout dài hơn","Retry 3 lần","Xếp hàng chờ đến khi Closed","Từ chối ngay hoặc trả fallback mà không gọi phụ thuộc"],
+        options: ["Gọi phụ thuộc với timeout dài hơn bình thường","Retry 3 lần rồi mới trả lỗi cho người gọi","Xếp lời gọi vào hàng chờ đến khi mạch đóng lại","Từ chối ngay hoặc trả fallback, không gọi mạng"],
         answer: 3,
         explain: "Mục đích của Open là fail fast và giảm tải cho phụ thuộc đang hỏng."
       },
       {
         q: "Trạng thái Half-open dùng để làm gì?",
-        options: ["Cho một số ít lời gọi thử để kiểm tra phụ thuộc đã hồi phục chưa", "Chỉ cho request GET đi qua", "Giảm timeout một nửa", "Chia đôi tải cho hai phụ thuộc"],
+        options: ["Cho vài lời gọi thử xem phụ thuộc đã hồi phục chưa","Chỉ cho request GET đi qua, chặn mọi request ghi","Giảm timeout của mọi lời gọi xuống còn một nửa","Chia đôi tải giữa phụ thuộc chính và bản dự phòng"],
         answer: 0,
         explain: "Half-open thăm dò có kiểm soát: thành công thì đóng mạch, thất bại thì mở lại."
       },
       {
         q: "Vì sao cần ngưỡng số lời gọi tối thiểu trước khi mở mạch?",
-        options: ["Để tiết kiệm bộ nhớ","Để tăng tỉ lệ lỗi","Vì thư viện yêu cầu","Để tránh mở mạch do một hai lỗi ngẫu nhiên lúc lưu lượng thấp"],
+        options: ["Để breaker tốn ít bộ nhớ hơn khi lưu cửa sổ","Để tỉ lệ lỗi đo được luôn cao hơn thực tế","Vì thư viện opossum bắt buộc phải cấu hình","Để vài lỗi lẻ lúc ít tải không làm mở mạch"],
         answer: 3,
         explain: "Với 2 lời gọi, 1 lỗi đã là 50%. Không có ngưỡng tối thiểu, breaker sẽ mở mạch vô lý khi ít tải."
       }
@@ -1971,19 +1974,19 @@ const paymentBulkhead = new Bulkhead(100, 200);`
     quiz: [
       {
         q: "Mục tiêu chính của bulkhead là gì?",
-        options: ["Tăng throughput tối đa","Cân bằng tải giữa các vùng","Mã hóa dữ liệu","Cô lập tài nguyên để sự cố của một phụ thuộc không lan sang luồng khác"],
+        options: ["Tăng throughput tối đa bằng cách dùng chung pool","Cân bằng tải đều giữa các vùng địa lý khác nhau","Mã hóa dữ liệu trao đổi giữa các service nội bộ","Cô lập tài nguyên để lỗi một phụ thuộc không lan ra"],
         answer: 3,
         explain: "Bulkhead giới hạn phần tài nguyên mỗi luồng được dùng, nên một phụ thuộc treo chỉ làm cạn phần của nó."
       },
       {
         q: "Server đang quá tải chung. Mã phản hồi phù hợp khi từ chối sớm là gì?",
-        options: ["200 kèm body rỗng", "400 Bad Request", "503 Service Unavailable kèm Retry-After", "301 Redirect"],
+        options: ["200 OK kèm body rỗng","400 Bad Request kèm thông báo","503 kèm header Retry-After","301 chuyển sang trang bảo trì"],
         answer: 2,
         explain: "503 báo server tạm thời không phục vụ được; `Retry-After` hướng dẫn client chờ. 429 dành cho trường hợp một client vượt quota của mình."
       },
       {
         q: "Vì sao từ chối sớm tốt hơn nhận hết request khi quá tải?",
-        options: ["Vì từ chối sớm tốn ít tài nguyên và giúp phần request còn lại được phục vụ trong thời gian chấp nhận được", "Vì client thích bị từ chối", "Vì nó làm tăng độ trễ", "Vì nó thay thế autoscaling"],
+        options: ["Từ chối sớm rất rẻ, giữ được độ trễ cho phần còn lại","Client thường thích nhận lỗi hơn là phải chờ","Từ chối sớm làm độ trễ trung bình tăng lên","Từ chối sớm thay thế hoàn toàn autoscaling"],
         answer: 0,
         explain: "Nhận hết thì mọi request đều chậm và timeout, tức là 0% thành công thực chất. Load shedding bảo vệ phần tải mà hệ thống xử lý được."
       }
@@ -2072,14 +2075,14 @@ const bucket = new TokenBucket(20, 10);`
       },
       {
         q: "Nhược điểm đặc trưng của fixed window là gì?",
-        options: ["Tốn bộ nhớ tỉ lệ với số request","Không cho phép burst nào","Không cài được bằng Redis","Ở ranh giới hai cửa sổ, client có thể gửi gần gấp đôi giới hạn trong thời gian ngắn"],
+        options: ["Tốn bộ nhớ tỉ lệ với số request trong cửa sổ","Không cho phép bất kỳ burst nào trong cửa sổ","Không cài được bằng các lệnh có sẵn của Redis","Ở ranh giới cửa sổ có thể lọt gần gấp đôi giới hạn"],
         answer: 3,
         explain: "Bộ đếm reset đột ngột ở đầu cửa sổ mới. Tốn bộ nhớ theo số request là nhược điểm của sliding window log."
       },
       {
         q: "Cần gọi nhà cung cấp SMS chỉ chịu tối đa 50 tin/giây đều đặn. Thuật toán nào hợp nhất?",
-        options: ["Leaky bucket (hàng đợi xả với tốc độ cố định)", "Fixed window 1 phút 3.000 tin", "Không cần rate limit", "Token bucket với dung lượng 10.000"],
-        answer: 0,
+        options: ["Fixed window 1 phút, tối đa 3.000 tin", "Leaky bucket xả với tốc độ cố định", "Không cần rate limit, provider tự chặn", "Token bucket với dung lượng 10.000"],
+        answer: 1,
         explain: "Leaky bucket xả đều, đúng với phụ thuộc chỉ chịu tốc độ cố định. Fixed window theo phút cho phép dồn 3.000 tin trong vài giây; token bucket dung lượng lớn cho phép burst lớn."
       }
     ]
@@ -2146,7 +2149,7 @@ const bucket = new TokenBucket(20, 10);`
     quiz: [
       {
         q: "Dịch vụ gợi ý sản phẩm bị lỗi. Cách xử lý đúng tinh thần graceful degradation là gì?",
-        options: ["Trả 500 cho toàn bộ trang sản phẩm", "Hiển thị trang với danh sách phổ biến từ cache hoặc ẩn khối gợi ý", "Retry vô hạn cho đến khi gợi ý trả về", "Chuyển hướng người dùng sang trang lỗi"],
+        options: ["Trả 500 cho toàn bộ trang sản phẩm","Ẩn khối gợi ý hoặc dùng danh sách phổ biến","Retry vô hạn đến khi gợi ý trả về","Chuyển hướng người dùng sang trang lỗi"],
         answer: 1,
         explain: "Gợi ý là tính năng phụ; trang vẫn phải hiện sản phẩm và cho mua. Retry vô hạn làm chậm cả trang."
       },
@@ -2158,7 +2161,7 @@ const bucket = new TokenBucket(20, 10);`
       },
       {
         q: "DB primary gặp sự cố nhưng replica vẫn hoạt động. Chế độ suy giảm hợp lý là gì?",
-        options: ["Cho ghi vào replica", "Chế độ chỉ đọc: vẫn xem dữ liệu từ replica, tạm khóa thao tác ghi và thông báo rõ", "Tắt toàn bộ hệ thống", "Ghi vào cache rồi bỏ qua DB"],
+        options: ["Chuyển mọi thao tác ghi sang replica","Chỉ đọc: xem từ replica, tạm khóa ghi","Tắt toàn bộ hệ thống đến khi sửa xong","Ghi vào cache rồi bỏ qua database"],
         answer: 1,
         explain: "Replica không nhận ghi; ghi vào cache rồi bỏ DB có nguy cơ mất dữ liệu. Chế độ chỉ đọc giữ được phần lớn giá trị cho người dùng."
       }
@@ -2230,7 +2233,7 @@ Client --> API tạo link --> ID generator (dải số theo lô) --> base62 --> 
     quiz: [
       {
         q: "Vì sao 7 ký tự base62 đủ cho 6 tỉ link?",
-        options: ["Vì 62^7 ≈ 3,5 nghìn tỉ, lớn hơn rất nhiều so với 6 tỉ", "Vì 7 là số may mắn", "Vì base62 nén URL gốc", "Vì mỗi ký tự chứa 62 bit"],
+        options: ["Vì 62^7 ≈ 3,5 x 10^12, lớn hơn nhiều 6 x 10^9","Vì base62 nén URL gốc còn khoảng 7 byte","Vì mỗi ký tự base62 mang được 62 bit","Vì 7 ký tự là giới hạn độ dài của URL"],
         answer: 0,
         explain: "Mỗi ký tự có 62 khả năng, 7 ký tự cho khoảng 3,5 x 10^12 tổ hợp. Mỗi ký tự base62 mang khoảng 5,95 bit chứ không phải 62 bit."
       },
@@ -2242,8 +2245,8 @@ Client --> API tạo link --> ID generator (dải số theo lô) --> base62 --> 
       },
       {
         q: "Cách ghi analytics hợp lý nhất để không làm chậm redirect?",
-        options: ["INSERT đồng bộ vào PostgreSQL rồi mới redirect", "Đẩy event click vào queue bất đồng bộ, worker ghi theo lô vào kho phân tích", "Ghi file log trên máy rồi đọc thủ công", "Không cần analytics"],
-        answer: 1,
+        options: ["INSERT đồng bộ vào PostgreSQL rồi mới trả redirect","Gọi API kho phân tích trước khi trả redirect","Đẩy event click vào queue, worker ghi theo lô","Ghi file log trên từng máy rồi gom thủ công"],
+        answer: 2,
         explain: "Tách analytics khỏi đường nóng giúp redirect chỉ phụ thuộc cache/DB tra khóa. Ghi theo lô cũng hiệu quả hơn cho kho phân tích."
       }
     ]
@@ -2254,7 +2257,7 @@ Client --> API tạo link --> ID generator (dải số theo lô) --> base62 --> 
       {
         h: "Yêu cầu",
         p: [
-          "Chức năng: giới hạn số request theo API key hoặc user (ví dụ 100 request/phút, cho phép burst ngắn), có thể cấu hình khác nhau theo gói dịch vụ và theo endpoint; trả 429 kèm header `RateLimit-Limit`, `RateLimit-Remaining`, `Retry-After`.",
+          "Chức năng: giới hạn số request theo API key hoặc user (ví dụ 100 request/phút, cho phép burst ngắn), có thể cấu hình khác nhau theo gói dịch vụ và theo endpoint; trả 429 kèm `Retry-After` và thông tin hạn mức. Nhiều API dùng các header quen thuộc `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`; bản draft chuẩn hóa của IETF (draft-ietf-httpapi-ratelimit-headers, vẫn là draft) hiện định nghĩa hai header `RateLimit-Policy` và `RateLimit`, thay cho `RateLimit-Limit`/`RateLimit-Remaining` ở các bản draft cũ.",
           "Phi chức năng: giới hạn phải đúng trên toàn cụm, không phải trên từng node (20 instance gateway mà mỗi node đếm riêng thì giới hạn thực tế gấp 20). Độ trễ thêm vào mỗi request phải rất nhỏ, cỡ một round-trip tới Redis. Nếu kho đếm gặp sự cố, hệ thống phải có hành vi đã quyết định trước."
         ]
       },
@@ -2352,14 +2355,14 @@ export async function consume(key: string, capacity: number, ratePerSec: number)
     quiz: [
       {
         q: "Vì sao dùng Lua script thay vì các lệnh GET/SET riêng lẻ?",
-        options: ["Lua chạy nhanh hơn C", "Script chạy nguyên tử trong Redis, tránh race giữa nhiều gateway và chỉ tốn một round-trip", "Redis không hỗ trợ SET", "Để mã hóa dữ liệu"],
-        answer: 1,
+        options: ["Script chạy nguyên tử, không lệnh nào chen giữa","Lua được biên dịch nên chạy nhanh hơn code C","Redis Cluster không hỗ trợ lệnh SET đơn lẻ","Lua script tự mã hóa giá trị trước khi lưu"],
+        answer: 0,
         explain: "Tính nguyên tử là lý do chính; giảm round-trip là lợi ích phụ. Lua không nhanh hơn C, và Redis vẫn hỗ trợ SET."
       },
       {
         q: "Redis của rate limiter bị lỗi. Với endpoint gửi OTP qua SMS, lựa chọn hợp lý là gì?",
-        options: ["Fail-open: cho mọi request qua", "Fail-closed: tạm chặn để tránh bị lạm dụng gửi SMS tốn tiền", "Xóa rate limit vĩnh viễn", "Chuyển sang fixed window trong RAM mà không giới hạn"],
-        answer: 1,
+        options: ["Fail-open: cho mọi request qua để giữ trải nghiệm","Chuyển sang đếm trong RAM từng node, không giới hạn","Tắt rate limit vĩnh viễn cho endpoint này","Fail-closed: tạm chặn để tránh bị lạm dụng SMS"],
+        answer: 3,
         explain: "OTP là endpoint nhạy cảm, bị lạm dụng gây mất tiền và spam người dùng. API đọc thông thường thì hay chọn fail-open."
       },
       {
@@ -2442,14 +2445,14 @@ Lưu trữ: 2 x 10^9 x 200 B                      ≈ 400 GB/ngày ≈ 150 TB/n�
     quiz: [
       {
         q: "Làm sao Chat service biết phải đẩy tin cho user B qua gateway nào?",
-        options: ["Gửi tới mọi gateway", "Tra session registry (ví dụ Redis) ánh xạ user -> gateway đang giữ kết nối", "Hỏi client B qua HTTP", "Dựa vào IP của B"],
-        answer: 1,
+        options: ["Gửi tin tới mọi gateway, gateway nào có B thì đẩy","Hỏi client B qua HTTP xem đang kết nối ở đâu","Tra registry ánh xạ user -> gateway đang giữ kết nối","Tính gateway từ địa chỉ IP hiện tại của B"],
+        answer: 2,
         explain: "Registry cập nhật khi kết nối và ngắt kết nối cho phép định tuyến chính xác. Gửi tới mọi gateway lãng phí khi có hàng trăm node."
       },
       {
         q: "Để tránh tin nhắn trùng khi client retry do mạng chập chờn, cần gì?",
-        options: ["Tăng timeout", "Client gửi `client_message_id` duy nhất, server khử trùng theo id đó", "Dùng HTTP/1.0", "Xóa tin trùng thủ công"],
-        answer: 1,
+        options: ["Client gửi id duy nhất, server khử trùng theo id","Tăng timeout phía client để ít phải retry","Chuyển sang HTTP/1.0 cho kết nối ổn định hơn","Chạy job định kỳ xóa các tin nhắn trùng"],
+        answer: 0,
         explain: "Id do client sinh làm cho thao tác gửi trở nên idempotent: server thấy id đã có thì chỉ trả lại ack cũ."
       },
       {
@@ -2561,20 +2564,20 @@ Feed API --> Redis feed:{user} + bài của celeb (cache theo tác giả) --> me
     quiz: [
       {
         q: "Nhược điểm lớn nhất của fan-out on write là gì?",
-        options: ["Đọc feed chậm", "Khuếch đại ghi theo số follower, rất tệ với tài khoản nổi tiếng", "Không dùng được Redis", "Không hỗ trợ phân trang"],
+        options: ["Đọc feed chậm vì phải trộn nhiều nguồn","Khuếch đại ghi theo số follower của tác giả","Không lưu được feed trong Redis sorted set","Không hỗ trợ phân trang bằng cursor"],
         answer: 1,
         explain: "Mỗi bài tạo số lượt ghi bằng số follower. Đọc chậm là nhược điểm của fan-out on read."
       },
       {
         q: "Trong mô hình lai, bài của tài khoản có 5 triệu follower được đưa vào feed thế nào?",
-        options: ["Fan-out tới 5 triệu feed", "Không fan-out; kéo lúc người dùng đọc feed rồi trộn với feed đã tính sẵn", "Gửi email cho từng follower", "Không hiển thị"],
-        answer: 1,
+        options: ["Fan-out ghi vào đủ 5 triệu feed như người thường","Gửi email thông báo bài mới cho từng follower","Không hiển thị bài của tài khoản đó trong feed","Không fan-out; kéo lúc đọc rồi trộn vào feed"],
+        answer: 3,
         explain: "Tài khoản vượt ngưỡng được xử lý bằng pull để tránh hàng triệu lượt ghi cho mỗi bài."
       },
       {
         q: "Vì sao feed nên phân trang bằng cursor thay vì OFFSET?",
-        options: ["Vì OFFSET không có trong SQL", "Vì feed thay đổi liên tục; OFFSET làm lặp hoặc sót bài khi có bài mới chèn vào đầu", "Vì cursor dùng ít RAM hơn ở client", "Vì Redis không hỗ trợ số"],
-        answer: 1,
+        options: ["Vì bài mới chèn vào đầu làm OFFSET lặp hoặc sót","Vì OFFSET không có trong cú pháp SQL chuẩn","Vì cursor giúp client dùng ít RAM hơn nhiều","Vì Redis sorted set không truy cập theo chỉ số"],
+        answer: 0,
         explain: "Cursor neo theo vị trí của phần tử cuối đã xem nên ổn định khi dữ liệu mới xuất hiện. OFFSET tính theo vị trí nên bị xê dịch."
       }
     ]
@@ -2641,7 +2644,7 @@ Log trạng thái: 50M x 3 sự kiện x 200 B ≈ 30 GB/ngày -> kho phân tíc
   if (job.priority === 'low' && isQuietHours(prefs.timezone)) return scheduler.delayUntilMorning(job);
 
   // Khử trùng: chỉ một worker được gửi job này
-  const first = await redis.set('notif:sent:' + job.id, '1', { NX: true, EX: 7 * 86400 });
+  const first = await redis.set('notif:sent:' + job.id, '1', { condition: 'NX', expiration: { type: 'EX', value: 7 * 86400 } });
   if (!first) return; // đã gửi hoặc đang gửi
 
   try {
@@ -2675,19 +2678,19 @@ Log trạng thái: 50M x 3 sự kiện x 200 B ≈ 30 GB/ngày -> kho phân tíc
     quiz: [
       {
         q: "Vì sao tách queue theo kênh và mức ưu tiên?",
-        options: ["Để giảm số dòng code", "Để luồng quan trọng (OTP) không bị chặn sau luồng số lượng lớn (marketing), và mỗi kênh scale riêng", "Vì Kafka chỉ cho phép một consumer mỗi topic", "Để mã hóa nội dung"],
-        answer: 1,
+        options: ["Để giảm số dòng code của từng worker","Vì Kafka chỉ cho một consumer đọc mỗi topic","Để OTP không phải xếp hàng sau chiến dịch marketing","Để mã hóa nội dung riêng theo từng kênh gửi"],
+        answer: 2,
         explain: "Đây là bulkhead áp dụng cho messaging. Kafka cho phép nhiều consumer group trên một topic, nên đó không phải lý do."
       },
       {
         q: "Nhà cung cấp SMS trả lỗi “số điện thoại không hợp lệ”. Worker nên làm gì?",
-        options: ["Retry vô hạn với backoff", "Coi là lỗi vĩnh viễn: không retry, ghi trạng thái thất bại hoặc đưa vào DLQ", "Gửi lại ngay lập tức", "Chuyển sang gửi email mà không cần xem tùy chọn người dùng"],
-        answer: 1,
+        options: ["Retry vô hạn với exponential backoff","Gửi lại ngay lập tức qua cùng nhà cung cấp","Tự chuyển sang email, bỏ qua tùy chọn người dùng","Coi là lỗi vĩnh viễn: không retry, ghi thất bại/DLQ"],
+        answer: 3,
         explain: "Lỗi vĩnh viễn không tự hết khi gọi lại. Chuyển kênh chỉ hợp lệ nếu quy tắc và tùy chọn người dùng cho phép."
       },
       {
         q: "Vì sao cần id duy nhất cho mỗi thông báo?",
-        options: ["Để sắp xếp theo bảng chữ cái", "Để khử trùng khi queue giao lại hoặc bên gọi retry, tránh gửi hai lần", "Vì APNs yêu cầu UUID", "Để tăng tốc render template"],
+        options: ["Để sắp xếp thông báo theo bảng chữ cái","Để khử trùng khi queue giao lại hoặc bên gọi retry","Vì APNs bắt buộc mỗi push phải có UUID","Để render template nhanh hơn nhờ cache theo id"],
         answer: 1,
         explain: "Hệ thống messaging thường là at-least-once. Id cho phép worker và nhà cung cấp nhận ra yêu cầu lặp."
       }
@@ -2802,16 +2805,338 @@ export async function reserve(saleId: string, userId: string) {
       },
       {
         q: "Mục đích chính của hàng đợi ảo (waiting room) là gì?",
-        options: ["Tăng số vé", "Biến lượng truy cập đột biến thành dòng vào có kiểm soát theo sức chịu của backend", "Thay thế thanh toán", "Lưu vé vào CDN"],
-        answer: 1,
+        options: ["Điều tiết lượng người vào luồng mua theo sức backend","Tăng số vé bán ra trong đợt mở bán","Thay thế bước thanh toán bằng một hàng đợi","Lưu sẵn vé trên CDN để phục vụ nhanh hơn"],
+        answer: 0,
         explain: "Waiting room điều tiết tốc độ người dùng vào luồng mua, bảo vệ backend và tạo trải nghiệm công bằng hơn."
       },
       {
         q: "Reservation hết hạn 10 phút. Trả vé về kho bằng cách nào là an toàn?",
-        options: ["Cộng lại tồn kho cho mọi reservation sau 10 phút mà không kiểm tra", "Cập nhật có điều kiện: chỉ trả khi reservation vẫn ở trạng thái held và đã quá hạn", "Xóa toàn bộ bảng reservation mỗi giờ", "Chờ người dùng tự hủy"],
+        options: ["Cộng lại tồn kho cho mọi reservation sau 10 phút","Chỉ trả khi reservation vẫn held và đã quá hạn","Xóa toàn bộ bảng reservation mỗi giờ một lần","Chờ người dùng tự bấm hủy giữ chỗ"],
         answer: 1,
         explain: "Người dùng có thể vừa thanh toán ngay trước khi hết hạn. Điều kiện trạng thái ngăn việc trả lại vé đã bán, tránh oversell."
       }
     ]
   },
+
+  "p12.m0.t7": {
+    "sections": [
+      {
+        "h": "Cache stampede và cách chống",
+        "p": [
+          "Khi một key được đọc rất nhiều hết hạn, hàng nghìn request cùng lúc thấy cache miss và cùng đi truy vấn database. Hiện tượng này gọi là cache stampede (hay dogpile), có thể làm sập database ngay khi cache vừa hết hạn.",
+          "Các cách chống phổ biến: chỉ cho một request tính lại giá trị trong khi các request khác chờ hoặc dùng tạm giá trị cũ (request coalescing hay single-flight, thường làm bằng lock trên Redis); thêm độ lệch ngẫu nhiên (jitter) vào TTL để các key không hết hạn cùng lúc; và phục vụ giá trị cũ trong lúc làm mới ở nền (stale-while-revalidate)."
+        ],
+        "code": {
+          "lang": "typescript",
+          "file": "src/cache/get-or-load.ts",
+          "src": "import { createClient } from 'redis';\nconst redis = createClient({ url: process.env.REDIS_URL });\n\n// TTL có jitter: 300s ± 10% để các key không hết hạn cùng lúc\nconst ttl = (base = 300) => Math.round(base * (0.9 + Math.random() * 0.2));\n\nexport async function getOrLoad<T>(key: string, load: () => Promise<T>): Promise<T> {\n  const hit = await redis.get(key);\n  if (hit) return JSON.parse(hit);\n\n  // Chỉ một tiến trình được tính lại giá trị\n  const lock = await redis.set(`lock:${key}`, '1', { condition: 'NX', expiration: { type: 'PX', value: 5000 } });\n  if (!lock) {\n    await new Promise((r) => setTimeout(r, 100));\n    return getOrLoad(key, load); // chờ ngắn rồi đọc lại cache\n  }\n  try {\n    const value = await load();\n    await redis.set(key, JSON.stringify(value), { expiration: { type: 'EX', value: ttl() } });\n    return value;\n  } finally {\n    await redis.del(`lock:${key}`);\n  }\n}"
+        }
+      },
+      {
+        "h": "Refresh-ahead và các chiến lược ghi",
+        "p": [
+          "Refresh-ahead chủ động làm mới giá trị trước khi nó hết hạn, ví dụ khi TTL còn dưới 20% và key vẫn đang được đọc. Người dùng gần như không bao giờ gặp cache miss với dữ liệu nóng. Đổi lại, bạn phải đoán đúng key nào sắp được dùng, nếu không sẽ tốn tài nguyên làm mới những key không ai đọc.",
+          "Nhắc lại các mẫu còn lại: cache-aside (ứng dụng tự đọc DB khi miss, phổ biến nhất), write-through (ghi cache và DB cùng lúc) và write-behind (ghi cache trước, đồng bộ DB sau, nhanh nhưng có nguy cơ mất dữ liệu)."
+        ]
+      },
+      {
+        "h": "Memcached hay Redis, CDN push hay pull",
+        "p": [
+          "Memcached là cache key-value thuần trong bộ nhớ, đa luồng, rất đơn giản: không có kiểu dữ liệu phức tạp, không lưu xuống đĩa, không có replication sẵn. Redis có nhiều kiểu dữ liệu (hash, sorted set, stream), có persistence và replication, nên dùng được cho cả rate limit, lock, queue. Dự án mới thường chọn Redis vì linh hoạt hơn, còn Memcached vẫn hợp khi chỉ cần cache chuỗi đơn giản ở quy mô rất lớn.",
+          "Với CDN: pull CDN tự lấy file từ origin khi có cache miss đầu tiên, dễ dùng và là mặc định của Cloudflare hay CloudFront. Push CDN yêu cầu bạn chủ động tải nội dung lên vùng lưu trữ của CDN, hợp với file lớn ít thay đổi như video. Dù dùng loại nào, hãy đặt tên file theo hash nội dung (app.3f9c2a.js) để có thể cache rất lâu mà không lo phục vụ bản cũ."
+        ]
+      }
+    ],
+    "summary": [
+      "Cache stampede xảy ra khi key nóng hết hạn và mọi request cùng truy vấn DB",
+      "Chống stampede bằng single-flight lock, TTL có jitter và stale-while-revalidate",
+      "Refresh-ahead làm mới trước khi hết hạn cho dữ liệu nóng",
+      "Redis linh hoạt hơn Memcached; Memcached đơn giản, đa luồng, chỉ key-value",
+      "Đặt tên asset theo hash nội dung để cache CDN lâu mà vẫn an toàn"
+    ],
+    "pitfalls": [
+      "Đặt cùng một TTL cho hàng triệu key được tạo cùng lúc, khiến chúng hết hạn đồng loạt",
+      "Lock không có thời hạn (PX), tiến trình giữ lock chết thì key không bao giờ được tính lại",
+      "Cache file `app.js` không có hash trong tên với thời gian cache dài, người dùng nhận bản cũ sau khi deploy"
+    ],
+    "quiz": [
+      {
+        "q": "Thêm jitter vào TTL giúp giải quyết vấn đề gì?",
+        "options": [
+          "Giảm dung lượng bộ nhớ của Redis",
+          "Tránh nhiều key hết hạn cùng một thời điểm",
+          "Tăng tỉ lệ nén dữ liệu trong cache",
+          "Bảo đảm dữ liệu cache luôn nhất quán với DB"
+        ],
+        "answer": 1,
+        "explain": "Jitter làm thời điểm hết hạn lệch nhau, tránh việc hàng loạt key cùng hết hạn và cùng dội truy vấn vào database."
+      },
+      {
+        "q": "Đặc điểm nào đúng với Memcached so với Redis?",
+        "options": [
+          "Hỗ trợ sorted set và stream",
+          "Có persistence xuống đĩa mặc định",
+          "Chỉ lưu key-value đơn giản trong bộ nhớ",
+          "Có replication tích hợp sẵn"
+        ],
+        "answer": 2,
+        "explain": "Memcached là cache key-value thuần trong bộ nhớ, không có kiểu dữ liệu phức tạp, persistence hay replication tích hợp như Redis."
+      },
+      {
+        "q": "Pull CDN hoạt động thế nào?",
+        "options": [
+          "CDN tự lấy file từ origin khi gặp cache miss",
+          "Bạn phải tải mọi file lên CDN trước khi dùng",
+          "Trình duyệt tải file trực tiếp từ origin",
+          "CDN chỉ phục vụ file có kích thước lớn"
+        ],
+        "answer": 0,
+        "explain": "Pull CDN lấy nội dung từ origin ở lần truy cập đầu rồi cache lại. Push CDN mới cần bạn chủ động tải nội dung lên."
+      }
+    ]
+  },
+
+  "p12.m1.t6": {
+    "sections": [
+      {
+        "h": "Mẫu thiết kế là lời giải đã được kiểm chứng",
+        "p": [
+          "Microsoft Azure Architecture Center duy trì danh mục cloud design patterns, là những lời giải lặp lại cho các vấn đề thường gặp khi xây hệ thống phân tán. Tên gọi của chúng đã trở thành ngôn ngữ chung trong phỏng vấn và thiết kế, dù bạn dùng AWS, GCP hay chạy máy chủ riêng.",
+          "Bài này tập trung vào những mẫu bạn sẽ gặp sớm nhất khi làm backend. Các mẫu khác như Cache-Aside, Compensating Transaction (saga), Circuit Breaker hay Backends for Frontends đã có ở các bài trước."
+        ]
+      },
+      {
+        "h": "Chuyển đổi hệ thống cũ an toàn",
+        "p": [
+          "Strangler Fig: thay dần từng phần chức năng của hệ thống cũ bằng dịch vụ mới. Một proxy hoặc API gateway đứng phía trước, chuyển dần từng route sang hệ thống mới cho tới khi hệ thống cũ không còn được gọi và có thể tắt. Cách này tránh rủi ro của việc viết lại toàn bộ trong một lần.",
+          "Anti-Corruption Layer: một lớp adapter giữa ứng dụng mới và hệ thống cũ, chuyển đổi model và giao thức để thiết kế cũ không lan vào code mới. Hai mẫu này thường đi cùng nhau."
+        ],
+        "code": {
+          "lang": "nginx",
+          "file": "strangler-fig.conf",
+          "src": "# Chuyển dần từng route sang dịch vụ mới, phần còn lại vẫn về hệ thống cũ\nlocation /api/orders/ {\n    proxy_pass http://orders-service:3000;   # đã viết lại\n}\nlocation /api/ {\n    proxy_pass http://legacy-monolith:8080;  # chưa chuyển\n}"
+        }
+      },
+      {
+        "h": "Tách phần việc dùng chung ra khỏi service",
+        "p": [
+          "Sidecar: chạy một thành phần phụ trong process hoặc container riêng, đặt cạnh service chính. Ví dụ: agent thu log, proxy mTLS của service mesh. Service chính không cần biết tới chúng.",
+          "Ambassador: một dạng sidecar chuyên gửi request ra ngoài thay cho service chính, đảm nhận retry, timeout, circuit breaker hay định tuyến. Gateway Offloading: chuyển các chức năng dùng chung như kết thúc TLS, xác thực, rate limit lên gateway thay vì cài lại ở từng service."
+        ]
+      },
+      {
+        "h": "Làm phẳng tải và truy cập trực tiếp",
+        "p": [
+          "Queue-Based Load Leveling: đặt một hàng đợi giữa nơi tạo việc và nơi xử lý. Khi lưu lượng tăng đột biến, hàng đợi hấp thụ phần dư, worker xử lý với tốc độ ổn định mà không bị quá tải. Đổi lại, kết quả trở thành bất đồng bộ.",
+          "Valet Key: cấp cho client một token có phạm vi và thời hạn giới hạn để truy cập trực tiếp tài nguyên, ví dụ presigned URL của S3 cho upload, thay vì cho dữ liệu đi qua server của bạn. Health Endpoint Monitoring: service mở endpoint như `/health` để công cụ giám sát và load balancer kiểm tra định kỳ."
+        ]
+      }
+    ],
+    "summary": [
+      "Strangler Fig thay dần hệ thống cũ theo từng route thay vì viết lại một lần",
+      "Anti-Corruption Layer giữ model của hệ thống cũ không lan vào code mới",
+      "Sidecar và Ambassador tách phần việc dùng chung ra process riêng",
+      "Queue-Based Load Leveling dùng hàng đợi để hấp thụ tải đột biến",
+      "Valet Key cấp quyền truy cập trực tiếp có giới hạn, ví dụ presigned URL"
+    ],
+    "pitfalls": [
+      "Viết lại toàn bộ hệ thống cũ trong một lần, kéo dài nhiều tháng mà không ra được giá trị",
+      "Dùng hàng đợi để làm phẳng tải cho thao tác mà người dùng cần kết quả ngay",
+      "Cấp presigned URL không giới hạn thời gian hoặc quyền rộng hơn cần thiết"
+    ],
+    "quiz": [
+      {
+        "q": "Mẫu nào phù hợp để thay dần một monolith cũ mà vẫn chạy song song?",
+        "options": [
+          "Strangler Fig",
+          "Valet Key",
+          "Sidecar",
+          "Queue-Based Load Leveling"
+        ],
+        "answer": 0,
+        "explain": "Strangler Fig chuyển dần từng phần chức năng sang hệ thống mới qua một lớp định tuyến, cho tới khi hệ thống cũ có thể tắt."
+      },
+      {
+        "q": "Upload file lớn trực tiếp lên S3 bằng presigned URL là ví dụ của mẫu nào?",
+        "options": [
+          "Gateway Offloading",
+          "Ambassador",
+          "Valet Key",
+          "Anti-Corruption Layer"
+        ],
+        "answer": 2,
+        "explain": "Valet Key cấp cho client token có phạm vi và thời hạn giới hạn để truy cập trực tiếp tài nguyên, dữ liệu không phải đi qua server của bạn."
+      },
+      {
+        "q": "Queue-Based Load Leveling đánh đổi điều gì?",
+        "options": [
+          "Tốn thêm bộ nhớ cho cache phân tán",
+          "Kết quả xử lý trở thành bất đồng bộ",
+          "Mất khả năng scale ngang worker",
+          "Phải dùng chung database giữa các service"
+        ],
+        "answer": 1,
+        "explain": "Hàng đợi hấp thụ tải đột biến nhưng việc được xử lý sau, nên client không nhận kết quả ngay trong cùng request."
+      }
+    ]
+  },
+
+  "p12.m3.t6": {
+    "sections": [
+      {
+        "h": "Anti-pattern hiệu năng là gì",
+        "p": [
+          "Anti-pattern là cách làm thường gặp, trông có vẻ hợp lý nhưng gây hại khi hệ thống lớn lên. Azure Architecture Center tổng hợp một danh mục anti-pattern hiệu năng. Nhận ra chúng sớm giúp bạn đọc được dashboard và biết cần sửa ở đâu khi hệ thống chậm.",
+          "Cách tiếp cận chung: đo trước khi sửa. Dùng trace và metric để tìm chỗ tốn thời gian nhất, thay vì tối ưu theo cảm tính."
+        ]
+      },
+      {
+        "h": "Nhóm anti-pattern về I/O và dữ liệu",
+        "p": [
+          "Các anti-pattern này đều khiến hệ thống tốn I/O hoặc tính toán nhiều hơn mức cần. Mỗi mục dưới đây kèm dấu hiệu nhận biết và hướng sửa."
+        ],
+        "list": [
+          "Chatty I/O: gửi rất nhiều request nhỏ, ví dụ N+1 query hoặc gọi API từng item trong vòng lặp. Sửa: gộp thành batch, JOIN, DataLoader",
+          "Extraneous Fetching: lấy nhiều dữ liệu hơn cần, như `SELECT *` hay trả về cả danh sách không phân trang. Sửa: chọn cột, phân trang, lọc ở DB",
+          "Busy Database: đẩy quá nhiều logic xử lý vào database, như stored procedure nặng hay format dữ liệu bằng SQL. Sửa: để DB lo lưu và truy vấn, xử lý ở tầng ứng dụng",
+          "No Caching: đọc lại dữ liệu ít thay đổi ở mỗi request. Sửa: cache-aside với TTL hợp lý",
+          "Monolithic Persistence: dùng một kho dữ liệu cho mọi kiểu truy cập, như log, session và giao dịch chung một DB. Sửa: chọn kho phù hợp từng loại dữ liệu"
+        ],
+        "code": {
+          "lang": "typescript",
+          "file": "chatty-vs-batch.ts",
+          "src": "// Chatty I/O: 1 query cho mỗi đơn hàng (N+1)\nfor (const order of orders) {\n  order.customer = await db.customer.findUnique({ where: { id: order.customerId } });\n}\n\n// Gộp thành 1 query\nconst ids = [...new Set(orders.map((o) => o.customerId))];\nconst customers = await db.customer.findMany({ where: { id: { in: ids } } });\nconst byId = new Map(customers.map((c) => [c.id, c]));\norders.forEach((o) => { o.customer = byId.get(o.customerId); });"
+        }
+      },
+      {
+        "h": "Nhóm anti-pattern về tài nguyên và luồng xử lý",
+        "p": [
+          "Improper Instantiation: tạo mới rồi huỷ liên tục những object được thiết kế để dùng chung, như tạo DB pool hay HTTP client mới cho mỗi request. Synchronous I/O: chặn luồng xử lý trong lúc chờ I/O, với Node.js là dùng các hàm `*Sync` như `readFileSync` trong request handler, làm đứng cả event loop. Busy Front End: làm việc nặng ngay trong luồng phục vụ request thay vì đẩy sang job nền.",
+          "Retry Storm: retry quá dày khi service phía sau đang lỗi, biến sự cố nhỏ thành sập hoàn toàn. Sửa bằng exponential backoff có jitter, giới hạn số lần thử và circuit breaker. Noisy Neighbor: một tenant dùng quá nhiều tài nguyên làm chậm tenant khác. Sửa bằng rate limit và quota theo tenant, hoặc tách tài nguyên cho khách hàng lớn."
+        ]
+      }
+    ],
+    "summary": [
+      "Đo bằng trace và metric trước khi tối ưu",
+      "Chatty I/O và Extraneous Fetching là nguyên nhân chậm phổ biến nhất ở backend",
+      "Dùng lại DB pool và HTTP client, không tạo mới mỗi request",
+      "Không dùng hàm *Sync trong request handler của Node.js",
+      "Chống Retry Storm bằng backoff có jitter, giới hạn lần thử và circuit breaker"
+    ],
+    "pitfalls": [
+      "Tối ưu một hàm tính toán trong khi 90% thời gian nằm ở hàng chục query tuần tự",
+      "Tạo `new PrismaClient()` hoặc kết nối DB mới trong mỗi request, nhanh chóng cạn connection",
+      "Mọi client retry ngay lập tức với cùng khoảng thời gian, dồn tải lên service vừa hồi phục"
+    ],
+    "quiz": [
+      {
+        "q": "API trả danh sách 50 đơn hàng nhưng chạy 51 query. Đây là anti-pattern nào?",
+        "options": [
+          "Chatty I/O",
+          "Busy Front End",
+          "Noisy Neighbor",
+          "Monolithic Persistence"
+        ],
+        "answer": 0,
+        "explain": "Gửi nhiều request nhỏ (1 query lấy danh sách và 50 query lấy chi tiết) là Chatty I/O, dạng quen thuộc là vấn đề N+1."
+      },
+      {
+        "q": "Vì sao gọi `fs.readFileSync` trong request handler của Node.js là anti-pattern?",
+        "options": [
+          "Vì hàm này không đọc được file UTF-8",
+          "Vì nó chặn event loop, mọi request khác phải chờ",
+          "Vì nó luôn đọc toàn bộ file vào đĩa tạm",
+          "Vì nó chỉ chạy được khi dùng worker thread"
+        ],
+        "answer": 1,
+        "explain": "Node.js xử lý request trên một event loop. Hàm đồng bộ chặn event loop cho tới khi đọc xong, nên mọi request khác bị treo theo."
+      },
+      {
+        "q": "Cách nào giúp tránh Retry Storm khi service phía sau gặp sự cố?",
+        "options": [
+          "Tăng số lần retry để chắc chắn thành công",
+          "Retry ngay lập tức không chờ",
+          "Backoff có jitter, giới hạn số lần và circuit breaker",
+          "Tắt timeout để request chờ lâu hơn"
+        ],
+        "answer": 2,
+        "explain": "Backoff có jitter giãn và phân tán thời điểm retry, giới hạn số lần thử và circuit breaker ngăn dồn thêm tải lên service đang lỗi."
+      }
+    ]
+  },
+  "p12.m4.t6": {
+    sections: [
+      {
+        h: "Người phỏng vấn thực sự chấm gì",
+        p: [
+          "Đề system design như \"Thiết kế URL shortener\" hay \"Thiết kế hệ thống chat\" không có đáp án chuẩn. Người phỏng vấn quan sát cách bạn làm rõ vấn đề mơ hồ, ước lượng quy mô, chia hệ thống thành thành phần hợp lý, nhận ra nút cổ chai, và giải thích đánh đổi. Giao tiếp quan trọng ngang kiến thức: nghĩ thành tiếng, viết lên bảng, kiểm tra xem họ có đồng ý hướng đi không.",
+          "Lỗi phổ biến nhất là nhảy ngay vào vẽ Kafka, Redis, Kubernetes khi chưa biết hệ thống cần làm gì. Một khung cố định giúp bạn không quên bước và chủ động dẫn dắt 45 phút."
+        ]
+      },
+      {
+        h: "Bảy bước và phân bổ thời gian",
+        p: [
+          "Buổi 45 phút thường mất vài phút giới thiệu đầu giờ và vài phút cho bạn đặt câu hỏi cuối giờ, nên thời gian thiết kế thực tế khoảng 35 đến 40 phút. Bảng dưới là mốc tham khảo; nếu người phỏng vấn muốn đào sâu chỗ khác, hãy theo họ."
+        ],
+        code: {
+          lang: "text", file: "khung-45-phut.txt",
+          src: `Phút    Bước                        Kết quả trên bảng
+------  --------------------------  -------------------------------------------
+00-03   Giới thiệu
+03-08   1. Làm rõ yêu cầu           3-5 chức năng chính, yêu cầu phi chức năng,
+                                    những gì ngoài phạm vi
+08-12   2. Ước lượng                QPS đọc/ghi, dung lượng lưu trữ, tỉ lệ đọc:ghi
+12-17   3. API                      4-6 endpoint chính, tham số, phản hồi
+        4. Data model               bảng/collection, khoá chính, SQL hay NoSQL
+17-25   5. Kiến trúc tổng thể       sơ đồ khối chạy được end-to-end
+25-37   6. Đi sâu 1-2 thành phần    scale, cache, nhất quán, xử lý lỗi
+37-41   7. Đánh đổi & mở rộng       điểm lỗi đơn, giám sát, khi tải x10
+41-45   Câu hỏi của ứng viên`
+        }
+      },
+      {
+        h: "Mỗi bước làm gì, ví dụ URL shortener",
+        list: [
+          "Làm rõ yêu cầu: \"Có cần alias tuỳ chỉnh không? Link có hết hạn không? Có cần thống kê lượt click không?\". Yêu cầu phi chức năng: redirect nhanh, sẵn sàng cao, link đã tạo không được mất.",
+          "Ước lượng: 100 triệu link mới mỗi tháng, chia cho khoảng 2,6 triệu giây là khoảng 40 ghi/s; đọc gấp 100 lần là khoảng 4.000 đọc/s. Lưu 5 năm là 6 tỉ bản ghi, mỗi bản ghi 500 byte là khoảng 3 TB. Làm tròn mạnh tay, mục tiêu là biết bậc độ lớn.",
+          "API: `POST /links` trả mã ngắn, `GET /{code}` trả 301 hoặc 302, `GET /links/{code}/stats`.",
+          "Data model: bảng `links(code PK, long_url, owner_id, created_at, expires_at)`; truy vấn chủ yếu theo khoá nên key-value hay SQL đều ổn, hãy nói lý do chọn.",
+          "Kiến trúc tổng thể: vẽ luồng đầy đủ trước, rồi mới thêm cache và hàng đợi."
+        ],
+        p: [
+          "Sơ đồ tổng thể chỉ cần đủ luồng ghi, luồng đọc và luồng thống kê:"
+        ],
+        code: {
+          lang: "text", file: "so-do-tong-the.txt",
+          src: `Client ──> CDN / LB ──> API service ──> Cache (Redis) ──miss──> DB links
+                             │
+                             └──> Queue ──> Analytics worker ──> DB thống kê`
+        }
+      },
+      {
+        h: "Đi sâu và nói về đánh đổi",
+        p: [
+          "Chọn phần rủi ro nhất để đi sâu, hoặc hỏi người phỏng vấn muốn xem phần nào. Với URL shortener đó là cách sinh mã không trùng (base62 từ bộ đếm hay Snowflake) và cache cho luồng đọc chiếm đa số.",
+          "Trình bày đánh đổi theo mẫu \"chọn X vì Y, cái giá là Z\": \"Dùng 302 thay 301 để đếm được mọi lượt click, cái giá là trình duyệt không cache redirect nên server chịu tải nhiều hơn\". Cuối buổi, tự nêu điểm yếu còn lại, metric cần giám sát, và thay đổi gì khi tải tăng gấp 10. Tự chỉ ra giới hạn của thiết kế cho thấy sự chín chắn."
+        ]
+      }
+    ],
+    summary: [
+      "System design không có đáp án chuẩn; người phỏng vấn chấm cách làm rõ, ước lượng, phân rã, đánh đổi và giao tiếp.",
+      "Khung bảy bước: yêu cầu, ước lượng, API, data model, kiến trúc tổng thể, đi sâu, đánh đổi.",
+      "Trong 45 phút, thiết kế thực tế khoảng 35 đến 40 phút; dành phần lớn cho kiến trúc và đi sâu.",
+      "Ước lượng chỉ cần đúng bậc độ lớn: QPS đọc/ghi, dung lượng, tỉ lệ đọc:ghi quyết định cache và lựa chọn lưu trữ.",
+      "Nói đánh đổi theo mẫu \"chọn X vì Y, cái giá là Z\" và tự nêu điểm yếu của thiết kế."
+    ],
+    pitfalls: [
+      "Vẽ kiến trúc ngay khi nghe đề, sau 20 phút mới phát hiện hiểu sai phạm vi.",
+      "Sa vào ước lượng hoặc schema quá chi tiết, hết giờ mà chưa có sơ đồ tổng thể chạy được end-to-end.",
+      "Im lặng suy nghĩ lâu hoặc bỏ qua gợi ý của người phỏng vấn; họ thường gợi ý đúng phần họ muốn chấm."
+    ],
+    quiz: [
+      { q: "Nhận đề \"Thiết kế hệ thống chat\", việc đầu tiên nên làm là gì?", options: ["Vẽ ngay sơ đồ có WebSocket và Kafka", "Viết schema chi tiết cho bảng tin nhắn", "Tính số server cần cho một tỉ người dùng", "Hỏi rõ chức năng chính và quy mô cần hỗ trợ"], answer: 3, explain: "Đề cố tình mơ hồ. Làm rõ chức năng (nhóm chat? lịch sử? trạng thái online?) và quy mô trước, rồi các bước sau mới có cơ sở." },
+      { q: "100 triệu bản ghi mới mỗi tháng tương đương khoảng bao nhiêu ghi mỗi giây?", options: ["Khoảng 4 ghi/s", "Khoảng 40 ghi/s", "Khoảng 400 ghi/s", "Khoảng 4.000 ghi/s"], answer: 1, explain: "Một tháng khoảng 2,6 triệu giây; 100 triệu chia 2,6 triệu xấp xỉ 40. Giờ cao điểm có thể gấp vài lần nhưng bậc độ lớn là hàng chục." },
+      { q: "Cách trình bày một quyết định thiết kế nào gây ấn tượng tốt nhất?", options: ["Nêu lựa chọn, lý do và cái giá phải trả", "Nêu công nghệ mà công ty lớn đang dùng", "Nêu mọi công nghệ có thể dùng cho phần đó", "Nêu lựa chọn và khẳng định không có nhược điểm"], answer: 0, explain: "Mỗi lựa chọn đều có giá. Nói rõ vì sao chọn và mình chấp nhận mất gì cho thấy bạn hiểu đánh đổi, thay vì chỉ nhắc tên công nghệ." }
+    ]
+  }
 });

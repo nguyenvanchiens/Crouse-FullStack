@@ -26,7 +26,7 @@ Object.assign(window.LESSON_CONTENT, {
       {
         h: "Ví dụ: cùng một pipeline, khác ở cổng duyệt",
         p: [
-          "Trong GitHub Actions, khác biệt giữa Delivery và Deployment thường chỉ nằm ở cấu hình environment. Nếu environment `production` có Required reviewers, pipeline dừng lại chờ duyệt (Delivery). Bỏ quy tắc đó thì pipeline chạy thẳng tới production (Deployment)."
+          "Trong GitHub Actions, khác biệt giữa Delivery và Deployment thường chỉ nằm ở cấu hình environment. Nếu environment `production` có Required reviewers, pipeline dừng lại chờ duyệt (Delivery). Bỏ quy tắc đó thì pipeline chạy thẳng tới production (Deployment). Environment là một cấu hình trong Settings của repo, gom secret và quy tắc bảo vệ cho một môi trường deploy; bài về secret và environment sẽ nói kỹ. Lưu ý: với repo private, Required reviewers chỉ có trên gói GitHub Enterprise."
         ],
         code: {
           lang: "yaml",
@@ -85,20 +85,20 @@ jobs:
     quiz: [
       {
         q: "Điểm khác biệt chính giữa Continuous Delivery và Continuous Deployment là gì?",
-        options: ["Delivery không chạy test", "Deployment tự động đưa lên production mà không cần bước duyệt tay", "Delivery chỉ dùng cho mobile", "Deployment không cần build artifact"],
+        options: ["Delivery bỏ qua test tự động, còn Deployment chạy đủ test","Deployment tự lên production, không có bước duyệt tay","Delivery chỉ dành cho mobile, Deployment dành cho web","Deployment không cần build artifact trước khi phát hành"],
         answer: 1,
         explain: "Cả hai đều build, test và giữ main ở trạng thái release được. Khác biệt là Deployment bỏ bước duyệt tay trước production. Các đáp án còn lại mô tả sai cả hai khái niệm."
       },
       {
         q: "Mục tiêu cốt lõi của CI là gì?",
-        options: ["Deploy lên production mỗi giờ", "Phát hiện lỗi tích hợp sớm bằng cách merge thường xuyên và test tự động", "Thay thế code review", "Giảm số lượng test"],
-        answer: 1,
+        options: ["Deploy lên production ít nhất mỗi giờ một lần","Thay thế hoàn toàn bước code review thủ công","Phát hiện lỗi tích hợp sớm nhờ merge và test thường xuyên","Giảm bớt số lượng test để pipeline chạy nhanh hơn"],
+        answer: 2,
         explain: "CI giúp phát hiện lỗi khi thay đổi còn nhỏ. CI không thay code review, không bắt buộc deploy production và càng không giảm test."
       },
       {
         q: "Trong GitHub Actions, cách phổ biến để biến pipeline thành Continuous Delivery là gì?",
-        options: ["Xoá job deploy", "Đặt Required reviewers cho environment production", "Chạy workflow bằng schedule", "Dùng matrix build"],
-        answer: 1,
+        options: ["Xoá job deploy khỏi workflow","Chạy job deploy theo lịch schedule","Dùng matrix build cho job deploy","Đặt Required reviewers cho environment"],
+        answer: 3,
         explain: "Required reviewers khiến job dùng environment production phải chờ người duyệt. Schedule và matrix không liên quan tới cổng duyệt; xoá job deploy thì không còn CD."
       }
     ]
@@ -203,8 +203,8 @@ jobs:
     quiz: [
       {
         q: "Vì sao lint và type-check thường được đặt ở đầu pipeline?",
-        options: ["Vì chúng bắt buộc chạy trên production", "Vì chúng nhanh, rẻ và bắt được nhiều lỗi sớm", "Vì chúng tạo ra Docker image", "Vì GitHub yêu cầu như vậy"],
-        answer: 1,
+        options: ["Vì chúng bắt buộc phải chạy trên production","Vì chúng là bước tạo ra Docker image","Vì GitHub yêu cầu thứ tự như vậy","Vì chúng nhanh, rẻ và báo lỗi sớm"],
+        answer: 3,
         explain: "Nguyên tắc là fail fast: bước nhanh chạy trước để phản hồi sớm. Lint không tạo image và không có quy định nào của GitHub buộc thứ tự này."
       },
       {
@@ -274,7 +274,7 @@ async checkout(userId: string, cart: Cart) {
     quiz: [
       {
         q: "Trong trunk-based development, nhánh tính năng thường sống bao lâu?",
-        options: ["Vài tháng", "Đến khi release lớn tiếp theo", "Rất ngắn, thường dưới một đến hai ngày", "Không bao giờ được merge"],
+        options: ["Vài tháng, theo chu kỳ release","Đến khi có release lớn tiếp theo","Thường dưới một đến hai ngày","Không bao giờ được merge vào main"],
         answer: 2,
         explain: "Nhánh ngắn là cốt lõi của trunk-based. Nhánh sống hàng tháng hoặc chờ release là đặc điểm của mô hình nhánh dài."
       },
@@ -286,8 +286,8 @@ async checkout(userId: string, cart: Cart) {
       },
       {
         q: "Merge queue giải quyết vấn đề gì?",
-        options: ["Tự viết test", "Đảm bảo PR được kiểm tra trên phiên bản main mới nhất trước khi merge", "Thay thế code review", "Giảm dung lượng repo"],
-        answer: 1,
+        options: ["Kiểm tra PR trên main mới nhất trước khi merge","Tự động sinh test cho các PR mới","Thay thế bước code review của đồng đội","Giảm dung lượng lịch sử của repo"],
+        answer: 0,
         explain: "Khi nhiều PR merge liên tục, một PR xanh trên main cũ vẫn có thể làm hỏng main mới. Merge queue test lại PR trên main mới nhất. Nó không viết test hay thay review."
       }
     ]
@@ -378,8 +378,8 @@ jobs:
       },
       {
         q: "Vì sao nên dùng CODEOWNERS cho thư mục `.github/workflows/`?",
-        options: ["Để workflow chạy nhanh hơn", "Vì workflow có quyền truy cập secret nên thay đổi cần team platform duyệt", "Để tắt CI", "Vì GitHub bắt buộc"],
-        answer: 1,
+        options: ["Để workflow chạy nhanh hơn trên runner","Vì GitHub bắt buộc mọi repo phải có","Vì workflow chạm tới secret nên cần team platform duyệt","Để tự tắt CI với các PR sửa workflow"],
+        answer: 2,
         explain: "Sửa workflow có thể làm lộ secret hoặc bỏ qua các cổng kiểm tra, nên cần người có chuyên môn duyệt. CODEOWNERS không ảnh hưởng tốc độ và không bắt buộc."
       },
       {
@@ -407,7 +407,7 @@ jobs:
         ],
         list: [
           "Tag bằng commit SHA: bất biến, truy ngược được về code.",
-          "Tốt hơn nữa là deploy theo digest (`@sha256:...`), vì tag có thể bị ghi đè còn digest thì không.",
+          "Tốt hơn nữa là deploy theo digest `@sha256:...` (mã băm nội dung image), vì tag có thể bị ghi đè còn digest thì không.",
           "Bật chế độ tag immutable trên registry (ECR hỗ trợ) để không ai ghi đè tag cũ."
         ]
       },
@@ -473,7 +473,7 @@ jobs:
     quiz: [
       {
         q: "Vì sao không nên build lại image riêng cho production?",
-        options: ["Vì tốn tiền runner", "Vì image mới có thể khác bản đã test (base image, dependency, cache)", "Vì registry không cho phép", "Vì Docker không hỗ trợ"],
+        options: ["Vì build lại tốn thêm phút runner","Vì image mới có thể khác bản đã test","Vì registry không cho push lại cùng repo","Vì Docker không hỗ trợ build lại"],
         answer: 1,
         explain: "Lý do chính là đảm bảo thứ chạy trên production giống hệt thứ đã test. Chi phí runner là phụ; registry và Docker đều cho phép build lại."
       },
@@ -485,8 +485,8 @@ jobs:
       },
       {
         q: "Config khác nhau giữa staging và production nên được đưa vào như thế nào?",
-        options: ["Build argument riêng cho mỗi môi trường", "Biến môi trường, ConfigMap hoặc secret manager lúc chạy", "Sửa code trước mỗi lần deploy", "Tạo nhánh riêng cho mỗi môi trường"],
-        answer: 1,
+        options: ["Build argument riêng cho mỗi môi trường","Sửa hằng số trong code trước mỗi lần deploy","Nhánh Git riêng cho mỗi môi trường","Biến môi trường, ConfigMap hoặc secret manager lúc chạy"],
+        answer: 3,
         explain: "Truyền config lúc chạy giữ artifact giống nhau. Build argument riêng hay nhánh riêng đều dẫn tới artifact khác nhau cho mỗi môi trường."
       }
     ]
@@ -579,7 +579,7 @@ jobs:
     quiz: [
       {
         q: "Environment parity nghĩa là gì?",
-        options: ["Mọi môi trường có cùng số server", "Các môi trường giống nhau về thành phần, phiên bản và cách cấu hình", "Mọi môi trường dùng chung database", "Staging và production dùng cùng domain"],
+        options: ["Mọi môi trường có cùng số server","Các môi trường cùng thành phần và phiên bản","Mọi môi trường dùng chung một database","Staging và production dùng cùng domain"],
         answer: 1,
         explain: "Parity là giống nhau về bản chất; quy mô có thể khác. Dùng chung database hay domain là sai và nguy hiểm."
       },
@@ -591,8 +591,8 @@ jobs:
       },
       {
         q: "Vì sao không nên tự động deploy preview cho PR từ fork?",
-        options: ["Vì fork không có code", "Vì code lạ sẽ chạy với quyền và hạ tầng của bạn", "Vì GitHub cấm", "Vì preview chỉ dành cho main"],
-        answer: 1,
+        options: ["Vì code lạ sẽ chạy trên hạ tầng của bạn","Vì PR từ fork không chứa code","Vì GitHub cấm deploy từ fork","Vì preview chỉ dành cho nhánh main"],
+        answer: 0,
         explain: "Code từ fork chưa được tin cậy; deploy nó có thể giúp kẻ tấn công truy cập hạ tầng hoặc secret."
       }
     ]
@@ -683,14 +683,14 @@ jobs:
       },
       {
         q: "Điểm khác nhau chính giữa release-please và semantic-release?",
-        options: ["release-please không sinh changelog", "release-please mở Release PR, merge PR mới tạo release; semantic-release release ngay khi push", "semantic-release chỉ chạy trên GitLab", "Không có khác biệt"],
+        options: ["release-please không sinh changelog, semantic-release thì có","release-please mở Release PR, merge PR đó mới tạo release","semantic-release chỉ chạy được trên GitLab CI","semantic-release phải merge một PR mới tạo được tag"],
         answer: 1,
-        explain: "release-please thêm điểm kiểm soát bằng Release PR. Cả hai đều sinh changelog và đều dùng được với GitHub."
+        explain: "release-please thêm điểm kiểm soát bằng Release PR; semantic-release release ngay khi có push lên nhánh release. Cả hai đều sinh changelog và đều dùng được với GitHub."
       },
       {
         q: "Vì sao workflow release cần `fetch-depth: 0`?",
-        options: ["Để chạy nhanh hơn", "Để có toàn bộ lịch sử commit và tag, từ đó tính version tiếp theo", "Để tải dependency", "Để bật cache"],
-        answer: 1,
+        options: ["Để job checkout chạy nhanh hơn","Để npm tải dependency từ cache","Để có lịch sử commit và tag cũ khi tính version","Để bật cache của setup-node"],
+        answer: 2,
         explain: "Mặc định checkout chỉ lấy một commit. Công cụ cần tag trước đó và các commit sau nó để quyết định version."
       }
     ]
@@ -698,21 +698,23 @@ jobs:
   "p08.m0.t7": {
     sections: [
       {
-        h: "Bốn chỉ số DORA",
+        h: "Các chỉ số DORA",
         p: [
-          "DORA (DevOps Research and Assessment) là chương trình nghiên cứu nhiều năm về hiệu quả giao phần mềm. Họ đưa ra bốn chỉ số, chia thành hai nhóm: tốc độ (throughput) và độ ổn định (stability). Điểm quan trọng từ nghiên cứu là hai nhóm không đối nghịch: đội giỏi thường vừa nhanh vừa ổn định."
+          "DORA (DevOps Research and Assessment) là chương trình nghiên cứu nhiều năm về hiệu quả giao phần mềm. Trong nhiều năm, DORA nổi tiếng với bộ \"four keys\" (bốn chỉ số). Từ báo cáo 2024, dora.dev dùng năm chỉ số, chia thành hai nhóm: throughput (lượng thay đổi đi qua hệ thống nhanh tới đâu) và instability (các lần deploy hỏng tới đâu). Điểm quan trọng từ nghiên cứu là hai nhóm không đối nghịch: đội giỏi thường vừa nhanh vừa ổn định.",
+          "Nhóm throughput gồm ba chỉ số đầu, nhóm instability gồm hai chỉ số sau. Chỉ số thứ năm (deployment rework rate) là mới; nếu bạn đọc tài liệu cũ chỉ thấy bốn chỉ số, đó là bộ four keys trước 2024."
         ],
         list: [
-          "Deployment frequency: bao lâu deploy lên production một lần.",
-          "Lead time for changes: từ lúc commit tới lúc commit đó chạy trên production mất bao lâu.",
-          "Change failure rate: tỷ lệ deploy gây sự cố cần khắc phục (rollback, hotfix).",
-          "Time to restore service: khi có sự cố do deploy, mất bao lâu để khôi phục. Các báo cáo gần đây gọi là failed deployment recovery time."
+          "Change lead time: thời gian từ lúc thay đổi được commit vào version control tới lúc nó được deploy lên production.",
+          "Deployment frequency: số lần deploy lên production trong một khoảng thời gian, hoặc khoảng cách giữa hai lần deploy.",
+          "Failed deployment recovery time: thời gian khôi phục sau một lần deploy hỏng cần can thiệp ngay. Tài liệu cũ gọi gần giống là time to restore service (MTTR).",
+          "Change fail rate: tỷ lệ deploy cần can thiệp ngay sau khi deploy, thường dẫn tới rollback hoặc hotfix.",
+          "Deployment rework rate: tỷ lệ deploy không nằm trong kế hoạch mà phải làm vì có sự cố trên production."
         ]
       },
       {
         h: "Đo như thế nào",
         p: [
-          "Bạn không cần công cụ đắt tiền để bắt đầu. Dữ liệu có sẵn trong hệ thống bạn đang dùng: lịch sử deployment của GitHub Environments, thời gian commit, và hệ thống quản lý sự cố. Deployment frequency đếm số lần job deploy production thành công. Lead time lấy thời điểm deploy trừ thời điểm commit. Change failure rate cần đánh dấu deploy nào gây sự cố, thường liên kết với incident hoặc rollback.",
+          "Bạn không cần công cụ đắt tiền để bắt đầu. Dữ liệu có sẵn trong hệ thống bạn đang dùng: lịch sử deployment của GitHub Environments, thời gian commit, và hệ thống quản lý sự cố. Deployment frequency đếm số lần job deploy production thành công. Change lead time lấy thời điểm deploy trừ thời điểm commit. Change fail rate và deployment rework rate cần đánh dấu deploy nào gây sự cố hoặc là deploy chữa cháy, thường liên kết với incident, rollback hay hotfix.",
           "Ví dụ dưới đây dùng GitHub CLI lấy danh sách deployment của environment production để đếm tần suất."
         ],
         code: {
@@ -731,38 +733,38 @@ gh api "repos/my-org/task-api/deployments?environment=production&per_page=100" \
         h: "Dùng đúng cách",
         p: [
           "DORA dùng để đội tự cải thiện, không phải để xếp hạng cá nhân hay so sánh các đội với nhau. Khi chỉ số trở thành mục tiêu thưởng phạt, người ta sẽ tìm cách làm đẹp số liệu: chia deploy thành nhiều lần vô nghĩa, không ghi nhận sự cố.",
-          "Hãy xem chỉ số theo xu hướng. Lead time dài thường do PR lớn, review chậm hoặc pipeline chậm. Change failure rate cao thường do test yếu hoặc thay đổi lớn. Mỗi thực hành trong chương này, như trunk-based, build once, canary, feature flag, rollback tự động, đều tác động trực tiếp tới một hoặc nhiều chỉ số DORA."
+          "Hãy xem chỉ số theo xu hướng. Lead time dài thường do PR lớn, review chậm hoặc pipeline chậm. Change fail rate cao thường do test yếu hoặc thay đổi lớn. Mỗi thực hành trong chương này, như trunk-based, build once, canary, feature flag, rollback tự động, đều tác động trực tiếp tới một hoặc nhiều chỉ số DORA."
         ]
       }
     ],
     summary: [
-      "Bốn chỉ số: deployment frequency, lead time for changes, change failure rate, time to restore.",
-      "Hai chỉ số đầu đo tốc độ, hai chỉ số sau đo độ ổn định.",
+      "Năm chỉ số hiện hành: change lead time, deployment frequency, failed deployment recovery time, change fail rate, deployment rework rate.",
+      "Ba chỉ số đầu thuộc nhóm throughput, hai chỉ số sau thuộc nhóm instability.",
       "Dữ liệu có thể lấy từ lịch sử deployment, git và hệ thống sự cố.",
       "Dùng để đội tự cải thiện theo xu hướng, không để đánh giá cá nhân."
     ],
     pitfalls: [
       "Biến DORA thành KPI thưởng phạt, dẫn tới số liệu bị làm đẹp.",
-      "Chỉ đo tốc độ mà bỏ qua change failure rate: deploy nhiều nhưng hỏng nhiều.",
+      "Chỉ đo tốc độ mà bỏ qua change fail rate: deploy nhiều nhưng hỏng nhiều.",
       "Đo lead time từ lúc tạo ticket thay vì từ commit, làm lẫn thời gian lập kế hoạch vào chỉ số."
     ],
     quiz: [
       {
-        q: "Chỉ số nào KHÔNG thuộc bốn chỉ số DORA?",
-        options: ["Deployment frequency", "Lead time for changes", "Số dòng code mỗi ngày", "Change failure rate"],
+        q: "Chỉ số nào KHÔNG thuộc bộ chỉ số DORA?",
+        options: ["Deployment frequency","Change lead time","Số dòng code mỗi ngày","Deployment rework rate"],
         answer: 2,
-        explain: "Số dòng code không phải chỉ số DORA và cũng không phản ánh hiệu quả. Ba lựa chọn còn lại đều thuộc bộ bốn chỉ số."
+        explain: "Số dòng code không phải chỉ số DORA và cũng không phản ánh hiệu quả. Ba lựa chọn còn lại đều thuộc bộ năm chỉ số hiện hành trên dora.dev."
       },
       {
-        q: "Lead time for changes đo khoảng thời gian nào?",
-        options: ["Từ lúc tạo ticket tới lúc đóng ticket", "Từ lúc commit tới lúc chạy trên production", "Thời gian chạy pipeline CI", "Thời gian khôi phục sau sự cố"],
+        q: "Change lead time (lead time for changes) đo khoảng thời gian nào?",
+        options: ["Từ lúc tạo ticket tới lúc đóng ticket","Từ lúc commit tới lúc chạy trên production","Thời gian chạy một lần pipeline CI","Thời gian khôi phục sau deploy lỗi"],
         answer: 1,
-        explain: "Lead time for changes tính từ commit tới production. Thời gian khôi phục là chỉ số khác; thời gian pipeline chỉ là một phần của lead time."
+        explain: "Change lead time tính từ lúc commit vào version control tới lúc deploy lên production. Thời gian khôi phục là chỉ số khác (failed deployment recovery time); thời gian pipeline chỉ là một phần của lead time."
       },
       {
         q: "Kết luận quan trọng từ nghiên cứu DORA về tốc độ và độ ổn định là gì?",
-        options: ["Phải hy sinh một trong hai", "Đội hiệu quả thường đạt tốt cả hai", "Ổn định quan trọng hơn nên deploy ít đi", "Tốc độ không đo được"],
-        answer: 1,
+        options: ["Phải hy sinh một trong hai","Nên deploy ít đi để ổn định hơn","Tốc độ giao hàng không đo được","Đội hiệu quả thường đạt tốt cả hai"],
+        answer: 3,
         explain: "Nghiên cứu cho thấy tốc độ và ổn định đi cùng nhau: thay đổi nhỏ, thường xuyên vừa nhanh vừa ít rủi ro."
       }
     ]
@@ -849,15 +851,15 @@ jobs:
       },
       {
         q: "Cách đúng để truyền một chuỗi ngắn từ job build sang job deploy?",
-        options: ["Biến môi trường export trong step", "Khai báo `outputs` của job và đọc qua `needs.build.outputs`", "Ghi file vào /tmp", "Không thể truyền"],
+        options: ["`export` biến trong step của job build","Job `outputs`, đọc qua `needs.build.outputs`","Ghi vào file /tmp trên runner của job build","Ghi vào `$GITHUB_ENV` trong job build"],
         answer: 1,
-        explain: "Job outputs là cơ chế chuẩn cho giá trị ngắn. Biến export và file /tmp chỉ tồn tại trên runner của job đó."
+        explain: "Job outputs là cơ chế chuẩn cho giá trị ngắn. Biến export, file /tmp và `$GITHUB_ENV` chỉ tồn tại trong job build (`$GITHUB_ENV` chỉ truyền giữa các step cùng job)."
       },
       {
         q: "`if: always()` trên một job có tác dụng gì?",
-        options: ["Job chạy mọi lúc kể cả không có trigger", "Job vẫn chạy dù các job trong `needs` thất bại", "Job chạy lại vô hạn", "Job bỏ qua mọi step"],
+        options: ["Job chạy mọi lúc kể cả khi không có trigger","Job vẫn chạy dù job trong `needs` thất bại","Job tự chạy lại vô hạn khi bị lỗi","Job bỏ qua mọi step bên trong nó"],
         answer: 1,
-        explain: "`always()` khiến điều kiện đúng bất kể kết quả job trước, hữu ích cho báo cáo và dọn dẹp. Nó không tạo trigger mới."
+        explain: "`always()` khiến điều kiện đúng bất kể kết quả job trước, kể cả khi run bị huỷ; hữu ích cho báo cáo và dọn dẹp. Muốn bỏ qua khi bị huỷ, dùng `!cancelled()`. Nó không tạo trigger mới."
       }
     ]
   },
@@ -920,7 +922,7 @@ jobs:
       {
         h: "Các lưu ý quan trọng",
         p: [
-          "Khi dùng cả `branches` và `paths` cho cùng sự kiện, workflow chỉ chạy khi thoả cả hai. Với `schedule`, GitHub có thể trễ vài phút vào giờ cao điểm, và workflow schedule chỉ chạy trên nhánh mặc định. Ở repo công khai, workflow schedule có thể bị tự động tắt khi repo không có hoạt động trong 60 ngày.",
+          "Khi dùng cả `branches` và `paths` cho cùng sự kiện, workflow chỉ chạy khi thoả cả hai. Với `schedule`, khoảng cách ngắn nhất là 5 phút, GitHub có thể trễ (thậm chí bỏ qua) lần chạy vào giờ cao điểm như đầu mỗi giờ, và workflow schedule chỉ chạy trên commit mới nhất của nhánh mặc định. Ở repo công khai, workflow schedule có thể bị tự động tắt khi repo không có hoạt động trong 60 ngày.",
           "Hãy phân biệt `pull_request` và `pull_request_target`. `pull_request_target` chạy trong ngữ cảnh nhánh đích, có secret và token có quyền ghi. Nếu bạn checkout code của PR từ fork và chạy nó trong workflow này, kẻ tấn công có thể đánh cắp secret. Bài bảo mật pipeline sẽ nói kỹ hơn.",
           "Workflow bị bỏ qua do lọc `paths` sẽ không báo trạng thái. Nếu check đó là bắt buộc trong branch protection, PR sẽ bị treo. Giải pháp là lọc ở cấp job bằng điều kiện, hoặc dùng một job tổng hợp luôn chạy."
         ]
@@ -952,8 +954,8 @@ jobs:
       },
       {
         q: "Vì sao `pull_request_target` nguy hiểm khi kết hợp với checkout code PR từ fork?",
-        options: ["Vì nó chạy chậm", "Vì nó có secret và token quyền ghi, trong khi code PR là code lạ", "Vì nó không hỗ trợ Linux", "Vì nó xoá nhánh main"],
-        answer: 1,
+        options: ["Vì nó có secret và token ghi, còn code PR là code lạ","Vì nó chạy chậm hơn nhiều so với pull_request","Vì nó không hỗ trợ runner Linux","Vì nó tự xoá nhánh main sau khi chạy"],
+        answer: 0,
         explain: "`pull_request_target` chạy với quyền của repo đích. Chạy code không tin cậy trong ngữ cảnh đó có thể làm lộ secret."
       }
     ]
@@ -1054,7 +1056,7 @@ jobs:
       },
       {
         q: "Tác dụng của `--health-cmd` trong options của service?",
-        options: ["Giới hạn RAM", "GitHub chờ service khỏe mạnh trước khi chạy step", "Tự động chạy migration", "Xoá dữ liệu sau test"],
+        options: ["Giới hạn RAM của container service","Cho runner chờ service khoẻ rồi mới chạy step","Tự động chạy migration khi service khởi động","Xoá dữ liệu của service sau khi test"],
         answer: 1,
         explain: "Health check cho runner biết khi nào container sẵn sàng. Nó không chạy migration hay dọn dữ liệu."
       },
@@ -1292,8 +1294,8 @@ jobs:
       },
       {
         q: "Cache key tốt cho npm dependency nên dựa trên gì?",
-        options: ["Thời gian hiện tại", "Hash của package-lock.json và hệ điều hành", "Tên người commit", "Số thứ tự run"],
-        answer: 1,
+        options: ["Thời gian hiện tại của runner","Tên người tạo commit","Số thứ tự của lần chạy","Hash của package-lock.json và hệ điều hành"],
+        answer: 3,
         explain: "Lockfile quyết định nội dung dependency nên hash của nó là key chính xác. Thời gian hay số run khiến cache không bao giờ khớp."
       }
     ]
@@ -1310,12 +1312,13 @@ jobs:
       {
         h: "Environment protection rules",
         p: [
-          "Trong Settings → Environments, mỗi environment có thể cấu hình các quy tắc sau. Kết hợp chúng, bạn có một cổng production chặt chẽ mà không cần công cụ ngoài."
+          "Trong Settings → Environments, mỗi environment có thể cấu hình các quy tắc sau. Kết hợp chúng, bạn có một cổng production chặt chẽ mà không cần công cụ ngoài.",
+          "Lưu ý về gói dịch vụ: với repo public, mọi gói đều dùng được các quy tắc này. Với repo private trên gói Free, Pro hoặc Team, Required reviewers và Wait timer không dùng được (cần GitHub Enterprise); Deployment branches and tags thì có từ gói Pro/Team. Hãy kiểm tra gói của tổ chức trước khi thiết kế cổng duyệt."
         ],
         list: [
           "Required reviewers: tối đa 6 người hoặc team; job chờ một người trong số đó duyệt.",
           "Prevent self-review: người kích hoạt deploy không được tự duyệt.",
-          "Wait timer: chờ một khoảng thời gian trước khi deploy.",
+          "Wait timer: chờ một khoảng thời gian trước khi deploy (1 phút tới 30 ngày).",
           "Deployment branches and tags: chỉ nhánh `main` hoặc tag `v*` mới được deploy vào production.",
           "Secret và variable riêng cho environment."
         ]
@@ -1386,9 +1389,9 @@ jobs:
       },
       {
         q: "Secret đặt ở environment `production` được cấp cho job nào?",
-        options: ["Mọi job trong repo", "Chỉ job khai báo `environment: production` và đã qua quy tắc bảo vệ", "Chỉ job chạy theo schedule", "Job chạy từ PR fork"],
+        options: ["Mọi job của mọi workflow trong repo","Job có `environment: production` đã được duyệt","Mọi job chạy theo lịch `schedule`","Mọi job chạy trên nhánh main"],
         answer: 1,
-        explain: "Secret cấp environment gắn với job dùng environment đó và chỉ có sau khi được duyệt. PR fork không nhận secret."
+        explain: "Secret cấp environment chỉ được cấp cho job dùng environment đó, sau khi qua quy tắc bảo vệ. Chạy trên main hay theo lịch là chưa đủ; PR từ fork cũng không nhận secret."
       },
       {
         q: "Tính năng nào ngăn người kích hoạt deploy tự duyệt deploy của chính mình?",
@@ -1404,7 +1407,7 @@ jobs:
         h: "Vấn đề của access key dài hạn",
         p: [
           "Cách cũ là tạo IAM user, sinh `AWS_ACCESS_KEY_ID` và `AWS_SECRET_ACCESS_KEY`, dán vào GitHub secret. Key này sống mãi cho tới khi ai đó nhớ xoay vòng. Nếu bị lộ qua log, qua một action độc hại hay qua máy của một developer, kẻ tấn công dùng được nó từ bất kỳ đâu, bất kỳ lúc nào.",
-          "OIDC (OpenID Connect) giải quyết bằng cách không có key nào cả. Mỗi lần job chạy, GitHub cấp một token JWT ngắn hạn, ký bởi `https://token.actions.githubusercontent.com`, trong đó ghi rõ repo, nhánh, environment, workflow. AWS kiểm tra chữ ký và các claim, rồi trả về credential tạm thời có hạn khoảng một giờ."
+          "OIDC (OpenID Connect) giải quyết bằng cách không có key nào cả. Mỗi lần job chạy, GitHub cấp một token JWT (chuỗi JSON được ký số, ai cũng kiểm tra được chữ ký) ngắn hạn, ký bởi `https://token.actions.githubusercontent.com`, trong đó ghi rõ repo, nhánh, environment, workflow. AWS kiểm tra chữ ký và các claim, rồi trả về credential tạm thời có hạn khoảng một giờ."
         ]
       },
       {
@@ -1477,8 +1480,8 @@ jobs:
       },
       {
         q: "Lợi ích chính của OIDC so với access key lưu trong secret?",
-        options: ["Chạy nhanh hơn", "Không có credential dài hạn; credential tạm thời, gắn với repo và environment", "Không cần IAM role", "Không cần trust policy"],
-        answer: 1,
+        options: ["Workflow chạy nhanh hơn đáng kể","Không cần tạo IAM role trên AWS","Không còn credential dài hạn phải lưu","Không cần viết trust policy"],
+        answer: 2,
         explain: "OIDC loại bỏ key dài hạn và ràng buộc danh tính theo claim. Nó vẫn cần IAM role và trust policy."
       },
       {
@@ -1566,7 +1569,7 @@ jobs:
       {
         h: "Versioning và pin theo SHA",
         p: [
-          "Action và workflow dùng chung cần được version như thư viện: tag `v1.2.0`, changelog, không phá vỡ input cũ. Nhưng phía người dùng thì nên pin theo commit SHA đầy đủ, vì tag trong Git có thể bị di chuyển. Ngày 19/3/2026, kẻ tấn công dùng credential bị lộ để force-push 76/77 tag của `aquasecurity/trivy-action` thành mã độc đánh cắp secret. Ai pin theo SHA thì không bị ảnh hưởng.",
+          "Action và workflow dùng chung cần được version như thư viện: tag `v1.2.0`, changelog, không phá vỡ input cũ. Nhưng phía người dùng thì nên pin theo commit SHA đầy đủ, vì tag trong Git có thể bị di chuyển. Ngày 19/3/2026, kẻ tấn công dùng credential bị lộ để force-push 76/77 tag của `aquasecurity/trivy-action` thành mã độc đánh cắp secret. Workflow pin trivy-action theo SHA không nhận mã độc từ chính action đó. Nhưng pin SHA chỉ bảo vệ đúng một tầng: các commit trivy-action cũ (trước 9/4/2025) bên trong lại gọi `setup-trivy` theo tag, mà tag của `setup-trivy` cũng bị ghi đè, nên vẫn nhiễm. Khi chọn action, hãy xem cả những action mà nó gọi bên trong.",
           "Để việc pin SHA không thành gánh nặng, bật Dependabot cho ecosystem `github-actions`: nó mở PR cập nhật SHA và giữ comment version bên cạnh."
         ]
       },
@@ -1598,9 +1601,9 @@ jobs:
       },
       {
         q: "Vì sao nên pin action theo commit SHA thay vì tag?",
-        options: ["SHA ngắn hơn", "Tag có thể bị force-push trỏ sang mã khác, còn SHA thì bất biến", "GitHub không hỗ trợ tag", "SHA chạy nhanh hơn"],
+        options: ["SHA ngắn hơn và dễ đọc hơn tag","Tag có thể bị force-push, SHA thì không","GitHub không còn hỗ trợ tham chiếu theo tag","Action pin theo SHA chạy nhanh hơn"],
         answer: 1,
-        explain: "Sự cố trivy-action 3/2026 là ví dụ tag bị ghi đè thành mã độc. SHA trỏ tới đúng một commit nên không thể bị thay."
+        explain: "Sự cố trivy-action 3/2026 là ví dụ tag bị ghi đè thành mã độc. SHA trỏ tới đúng một commit nên không thể bị thay; nhưng nếu action đó lại gọi action khác theo tag thì tầng bên trong vẫn có rủi ro."
       },
       {
         q: "Trong composite action, step `run` bắt buộc phải có gì?",
@@ -1616,7 +1619,8 @@ jobs:
         h: "Concurrency: huỷ run cũ, tránh deploy chồng nhau",
         p: [
           "Khi bạn push ba commit liên tiếp vào một PR, mặc định có ba run CI chạy song song, hai run đầu là lãng phí. Khối `concurrency` gom các run vào một nhóm; trong một nhóm chỉ có một run đang chạy và tối đa một run chờ.",
-          "Với CI của PR, đặt `cancel-in-progress: true` để huỷ run cũ. Với deploy thì ngược lại: không nên huỷ một deploy đang chạy giữa chừng vì có thể để hệ thống ở trạng thái dở dang. Hãy dùng nhóm theo môi trường với `cancel-in-progress: false` để các deploy xếp hàng."
+          "Với CI của PR, đặt `cancel-in-progress: true` để huỷ run cũ. Với deploy thì ngược lại: không nên huỷ một deploy đang chạy giữa chừng vì có thể để hệ thống ở trạng thái dở dang. Hãy dùng nhóm theo môi trường với `cancel-in-progress: false` để deploy đang chạy được làm xong.",
+          "Cần hiểu đúng chữ \"xếp hàng\": mặc định (`queue: single`) nhóm chỉ giữ một run chờ. Nếu đang có run chờ mà run thứ ba tới, run chờ cũ bị huỷ và run mới thế chỗ. Với deploy, điều này thường hợp lý vì chỉ bản mới nhất cần lên. Nếu muốn mọi run đều được chạy lần lượt, GitHub hỗ trợ `queue: max` (tối đa 100 run chờ, xử lý gần đúng theo thứ tự vào hàng); `queue: max` không được kết hợp với `cancel-in-progress: true`."
         ],
         code: {
           lang: "yaml",
@@ -1647,7 +1651,8 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-production
-      cancel-in-progress: false   # xếp hàng, không huỷ deploy đang chạy
+      cancel-in-progress: false   # không huỷ deploy đang chạy
+      # queue: max                # bỏ comment nếu muốn giữ mọi run chờ thay vì chỉ run mới nhất
     steps:
       - run: echo "deploy"`
         }
@@ -1686,20 +1691,20 @@ jobs:
     quiz: [
       {
         q: "Với workflow deploy production, cấu hình concurrency nào hợp lý?",
-        options: ["cancel-in-progress: true", "Nhóm cố định theo môi trường, cancel-in-progress: false", "Không dùng concurrency, cho chạy song song", "Nhóm theo tên người commit"],
+        options: ["Nhóm theo `github.ref`, cancel-in-progress: true","Nhóm cố định theo môi trường, cancel-in-progress: false","Không dùng concurrency, cho các deploy chạy song song","Nhóm theo người commit, cancel-in-progress: true"],
         answer: 1,
         explain: "Deploy nên xếp hàng theo môi trường và không bị huỷ giữa chừng. Chạy song song dễ gây deploy chồng nhau."
       },
       {
         q: "Vì sao không nên dùng self-hosted runner cho repo public?",
-        options: ["GitHub tính phí cao", "PR từ fork có thể chạy code tùy ý trên máy trong mạng của bạn", "Runner không hỗ trợ Linux", "Không có label"],
-        answer: 1,
+        options: ["Vì GitHub tính phí cao hơn cho repo public","Vì self-hosted runner không hỗ trợ Linux","Vì repo public không gán được label runner","Vì PR từ fork có thể chạy code trên máy của bạn"],
+        answer: 3,
         explain: "Code không tin cậy chạy trên máy của bạn là rủi ro lớn nhất. Các lựa chọn còn lại không đúng."
       },
       {
         q: "Actions Runner Controller (ARC) mang lại lợi ích gì?",
-        options: ["Thay GitHub Actions bằng Jenkins", "Tạo runner tạm thời trên Kubernetes theo nhu cầu", "Tăng số phút miễn phí", "Tự viết workflow"],
-        answer: 1,
+        options: ["Tạo runner tạm thời trên Kubernetes theo nhu cầu","Thay GitHub Actions bằng Jenkins chạy trên cluster","Tăng số phút miễn phí của GitHub-hosted runner","Tự sinh workflow YAML từ cấu trúc repo"],
+        answer: 0,
         explain: "ARC tự co giãn runner dạng pod trên Kubernetes, mỗi job dùng runner mới. Nó không thay thế GitHub Actions hay tăng phút miễn phí."
       }
     ]
@@ -1709,12 +1714,12 @@ jobs:
       {
         h: "Cấu trúc .gitlab-ci.yml",
         p: [
-          "GitLab CI dùng một file `.gitlab-ci.yml` ở gốc repo. Mỗi khoá cấp cao không phải từ khoá dành riêng là một job. Job thuộc về một `stage`; mặc định các stage chạy tuần tự, các job cùng stage chạy song song. Job được thực thi bởi GitLab Runner, một agent bạn cài trên máy hoặc Kubernetes, hoặc runner dùng chung của GitLab.com.",
+          "GitLab CI dùng một file `.gitlab-ci.yml` ở gốc repo. Mỗi khoá cấp cao không phải từ khoá dành riêng (như `stages`, `default`, `workflow`, `variables`, `include`) là một job; khoá bắt đầu bằng dấu chấm như `.node-template` là hidden job, không chạy, thường dùng làm mẫu để job khác `extends`. Job thuộc về một `stage`; mặc định các stage chạy tuần tự, các job cùng stage chạy song song. Job được thực thi bởi GitLab Runner, một agent bạn cài trên máy hoặc Kubernetes, hoặc runner dùng chung của GitLab.com.",
           "Khái niệm tương ứng với GitHub Actions khá thẳng: job giống job, `script` giống các step `run`, `services` giống service container, `environment` giống environment, và `needs` tạo phụ thuộc trực tiếp giữa các job."
         ],
         list: [
           "`rules:` quyết định job có chạy không, thay cho `only/except` cũ.",
-          "`needs:` tạo DAG: job chạy ngay khi job nó cần xong, không chờ cả stage.",
+          "`needs:` tạo DAG (đồ thị phụ thuộc có hướng): job chạy ngay khi job nó cần xong, không chờ cả stage.",
           "`artifacts:` lưu file giữa các job, có `expire_in` và `reports` (junit, coverage).",
           "`cache:` tăng tốc, key có thể dựa theo file lockfile.",
           "`environment:` ghi nhận deploy, hỗ trợ protected environment và duyệt."
@@ -1788,7 +1793,7 @@ deploy_production:
         h: "GitLab Runner và bảo mật",
         p: [
           "Runner có nhiều executor: `docker` (mỗi job một container, phổ biến nhất), `shell` (chạy thẳng trên máy, ít cô lập), `kubernetes` (mỗi job một pod). Từ GitLab 16, runner được tạo trên giao diện và đăng ký bằng runner authentication token có tiền tố `glrt-`, thay cho registration token cũ.",
-          "Variable có thể đánh dấu Protected (chỉ cấp cho nhánh, tag được bảo vệ) và Masked (che trong log). Secret production nên luôn là Protected, kết hợp protected environment để chỉ một nhóm người được chạy job deploy. `interruptible: true` cùng tuỳ chọn tự huỷ pipeline dư thừa giúp huỷ pipeline cũ khi có commit mới, tương tự concurrency của GitHub."
+          "Variable có thể đánh dấu Protected (chỉ cấp cho nhánh, tag được bảo vệ) và Masked (che trong log). Secret production nên luôn là Protected, kết hợp protected environment để chỉ một nhóm người được chạy job deploy. Protected environment còn hỗ trợ deployment approvals: deploy phải được số người duyệt quy định chấp thuận, gần nhất với Required reviewers của GitHub. Cả hai tính năng này cần gói Premium hoặc Ultimate; trên gói Free, bạn chỉ có `when: manual` kết hợp Protected branch và Protected variable. `interruptible: true` cùng tuỳ chọn tự huỷ pipeline dư thừa giúp huỷ pipeline cũ khi có commit mới, tương tự concurrency của GitHub."
         ]
       }
     ],
@@ -1812,15 +1817,15 @@ deploy_production:
       },
       {
         q: "Tác dụng của `needs:` trong GitLab CI?",
-        options: ["Chọn runner", "Cho job chạy ngay khi các job cần thiết xong, không chờ cả stage", "Lưu cache", "Tạo biến môi trường"],
-        answer: 1,
+        options: ["Chọn runner cho job theo tags","Lưu cache giữa các pipeline","Cho job chạy khi job nó cần xong, không chờ cả stage","Khai báo biến môi trường cho job"],
+        answer: 2,
         explain: "`needs` biến pipeline thành DAG. Chọn runner dùng `tags`; cache dùng `cache`."
       },
       {
-        q: "Tương đương của Required reviewers GitHub trong GitLab CI là gì?",
-        options: ["`when: manual` kết hợp protected environment", "`cache:`", "`artifacts:`", "`image:`"],
-        answer: 0,
-        explain: "Job manual trên protected environment chỉ người được phép mới chạy được, tương đương cổng duyệt. Các khoá khác không liên quan."
+        q: "Trong GitLab, tính năng gần nhất với Required reviewers của GitHub là gì?",
+        options: ["Khoá `cache:` với key theo lockfile","Protected environment có deployment approvals","Khoá `artifacts:` với `expire_in`","Khoá `image:` trỏ tới image đã ký"],
+        answer: 1,
+        explain: "Protected environment giới hạn ai được deploy, deployment approvals buộc đủ số người duyệt (gói Premium/Ultimate). Trên gói Free, cách thường dùng là job `when: manual` kết hợp protected branch và protected variable. cache, artifacts, image không liên quan tới cổng duyệt."
       }
     ]
   },
@@ -1843,7 +1848,7 @@ deploy_production:
       {
         h: "Credentials an toàn",
         p: [
-          "Credential lưu trong Jenkins, không trong code. Helper `credentials('id')` với loại username/password tạo ra ba biến: `REG` (dạng user:pass), `REG_USR` và `REG_PSW`. Luôn dùng nháy đơn trong `sh` để shell, chứ không phải Groovy, đọc biến. Nháy kép khiến Groovy nội suy secret vào chuỗi lệnh và có thể lộ trong log."
+          "Credential lưu trong Jenkins, không trong code. Helper `credentials('id')` với loại username/password tạo ra ba biến: `REG` (dạng user:pass), `REG_USR` và `REG_PSW`. Khai báo `environment` ở cấp stage thay vì cấp pipeline để chỉ stage cần secret mới nhận nó. Luôn dùng nháy đơn trong `sh` để shell, chứ không phải Groovy, đọc biến. Nháy kép khiến Groovy nội suy secret vào chuỗi lệnh và có thể lộ trong log."
         ],
         code: {
           lang: "groovy",
@@ -1851,9 +1856,6 @@ deploy_production:
           src: `pipeline {
   agent none
   options { timeout(time: 20, unit: 'MINUTES'); disableConcurrentBuilds() }
-  environment {
-    REG = credentials('registry')   // tạo REG_USR và REG_PSW
-  }
   stages {
     stage('Test') {
       agent { docker { image 'node:24-alpine' } }
@@ -1865,6 +1867,9 @@ deploy_production:
     stage('Push') {
       agent { label 'docker' }        // agent có sẵn Docker CLI
       when { branch 'main' }
+      environment {
+        REG = credentials('registry') // chỉ stage này nhận secret; tạo REG_USR và REG_PSW
+      }
       steps {
         // Nháy đơn: shell đọc biến, Groovy không nội suy secret
         sh 'echo "$REG_PSW" | docker login registry.example.com -u "$REG_USR" --password-stdin'
@@ -1933,13 +1938,13 @@ def call(Map cfg = [:]) {
       },
       {
         q: "Vì sao nên dùng nháy đơn trong bước `sh` có secret?",
-        options: ["Nháy đơn chạy nhanh hơn", "Để shell đọc biến môi trường, tránh Groovy nội suy secret vào chuỗi lệnh", "Jenkins không hỗ trợ nháy kép", "Để tắt log"],
-        answer: 1,
+        options: ["Vì nháy đơn chạy nhanh hơn nháy kép","Vì Jenkins không hỗ trợ nháy kép trong sh","Để Jenkins tắt log của bước sh","Để shell đọc biến, Groovy không nội suy secret"],
+        answer: 3,
         explain: "Nháy kép là GString, Groovy thay giá trị vào trước khi chạy, làm secret xuất hiện trong lệnh. Jenkins vẫn hỗ trợ nháy kép."
       },
       {
         q: "Nơi nên chạy build trong kiến trúc Jenkins?",
-        options: ["Trên controller", "Trên agent, lý tưởng là agent tạm thời", "Trên máy developer", "Trên database server"],
+        options: ["Trên controller, cạnh cấu hình Jenkins","Trên agent, lý tưởng là agent tạm thời","Trên máy cá nhân của developer","Trên chính database server production"],
         answer: 1,
         explain: "Controller chỉ điều phối; chạy build trên controller vừa chậm vừa cho phép build truy cập cấu hình và secret của Jenkins."
       }
@@ -2063,21 +2068,21 @@ workflows:
     quiz: [
       {
         q: "Trong CircleCI, cổng duyệt tay được tạo bằng gì?",
-        options: ["Job có `type: approval` trong workflow", "`wait`", "`when: manual`", "`input`"],
-        answer: 0,
+        options: ["Step `wait` giữa các job","Khoá `when: manual` trên job","Job `type: approval` trong workflow","Step `input` trong stage"],
+        answer: 2,
         explain: "CircleCI dùng job `type: approval`. `wait` là của Buildkite, `when: manual` của GitLab, `input` của Jenkins."
       },
       {
         q: "Đặc điểm kiến trúc nổi bật của Buildkite là gì?",
-        options: ["Chỉ chạy trên Windows", "Điều phối SaaS, agent chạy trên hạ tầng của bạn", "Không hỗ trợ YAML", "Chỉ dùng cho mobile"],
+        options: ["Chỉ tự host toàn bộ, không có bản SaaS","Điều phối SaaS, agent chạy trên hạ tầng của bạn","Chạy toàn bộ build trên hạ tầng của Buildkite","Chỉ cấu hình được qua giao diện web"],
         answer: 1,
-        explain: "Buildkite tách control plane SaaS khỏi agent do bạn vận hành. Nó dùng YAML và chạy trên nhiều hệ điều hành."
+        explain: "Buildkite tách control plane SaaS khỏi agent do bạn vận hành. Pipeline được khai báo bằng YAML trong repo."
       },
       {
         q: "Cách nào giúp pipeline dễ chuyển giữa các công cụ CI?",
-        options: ["Viết mọi thứ trong YAML", "Đặt logic vào script trong repo, YAML chỉ gọi script", "Dùng nhiều plugin", "Không viết test"],
-        answer: 1,
-        explain: "Script chạy được ở mọi công cụ, YAML chỉ là lớp mỏng điều phối. Nhiều plugin làm việc chuyển đổi khó hơn."
+        options: ["Đặt logic vào script, YAML chỉ gọi script","Viết toàn bộ logic trong YAML của công cụ","Dùng càng nhiều plugin của công cụ càng tốt","Gộp mọi bước vào một job duy nhất"],
+        answer: 0,
+        explain: "Script chạy được ở mọi công cụ, YAML chỉ là lớp mỏng điều phối. Nhồi logic vào YAML hay phụ thuộc nhiều plugin làm việc chuyển đổi khó hơn."
       }
     ]
   },
@@ -2186,14 +2191,14 @@ aws ecr put-lifecycle-policy \\
       },
       {
         q: "Khi thiết kế lifecycle policy, ràng buộc quan trọng nhất là gì?",
-        options: ["Xoá càng nhiều càng tốt", "Giữ đủ image để rollback và không xoá image đang chạy", "Chỉ giữ image mới nhất", "Không bao giờ xoá"],
+        options: ["Xoá càng nhiều image càng tốt","Giữ đủ image để rollback, không xoá bản đang chạy","Chỉ giữ lại một image mới nhất","Không bao giờ xoá image nào"],
         answer: 1,
         explain: "Mục tiêu là tiết kiệm mà vẫn rollback được. Chỉ giữ image mới nhất làm mất khả năng rollback; không xoá thì chi phí tăng mãi."
       },
       {
         q: "Lợi ích của Nexus/Artifactory khi làm proxy cho npmjs?",
-        options: ["Tự viết code", "Cache package, build nhanh hơn và kiểm soát nguồn package", "Thay thế Git", "Tăng số CPU của runner"],
-        answer: 1,
+        options: ["Tự sinh code từ package","Thay thế Git làm nơi lưu mã","Cache package và kiểm soát nguồn package","Tăng số CPU cho runner"],
+        answer: 2,
         explain: "Proxy lưu bản sao package, giảm phụ thuộc internet và cho phép chặn package không được phép. Nó không thay Git hay tăng tài nguyên runner."
       }
     ]
@@ -2277,14 +2282,14 @@ spec:
       },
       {
         q: "Vai trò của readiness probe trong rolling update?",
-        options: ["Khởi động lại container bị treo", "Chỉ cho traffic vào và tiếp tục cập nhật khi pod mới thực sự sẵn sàng", "Giới hạn CPU", "Tạo log"],
+        options: ["Khởi động lại container bị treo","Chỉ cho traffic vào pod đã sẵn sàng","Giới hạn CPU của pod mới","Ghi log khởi động của pod"],
         answer: 1,
         explain: "Readiness quyết định pod có nhận traffic hay không. Khởi động lại container bị treo là việc của liveness probe."
       },
       {
         q: "Khi nào Recreate là lựa chọn hợp lý?",
-        options: ["API công khai cần 99,99% uptime", "Ứng dụng không thể chạy hai phiên bản cùng lúc và chấp nhận downtime ngắn", "Luôn luôn", "Khi có nhiều replica"],
-        answer: 1,
+        options: ["Ứng dụng không chạy được hai phiên bản song song","API công khai cần 99,99% uptime","Mọi trường hợp, vì nó đơn giản nhất","Deployment có nhiều replica"],
+        answer: 0,
         explain: "Recreate đổi downtime lấy sự đơn giản và không có hai phiên bản song song. API cần uptime cao nên dùng rolling, blue-green hoặc canary."
       }
     ]
@@ -2359,20 +2364,20 @@ spec:
     quiz: [
       {
         q: "Ưu điểm lớn nhất của Blue-Green là gì?",
-        options: ["Tiết kiệm tài nguyên", "Rollback gần như tức thì bằng cách chuyển traffic về môi trường cũ", "Chỉ ảnh hưởng 5% người dùng", "Không cần database"],
-        answer: 1,
+        options: ["Tiết kiệm tài nguyên hạ tầng","Chỉ ảnh hưởng 5% người dùng","Rollback gần như tức thì bằng chuyển traffic","Không cần quan tâm schema database"],
+        answer: 2,
         explain: "Blue-Green cho phép quay lại ngay. Nó tốn tài nguyên hơn; việc chỉ ảnh hưởng một phần người dùng là đặc điểm của canary."
       },
       {
         q: "Trong Argo Rollouts blueGreen, `previewService` dùng để làm gì?",
-        options: ["Nhận traffic người dùng thật", "Cho phép test phiên bản mới trước khi promote", "Lưu log", "Chạy migration"],
+        options: ["Nhận traffic người dùng thật","Test phiên bản mới trước khi promote","Lưu log của phiên bản cũ","Chạy migration trước khi chuyển"],
         answer: 1,
         explain: "previewService trỏ tới bản mới để test; activeService mới là nơi nhận traffic thật."
       },
       {
         q: "Vì sao schema database là thách thức trong Blue-Green?",
-        options: ["Vì mỗi môi trường có database riêng hoàn toàn", "Vì hai phiên bản ứng dụng thường dùng chung database nên schema phải tương thích với cả hai", "Vì database không hỗ trợ Kubernetes", "Vì phải xoá database mỗi lần deploy"],
-        answer: 1,
+        options: ["Hai phiên bản thường dùng chung một database","Mỗi môi trường có database riêng hoàn toàn","Database không chạy được trên Kubernetes","Phải xoá database mỗi lần chuyển traffic"],
+        answer: 0,
         explain: "Database dùng chung buộc schema tương thích ngược để có thể quay về Blue."
       }
     ]
@@ -2457,7 +2462,7 @@ spec:
       {
         h: "Canary không cần Kubernetes",
         p: [
-          "Canary không phải đặc quyền của Kubernetes. Với AWS, Application Load Balancer hỗ trợ weighted target group: chia ví dụ 95% về target group cũ và 5% về target group mới. ECS kết hợp CodeDeploy có sẵn cấu hình kiểu canary như `CodeDeployDefault.ECSCanary10Percent5Minutes`, tự rollback khi CloudWatch alarm kích hoạt.",
+          "Canary không phải đặc quyền của Kubernetes. Với AWS, Application Load Balancer hỗ trợ weighted target group: chia ví dụ 95% về target group cũ và 5% về target group mới. Từ 10/2025, ECS có sẵn chiến lược canary và linear ngay trong service (trước đó là blue/green gốc từ 7/2025): chuyển một phần trăm traffic sang bản mới, chờ bake time, tự rollback khi CloudWatch alarm kích hoạt. Cách cũ là ECS kết hợp CodeDeploy với cấu hình như `CodeDeployDefault.ECSCanary10Percent5Minutes` vẫn còn gặp nhiều.",
           "Với Nginx trên VPS, có thể dùng trọng số `weight` trong upstream. Dù ở nền tảng nào, nguyên tắc vẫn là: phần nhỏ trước, đo, rồi mới mở rộng."
         ]
       }
@@ -2476,13 +2481,13 @@ spec:
     quiz: [
       {
         q: "Lợi ích chính của canary so với blue-green?",
-        options: ["Rollback nhanh hơn", "Giới hạn phạm vi ảnh hưởng: chỉ một phần nhỏ người dùng gặp bản lỗi", "Không cần giám sát", "Không tốn tài nguyên"],
-        answer: 1,
+        options: ["Rollback nhanh hơn blue-green","Không cần hệ thống giám sát","Không tốn thêm tài nguyên nào","Giới hạn số người dùng gặp bản lỗi"],
+        answer: 3,
         explain: "Canary giảm số người bị ảnh hưởng. Nó cần giám sát tốt hơn, và blue-green thường rollback nhanh tương đương."
       },
       {
         q: "Trong AnalysisTemplate, điều gì xảy ra khi metric vượt `failureLimit`?",
-        options: ["Rollout tiếp tục bước tiếp theo", "Rollout bị abort và traffic quay về bản ổn định", "Prometheus khởi động lại", "Pod bị xoá hết"],
+        options: ["Rollout vẫn tiếp tục bước tiếp theo","Rollout bị abort, traffic về bản stable","Prometheus bị khởi động lại","Mọi pod của rollout bị xoá"],
         answer: 1,
         explain: "Phân tích thất bại khiến rollout abort và quay về phiên bản stable."
       },
@@ -2567,13 +2572,13 @@ export async function isNewCheckout(userId: string): Promise<boolean> {
       },
       {
         q: "Vai trò của OpenFeature là gì?",
-        options: ["Một dịch vụ lưu flag trả phí", "API chuẩn mở để đánh giá flag, cho phép đổi nhà cung cấp qua provider", "Một công cụ CI", "Thư viện test"],
-        answer: 1,
+        options: ["API chuẩn mở, đổi nhà cung cấp qua provider","Dịch vụ lưu flag trả phí của CNCF","Công cụ CI chạy test theo flag","Thư viện mock dùng khi viết test"],
+        answer: 0,
         explain: "OpenFeature chuẩn hoá API phía ứng dụng; Unleash, LaunchDarkly... là provider phía sau."
       },
       {
         q: "Giá trị mặc định của flag cho tính năng mới nên là gì?",
-        options: ["Bật", "Tắt, là trạng thái an toàn khi không đánh giá được flag", "Ngẫu nhiên", "Không cần mặc định"],
+        options: ["Bật, để người dùng thấy ngay","Tắt, giữ hành vi cũ khi có lỗi","Ngẫu nhiên theo từng request","Không cần giá trị mặc định"],
         answer: 1,
         explain: "Khi provider lỗi, ứng dụng dùng mặc định; mặc định tắt giữ hành vi cũ đã ổn định."
       }
@@ -2665,19 +2670,19 @@ spec:
     quiz: [
       {
         q: "Vì sao migration phải tương thích ngược với code cũ?",
-        options: ["Vì code cũ vẫn chạy trong lúc migration xong và code mới chưa deploy xong", "Vì database không hỗ trợ migration mới", "Vì Prisma yêu cầu", "Không cần tương thích ngược"],
-        answer: 0,
-        explain: "Migration chạy trước deploy nên có khoảng thời gian code cũ chạy trên schema mới, và rollback code cũng cần schema tương thích."
+        options: ["Vì database không hỗ trợ migration mới","Vì Prisma bắt buộc mọi migration như vậy","Vì code cũ vẫn chạy trên schema mới một thời gian","Vì migration luôn chạy sau khi deploy code"],
+        answer: 2,
+        explain: "Migration chạy trước deploy nên có khoảng thời gian code cũ chạy trên schema mới, và rollback code cũng cần schema tương thích. Thứ tự chuẩn là migration trước, code sau, không phải ngược lại."
       },
       {
         q: "Trong expand–contract, khi nào xoá cột cũ?",
-        options: ["Ngay trong migration đầu tiên", "Ở lần deploy sau, khi không còn code nào dùng cột cũ và không cần rollback về bản cũ", "Trước khi thêm cột mới", "Không bao giờ"],
-        answer: 1,
+        options: ["Ngay trong migration đầu tiên","Trước khi thêm cột mới","Không bao giờ được xoá","Khi không còn code nào dùng hoặc cần rollback về"],
+        answer: 3,
         explain: "Contract là bước cuối, chỉ làm khi chắc chắn mọi phiên bản đang chạy hoặc có thể rollback về đều không cần cột cũ."
       },
       {
         q: "Annotation `argocd.argoproj.io/hook: PreSync` trên Job có tác dụng gì?",
-        options: ["Chạy Job sau khi deploy xong", "Chạy Job trước khi Argo CD áp dụng các resource khác trong lần sync", "Xoá Job ngay lập tức", "Bỏ qua Job"],
+        options: ["Chạy Job sau khi deploy xong","Chạy Job trước các resource khác khi sync","Xoá Job ngay sau khi tạo","Bỏ qua Job trong lần sync"],
         answer: 1,
         explain: "PreSync hook chạy trước pha sync chính. Nếu Job lỗi, sync dừng và code mới không được áp dụng."
       }
@@ -2765,14 +2770,14 @@ spec:
     quiz: [
       {
         q: "Khác biệt chính giữa smoke test và e2e test?",
-        options: ["Smoke test ngắn, chỉ kiểm tra đường chính, chạy được ngay sau deploy trên production", "Smoke test chỉ chạy trên máy developer", "E2e test không cần môi trường", "Không có khác biệt"],
-        answer: 0,
+        options: ["Smoke test chỉ chạy trên máy developer","Smoke test ngắn, chỉ kiểm tra đường chính sau deploy","E2e test không cần môi trường để chạy","Smoke test bao quát mọi luồng như e2e"],
+        answer: 1,
         explain: "Smoke test nhanh và an toàn để chạy trên production; e2e test bao quát hơn, chạy lâu hơn, thường trên staging."
       },
       {
         q: "Vì sao smoke test nên kiểm tra phiên bản đang chạy?",
-        options: ["Để in đẹp log", "Để phát hiện trường hợp bản mới không lên và bản cũ vẫn phục vụ", "Vì Kubernetes yêu cầu", "Để tăng tốc deploy"],
-        answer: 1,
+        options: ["Để bắt trường hợp bản cũ vẫn đang phục vụ","Để log deploy dễ đọc hơn","Vì Kubernetes yêu cầu endpoint /version","Để quá trình deploy nhanh hơn"],
+        answer: 0,
         explain: "Nếu chỉ gọi health check, bản cũ vẫn trả ok. So sánh SHA xác nhận đúng bản mới đang chạy."
       },
       {
@@ -2833,8 +2838,8 @@ git push`
       {
         h: "Tự động hoá quyết định rollback",
         p: [
-          "Rollback càng tự động thì time to restore càng ngắn. Smoke test lỗi thì rollback ngay trong pipeline; canary analysis lỗi thì Argo Rollouts tự abort; alert tỷ lệ lỗi sau deploy thì người trực có sẵn runbook một lệnh. Mỗi deploy nên ghi lại image SHA trước đó để biết chính xác quay về đâu.",
-          "Định kỳ tổ chức diễn tập: cố ý deploy một bản lỗi lên staging và đo thời gian từ lúc phát hiện tới lúc khôi phục. Con số này chính là chỉ số time to restore của DORA ở quy mô nhỏ."
+          "Rollback càng tự động thì failed deployment recovery time càng ngắn. Smoke test lỗi thì rollback ngay trong pipeline; canary analysis lỗi thì Argo Rollouts tự abort; alert tỷ lệ lỗi sau deploy thì người trực có sẵn runbook một lệnh. Mỗi deploy nên ghi lại image SHA trước đó để biết chính xác quay về đâu.",
+          "Định kỳ tổ chức diễn tập: cố ý deploy một bản lỗi lên staging và đo thời gian từ lúc phát hiện tới lúc khôi phục. Con số này chính là chỉ số failed deployment recovery time của DORA ở quy mô nhỏ."
         ]
       }
     ],
@@ -2852,19 +2857,19 @@ git push`
     quiz: [
       {
         q: "Cluster được Argo CD quản lý với selfHeal bật. Cách rollback đúng là gì?",
-        options: ["kubectl rollout undo", "git revert commit cập nhật tag image rồi push", "Xoá namespace", "Sửa Deployment bằng kubectl edit"],
-        answer: 1,
+        options: ["kubectl rollout undo trên Deployment","Sửa Deployment bằng kubectl edit","git revert commit đổi tag image rồi push","Xoá namespace rồi để Argo CD tạo lại"],
+        answer: 2,
         explain: "Git là nguồn sự thật; thay đổi trực tiếp trên cluster bị selfHeal hoàn tác. git revert khiến Argo CD tự đồng bộ về bản cũ."
       },
       {
         q: "Khi nào phải roll forward thay vì rollback?",
-        options: ["Khi có feature flag", "Khi migration không đảo ngược được đã chạy và code cũ không tương thích schema mới", "Khi pipeline nhanh", "Khi dùng Kubernetes"],
+        options: ["Khi tính năng lỗi có feature flag","Khi migration không đảo ngược được đã chạy","Khi pipeline chạy rất nhanh","Khi hệ thống chạy trên Kubernetes"],
         answer: 1,
         explain: "Code cũ không chạy được trên schema mới nên quay lại sẽ lỗi thêm. Có feature flag thì thường chỉ cần tắt flag."
       },
       {
         q: "Lệnh nào quay Deployment về revision ngay trước đó?",
-        options: ["kubectl rollout restart", "kubectl rollout undo deployment/task-api", "kubectl delete deployment", "kubectl scale --replicas=0"],
+        options: ["kubectl rollout restart deployment/task-api","kubectl rollout undo deployment/task-api","kubectl delete deployment task-api","kubectl scale deployment/task-api --replicas=0"],
         answer: 1,
         explain: "`rollout undo` quay về revision trước. `restart` chỉ khởi động lại pod cùng phiên bản; delete và scale 0 gây downtime."
       }
@@ -2882,17 +2887,17 @@ git push`
       {
         h: "CodeQL và Semgrep",
         list: [
-          "CodeQL (GitHub): biến mã thành cơ sở dữ liệu rồi truy vấn, phân tích luồng dữ liệu sâu. Miễn phí cho repo public; repo private cần gói bảo mật trả phí của GitHub. Có chế độ default setup bật bằng vài cú click, không cần viết YAML.",
+          "CodeQL (GitHub): biến mã thành cơ sở dữ liệu rồi truy vấn, phân tích luồng dữ liệu sâu. Miễn phí cho repo public; repo private cần mua GitHub Code Security (trước 2025 nằm trong GitHub Advanced Security). Có chế độ default setup bật bằng vài cú click, không cần viết YAML.",
           "Semgrep: quy tắc viết giống mã nguồn nên dễ đọc và tự viết thêm; chạy nhanh; có bộ quy tắc cộng đồng như `p/owasp-top-ten`. Hợp để thêm quy tắc riêng của công ty, ví dụ cấm gọi một hàm nội bộ đã deprecated."
         ],
         p: [
-          "Kết quả xuất ra định dạng SARIF có thể tải lên tab Security của GitHub để hiển thị ngay trên dòng code trong PR. Job cần quyền `security-events: write` để tải kết quả lên."
+          "Kết quả xuất ra định dạng SARIF (chuẩn JSON chung cho kết quả phân tích tĩnh) có thể tải lên tab Security của GitHub để hiển thị ngay trên dòng code trong PR. Job cần quyền `security-events: write` để tải kết quả lên."
         ]
       },
       {
         h: "Ví dụ workflow",
         p: [
-          "Semgrep chạy trong container chính thức và lỗi khi có phát hiện. CodeQL dùng action của GitHub; ở đây SHA để dạng giữ chỗ, bạn thay bằng SHA thật của bản phát hành đang dùng (Dependabot sẽ giúp cập nhật)."
+          "Semgrep chạy trong container chính thức và lỗi khi có phát hiện. CodeQL dùng action của GitHub, pin theo SHA như mọi action khác; Dependabot sẽ giúp cập nhật. Quyền `actions: read` chỉ cần với repo private."
         ],
         code: {
           lang: "yaml",
@@ -2963,8 +2968,8 @@ jobs:
       },
       {
         q: "Chiến lược hợp lý khi đưa SAST vào codebase cũ có nhiều cảnh báo?",
-        options: ["Chặn mọi PR đến khi sửa hết", "Chỉ chặn phát hiện mới trong PR, xử lý dần phần tồn đọng", "Không bao giờ chặn", "Tắt SAST"],
-        answer: 1,
+        options: ["Chặn mọi PR đến khi sửa hết tồn đọng","Không bao giờ chặn, chỉ báo cáo","Tắt SAST cho tới khi refactor xong","Chỉ chặn phát hiện mới, xử lý dần tồn đọng"],
+        answer: 3,
         explain: "Chặn phát hiện mới ngăn tình trạng xấu thêm mà không làm tê liệt đội. Chặn tất cả hoặc không chặn gì đều kém hiệu quả."
       }
     ]
@@ -3053,14 +3058,14 @@ updates:
     quiz: [
       {
         q: "SCA khác SAST ở điểm nào?",
-        options: ["SCA quét mã do bạn viết", "SCA kiểm tra dependency bên thứ ba có lỗ hổng đã biết", "SCA quét ứng dụng đang chạy", "Không khác"],
+        options: ["SCA phân tích mã do chính bạn viết","SCA kiểm tra dependency bên thứ ba","SCA quét ứng dụng đang chạy qua HTTP","SCA và SAST là một, chỉ khác tên"],
         answer: 1,
         explain: "SCA tập trung vào thành phần bên thứ ba; SAST phân tích mã của bạn; DAST quét ứng dụng đang chạy."
       },
       {
         q: "Vì sao nên chạy SCA theo lịch dù code không đổi?",
-        options: ["Để tốn phút runner", "Vì lỗ hổng mới được công bố hằng ngày cho cả phiên bản cũ", "Vì lockfile tự thay đổi", "Vì npm yêu cầu"],
-        answer: 1,
+        options: ["Để dùng hết phút runner miễn phí","Vì lockfile tự thay đổi theo thời gian","Vì lỗ hổng mới được công bố cho bản cũ","Vì npm bắt buộc audit mỗi ngày"],
+        answer: 2,
         explain: "Một dependency an toàn hôm qua có thể có CVE hôm nay. Lockfile không tự thay đổi."
       },
       {
@@ -3108,7 +3113,7 @@ checkov -d infra --framework terraform`
       {
         h: "Trong pipeline",
         p: [
-          "Quét image sau khi build và trước khi push. Quét IaC trong PR, trước `terraform plan`. Checkov action dưới dùng đúng phiên bản đã pin trong Lab 07. Riêng trivy-action, bạn cần đặc biệt cẩn thận: tháng 3/2026 chính các tag của action này đã bị ghi đè thành mã độc, nên chỉ dùng khi pin theo SHA đã kiểm chứng, hoặc chạy Trivy binary/container đã pin digest."
+          "Quét image sau khi build và trước khi push. Quét IaC trong PR, trước `terraform plan`. Checkov action dưới dùng đúng phiên bản đã pin trong Lab 07. Riêng trivy-action, bạn cần đặc biệt cẩn thận: tháng 3/2026 chính các tag của action này đã bị ghi đè thành mã độc, nên chỉ dùng khi pin theo SHA đã kiểm chứng, hoặc chạy Trivy binary/container đã pin digest. Cùng đợt đó binary Trivy v0.69.4 và vài image Docker cũng bị phát hành bản độc hại, nên pin phiên bản công cụ và kiểm tra checksum/chữ ký là việc bắt buộc, không chỉ với action."
         ],
         code: {
           lang: "yaml",
@@ -3176,8 +3181,8 @@ jobs:
       },
       {
         q: "Cách giảm số CVE trong image hiệu quả nhất?",
-        options: ["Tắt quét", "Multi-stage build, base image tối giản và rebuild định kỳ", "Dùng tag latest", "Thêm nhiều package"],
-        answer: 1,
+        options: ["Multi-stage, base image tối giản, rebuild định kỳ","Tắt quét để build nhanh hơn","Dùng tag latest cho base image","Cài thêm công cụ bảo mật vào image"],
+        answer: 0,
         explain: "Image càng ít thành phần càng ít lỗ hổng, và rebuild để lấy bản vá. Tắt quét chỉ che giấu vấn đề."
       }
     ]
@@ -3214,7 +3219,7 @@ jobs:
       {
         h: "Quét trong CI",
         p: [
-          "Trufflehog có thể xác minh secret bằng cách thử gọi API của nhà cung cấp, `--only-verified` chỉ báo secret còn hoạt động, giảm nhiễu đáng kể. Checkout với `fetch-depth: 0` để có lịch sử cần quét."
+          "Trufflehog có thể xác minh secret bằng cách thử gọi API của nhà cung cấp, cờ `--results=verified` chỉ báo secret đã được xác minh là còn hoạt động, giảm nhiễu đáng kể (bản cũ dùng cờ `--only-verified`). `--fail` khiến lệnh trả mã lỗi 183 khi có phát hiện, để job CI đỏ. Checkout với `fetch-depth: 0` để có lịch sử cần quét."
         ],
         code: {
           lang: "yaml",
@@ -3247,7 +3252,7 @@ jobs:
           fetch-depth: 0
       - run: |
           docker run --rm -v "$PWD:/repo" trufflesecurity/trufflehog:latest \\
-            git file:///repo --only-verified --fail`
+            git file:///repo --results=verified --fail`
         }
       },
       {
@@ -3277,15 +3282,15 @@ jobs:
       },
       {
         q: "Vì sao vẫn cần quét secret trong CI dù đã có pre-commit hook?",
-        options: ["Hook chạy chậm", "Hook có thể bị bỏ qua hoặc chưa được cài trên máy developer", "CI rẻ hơn", "GitHub yêu cầu"],
-        answer: 1,
+        options: ["Vì hook chạy quá chậm trên máy dev","Vì chạy trong CI rẻ hơn","Vì GitHub bắt buộc quét trong CI","Vì hook có thể bị bỏ qua hoặc chưa cài"],
+        answer: 3,
         explain: "Hook nằm trên máy cá nhân nên không đảm bảo; CI là lớp kiểm soát tập trung."
       },
       {
-        q: "Cờ `--only-verified` của trufflehog có tác dụng gì?",
-        options: ["Chỉ quét file đã commit", "Chỉ báo secret đã được xác minh là còn hoạt động", "Bỏ qua mọi secret", "Chỉ quét nhánh main"],
+        q: "Cờ `--results=verified` của trufflehog có tác dụng gì?",
+        options: ["Chỉ quét các file đã commit","Chỉ báo secret đã xác minh còn hoạt động","Bỏ qua mọi secret đã tìm thấy","Chỉ quét lịch sử của nhánh main"],
         answer: 1,
-        explain: "Trufflehog thử xác minh secret với nhà cung cấp; cờ này chỉ báo những secret còn dùng được, giảm false positive."
+        explain: "Trufflehog thử xác minh secret với nhà cung cấp; cờ này chỉ báo những secret còn dùng được, giảm false positive. Bản cũ dùng cờ tương đương `--only-verified`."
       }
     ]
   },
@@ -3368,14 +3373,14 @@ jobs:
     quiz: [
       {
         q: "DAST phát hiện được loại vấn đề nào mà SAST thường bỏ sót?",
-        options: ["Lỗi cú pháp", "Thiếu security header và cấu hình cookie lúc chạy", "Dependency cũ", "Commit message sai"],
-        answer: 1,
+        options: ["Lỗi cú pháp trong mã nguồn","Dependency đã cũ có CVE","Thiếu security header, cookie sai cờ","Commit message sai quy ước"],
+        answer: 2,
         explain: "Header và cookie được cấu hình lúc chạy, thường ở proxy hoặc framework, DAST quan sát trực tiếp từ response."
       },
       {
         q: "`zap-baseline.py` khác `zap-full-scan.py` thế nào?",
-        options: ["Baseline chỉ quét thụ động, full scan gửi payload tấn công chủ động", "Baseline chậm hơn", "Full scan chỉ quét header", "Không khác"],
-        answer: 0,
+        options: ["Baseline chậm hơn full scan","Baseline quét thụ động, full scan gửi payload tấn công","Full scan chỉ kiểm tra header","Baseline gửi payload, full scan chỉ thụ động"],
+        answer: 1,
         explain: "Baseline an toàn và nhanh; full scan thêm active scan nên chậm và có thể làm bẩn dữ liệu."
       },
       {
@@ -3392,7 +3397,7 @@ jobs:
         h: "Chuỗi cung ứng phần mềm",
         p: [
           "Khi cluster kéo image `task-api@sha256:...` về chạy, làm sao biết image đó thực sự do pipeline của bạn build từ mã trên main, không phải do ai đó push lên registry bằng token bị lộ? Và image đó chứa những gì? Hai câu hỏi này dẫn tới ba khái niệm: SBOM, chữ ký và provenance.",
-          "SLSA (Supply-chain Levels for Software Artifacts) là framework mô tả các mức đảm bảo cho quá trình build. Ở mức thấp, build tạo ra provenance mô tả artifact được build thế nào; ở mức cao hơn, provenance được nền tảng build ký và quá trình build được cô lập, khó bị can thiệp."
+          "SLSA (Supply-chain Levels for Software Artifacts) là framework mô tả các mức đảm bảo cho chuỗi cung ứng. Với SLSA v1, phần Build track có ba mức: Build L1 là build tạo ra provenance mô tả artifact được build thế nào; Build L2 là build chạy trên nền tảng build được host (như GitHub-hosted runner) và provenance được nền tảng đó ký; Build L3 thêm yêu cầu nền tảng build được gia cố, các lần build cô lập nhau và bước build của người dùng không lấy được khoá ký provenance."
         ],
         list: [
           "SBOM (Software Bill of Materials): danh sách mọi thành phần trong artifact, định dạng SPDX hoặc CycloneDX. Khi có CVE mới, bạn tra được ngay image nào bị ảnh hưởng.",
@@ -3494,14 +3499,14 @@ gh attestation verify oci://ghcr.io/my-org/task-api@sha256:<digest> --owner my-o
       },
       {
         q: "SBOM giúp gì khi một CVE mới được công bố?",
-        options: ["Tự vá lỗ hổng", "Tra ngay được artifact nào chứa thành phần bị ảnh hưởng", "Ký lại image", "Xoá image cũ"],
-        answer: 1,
+        options: ["Tra được artifact nào chứa thành phần lỗi","Tự vá lỗ hổng trong image","Ký lại image theo digest mới","Xoá image cũ khỏi registry"],
+        answer: 0,
         explain: "SBOM là danh sách thành phần; có nó bạn tìm được image bị ảnh hưởng mà không phải quét lại tất cả. SBOM không tự vá."
       },
       {
         q: "Vì sao `cosign verify` cần `--certificate-identity` và `--certificate-oidc-issuer`?",
-        options: ["Để chạy nhanh hơn", "Để đảm bảo chữ ký đến từ đúng workflow, đúng repo và đúng nhà phát hành token", "Để tạo chữ ký mới", "Vì image không có digest"],
-        answer: 1,
+        options: ["Để lệnh verify chạy nhanh hơn","Để cosign tạo chữ ký mới khi cần","Vì image ký keyless không có digest","Để chữ ký phải đến từ đúng workflow và issuer"],
+        answer: 3,
         explain: "Bất kỳ ai cũng có thể ký keyless với danh tính của họ; ràng buộc identity và issuer mới chứng minh image do pipeline của bạn tạo."
       }
     ]
@@ -3518,47 +3523,58 @@ gh attestation verify oci://ghcr.io/my-org/task-api@sha256:<digest> --owner my-o
       {
         h: "Kyverno: policy viết bằng YAML",
         p: [
-          "Kyverno là admission controller dành riêng cho Kubernetes, policy viết bằng YAML quen thuộc. Policy dưới đây làm hai việc: bắt buộc `runAsNonRoot`, và chỉ cho chạy image từ `ghcr.io/my-org` đã được ký bởi workflow CI trên nhánh main. Rule viết cho Pod nhưng Kyverno tự sinh rule tương ứng cho Deployment, StatefulSet, Job."
+          "Kyverno là admission controller dành riêng cho Kubernetes, policy là resource YAML quen thuộc, còn điều kiện kiểm tra viết bằng CEL (Common Expression Language, ngôn ngữ biểu thức mà chính Kubernetes dùng cho ValidatingAdmissionPolicy). Từ Kyverno 1.17 (2/2026), các loại policy CEL như `ValidatingPolicy` và `ImageValidatingPolicy` (`policies.kyverno.io/v1`) là chuẩn; loại cũ `ClusterPolicy` (`kyverno.io/v1`) đã bị đánh dấu deprecated và dự kiến bị gỡ ở bản 1.20. Bạn vẫn sẽ gặp ClusterPolicy trong nhiều repo, nhưng policy mới nên viết theo kiểu mới.",
+          "Hai policy dưới đây làm hai việc: bắt buộc `runAsNonRoot`, và buộc mọi image từ `ghcr.io/my-org` phải được ký bởi workflow CI trên nhánh main. Policy viết cho Pod; khối `autogen` yêu cầu Kyverno sinh thêm policy tương ứng cho Deployment, StatefulSet, Job, CronJob để lỗi được báo ngay khi apply Deployment, thay vì chỉ lộ ra khi ReplicaSet không tạo được Pod. Lưu ý: policy chữ ký chỉ kiểm tra image khớp `matchImageReferences`; muốn cấm hẳn registry khác cần thêm một policy riêng."
         ],
         code: {
           lang: "yaml",
           file: "policies/secure-workloads.yaml",
-          src: `apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+          src: `apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
-  name: secure-workloads
+  name: require-run-as-non-root
 spec:
-  background: true
-  rules:
-    - name: require-run-as-non-root
-      match:
-        any:
-          - resources:
-              kinds: [Pod]
-      validate:
-        failureAction: Enforce
-        message: "Pod phải đặt securityContext.runAsNonRoot: true"
-        pattern:
-          spec:
-            securityContext:
-              runAsNonRoot: true
-
-    - name: verify-image-signature
-      match:
-        any:
-          - resources:
-              kinds: [Pod]
-      verifyImages:
-        - imageReferences: ["ghcr.io/my-org/*"]
-          failureAction: Enforce
-          mutateDigest: true
-          attestors:
-            - entries:
-                - keyless:
-                    subject: "https://github.com/my-org/task-api/.github/workflows/ci.yml@refs/heads/main"
-                    issuer: "https://token.actions.githubusercontent.com"
-                    rekor:
-                      url: https://rekor.sigstore.dev`
+  validationActions: [Deny]          # [Audit] để chỉ ghi nhận, không chặn
+  autogen:
+    podControllers:
+      controllers: [deployments, statefulsets, jobs, cronjobs]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+  validations:
+    - message: "Pod phải đặt securityContext.runAsNonRoot: true"
+      expression: "object.spec.?securityContext.?runAsNonRoot.orValue(false) == true"
+---
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: verify-image-signature
+spec:
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+  matchImageReferences:
+    - glob: "ghcr.io/my-org/*"
+  attestors:
+    - name: ci
+      cosign:
+        keyless:
+          identities:
+            - subject: "https://github.com/my-org/task-api/.github/workflows/ci.yml@refs/heads/main"
+              issuer: "https://token.actions.githubusercontent.com"
+        ctlog:
+          url: https://rekor.sigstore.dev
+  validations:
+    - message: "Image phải được ký bởi workflow CI trên nhánh main"
+      expression: >-
+        images.containers.map(image, verifyImageSignatures(image, [attestors.ci])).all(e, e > 0)`
         }
       },
       {
@@ -3587,7 +3603,7 @@ deny contains msg if {
       {
         h: "Đưa policy vào an toàn",
         p: [
-          "Bật Enforce ngay trên cluster đang chạy có thể chặn cả deploy khẩn cấp. Hãy bắt đầu ở chế độ Audit để xem những gì sẽ bị chặn, sửa dần các workload, rồi mới chuyển sang Enforce. Cần cơ chế ngoại lệ có kiểm soát (ví dụ PolicyException của Kyverno) cho các thành phần hệ thống thực sự cần quyền đặc biệt. Kyverno đang phát triển thêm các loại policy dựa trên CEL; khái niệm vẫn giống nhau."
+          "Bật chế độ chặn ngay trên cluster đang chạy có thể chặn cả deploy khẩn cấp. Hãy bắt đầu ở chế độ Audit (`validationActions: [Audit]`, với ClusterPolicy cũ là `failureAction: Audit`) để xem những gì sẽ bị chặn qua policy report, sửa dần các workload, rồi mới chuyển sang chặn thật (`[Deny]`, với ClusterPolicy cũ là `failureAction: Enforce`). Cần cơ chế ngoại lệ có kiểm soát (ví dụ PolicyException của Kyverno) cho các thành phần hệ thống thực sự cần quyền đặc biệt. Nếu đang có ClusterPolicy cũ, hãy lên kế hoạch chuyển sang loại policy CEL theo hướng dẫn migration của Kyverno trước khi nâng lên bản gỡ bỏ ClusterPolicy."
         ]
       },
       {
@@ -3617,21 +3633,21 @@ deny contains msg if {
     quiz: [
       {
         q: "Vì sao cần admission controller trong cluster dù CI đã kiểm tra policy?",
-        options: ["CI chạy chậm", "Có thể có người apply trực tiếp vào cluster mà không qua CI", "Kubernetes bắt buộc", "Để tạo image"],
-        answer: 1,
+        options: ["Vì có người apply thẳng vào cluster, bỏ qua CI","Vì CI chạy chậm hơn admission controller","Vì Kubernetes bắt buộc phải có policy","Vì admission controller là nơi tạo image"],
+        answer: 0,
         explain: "Admission controller là điểm thực thi cuối cùng mà mọi yêu cầu tới API server đều phải qua."
       },
       {
         q: "Khi mới đưa policy vào cluster đang chạy, nên dùng chế độ nào trước?",
         options: ["Enforce", "Audit", "Tắt policy", "Xoá workload cũ"],
         answer: 1,
-        explain: "Audit ghi nhận vi phạm mà không chặn, giúp sửa dần trước khi Enforce."
+        explain: "Audit ghi nhận vi phạm mà không chặn, giúp sửa dần trước khi chuyển sang chặn thật (Deny, hay Enforce với ClusterPolicy cũ)."
       },
       {
         q: "conftest dùng để làm gì?",
-        options: ["Build image", "Chạy policy Rego trên file cấu hình cục bộ, thường trong CI", "Ký image", "Quản lý secret"],
-        answer: 1,
-        explain: "conftest kiểm tra file như manifest, Terraform bằng policy OPA/Rego trước khi áp dụng."
+        options: ["Build image rồi kiểm tra theo Rego","Ký image và manifest bằng khoá OPA","Chạy policy Rego trên file cấu hình cục bộ","Đồng bộ policy Rego vào cluster"],
+        answer: 2,
+        explain: "conftest kiểm tra file như manifest, Terraform plan bằng policy OPA/Rego trước khi áp dụng, rất hợp để chạy trong CI. Thực thi trong cluster là việc của admission controller như Gatekeeper."
       }
     ]
   },
@@ -3641,7 +3657,8 @@ deny contains msg if {
         h: "Pipeline là mục tiêu tấn công giá trị nhất",
         p: [
           "Pipeline CI/CD giữ những thứ quý nhất: secret deploy, quyền push image, quyền vào production. Kẻ tấn công không cần hack ứng dụng của bạn nếu có thể chạy code trong pipeline. Và cách dễ nhất để chạy code trong pipeline của hàng nghìn công ty cùng lúc là tấn công một action mà họ đều dùng.",
-          "Đó chính là chuyện đã xảy ra ngày 19/3/2026: kẻ tấn công dùng credential bị lộ để force-push 76/77 tag của `aquasecurity/trivy-action` và toàn bộ 7 tag của `setup-trivy`, trỏ chúng sang mã độc đánh cắp secret từ môi trường CI (advisory GHSA-69fq-xp46-6x23). Mọi workflow viết `uses: aquasecurity/trivy-action@0.x.y` (theo tag) đều chạy mã độc ở lần chạy tiếp theo mà không có dòng code nào trong repo thay đổi. Workflow pin theo commit SHA thì không bị ảnh hưởng, vì tag bị di chuyển không làm thay đổi commit mà SHA trỏ tới."
+          "Đó chính là chuyện đã xảy ra ngày 19/3/2026: kẻ tấn công dùng credential bị lộ để force-push 76/77 tag của `aquasecurity/trivy-action` và toàn bộ 7 tag của `setup-trivy`, trỏ chúng sang mã độc đánh cắp secret từ môi trường CI (advisory GHSA-69fq-xp46-6x23). Mọi workflow viết `uses: aquasecurity/trivy-action@0.x.y` (theo tag) đều chạy mã độc ở lần chạy tiếp theo mà không có dòng code nào trong repo thay đổi. Workflow pin theo commit SHA thì không nhận trivy-action độc hại, vì tag bị di chuyển không làm thay đổi commit mà SHA trỏ tới.",
+          "Có một ngoại lệ đáng nhớ: trivy-action là composite action, bên trong gọi `setup-trivy`. Các commit trivy-action trước ngày 9/4/2025 gọi `setup-trivy` theo tag, nên ai pin SHA của những commit cũ đó vẫn kéo phải `setup-trivy` độc hại trong khung giờ bị tấn công. Pin SHA chỉ bảo vệ tầng bạn pin; phụ thuộc bắc cầu (action gọi action) cũng phải được pin. Cùng đợt đó, binary Trivy v0.69.4 và một số Docker image cũng bị phát hành bản độc hại, nên image công cụ cũng cần pin theo digest đã kiểm chứng."
         ]
       },
       {
@@ -3650,7 +3667,7 @@ deny contains msg if {
           "Không có biện pháp đơn lẻ nào là đủ. Danh sách dưới đây sắp theo thứ tự nên làm trước; phần lớn chỉ tốn vài dòng YAML hoặc một thay đổi trong phần cài đặt repo."
         ],
         list: [
-          "Pin mọi action bên thứ ba theo commit SHA đầy đủ, kèm comment version; dùng Dependabot để cập nhật. GitHub cho phép admin bật chính sách bắt buộc pin SHA trong cài đặt Actions.",
+          "Pin mọi action bên thứ ba theo commit SHA đầy đủ, kèm comment version; dùng Dependabot để cập nhật. Với composite action, xem nó có pin các action gọi bên trong không. GitHub cho phép admin bật chính sách bắt buộc pin SHA trong cài đặt Actions.",
           "Đặt `permissions` tối thiểu ở cấp workflow (`contents: read`) và chỉ mở rộng ở job cần; đặt quyền mặc định của `GITHUB_TOKEN` trong repo là chỉ đọc.",
           "Không dùng `pull_request_target` hay `workflow_run` để chạy code từ PR fork trong ngữ cảnh có secret.",
           "Không chèn trực tiếp dữ liệu người dùng kiểm soát (tiêu đề PR, tên nhánh, nội dung issue) vào `run:`; truyền qua biến môi trường.",
@@ -3702,7 +3719,7 @@ jobs:
     ],
     summary: [
       "Pipeline giữ secret và quyền production nên là mục tiêu tấn công hàng đầu.",
-      "Sự cố trivy-action 19/3/2026: tag bị force-push thành mã độc; pin theo SHA thì an toàn.",
+      "Sự cố trivy-action 19/3/2026: tag bị force-push thành mã độc; pin theo SHA chặn được, miễn là cả các action gọi bên trong cũng được pin.",
       "Permissions tối thiểu, không chạy code fork trong `pull_request_target`.",
       "Truyền dữ liệu người dùng qua `env`, không chèn `\${{ }}` thẳng vào `run:`.",
       "Nhiều lớp: SHA pin, quyền tối thiểu, OIDC, environment duyệt, quét workflow."
@@ -3715,20 +3732,20 @@ jobs:
     quiz: [
       {
         q: "Trong sự cố trivy-action ngày 19/3/2026, workflow nào KHÔNG bị ảnh hưởng?",
-        options: ["Workflow dùng `@v0.x.y` theo tag", "Workflow pin action theo commit SHA đầy đủ", "Workflow dùng `@master`", "Workflow có `permissions: write-all`"],
+        options: ["Workflow dùng `@0.x.y` theo tag","Workflow pin SHA của bản trivy-action gần đây","Workflow dùng `@master` theo nhánh","Workflow có `permissions: write-all`"],
         answer: 1,
-        explain: "Kẻ tấn công di chuyển tag sang commit độc hại; SHA đã pin vẫn trỏ tới commit cũ sạch. Tag và nhánh đều bị ảnh hưởng."
+        explain: "Kẻ tấn công di chuyển tag sang commit độc hại; tag và nhánh đều bị ảnh hưởng, còn permissions không ngăn mã độc chạy. SHA đã pin vẫn trỏ tới commit sạch. Lưu ý: commit trivy-action trước 9/4/2025 gọi setup-trivy theo tag nên dù pin SHA vẫn nhiễm."
       },
       {
         q: "Cách an toàn để dùng tiêu đề PR trong bước `run`?",
-        options: ["Chèn trực tiếp `\${{ github.event.pull_request.title }}`", "Truyền qua biến môi trường rồi dùng `\"$TITLE\"`", "Đặt trong nháy kép là đủ", "Không có cách nào"],
-        answer: 1,
-        explain: "Biểu thức được thay vào script trước khi chạy nên nháy kép không đủ; biến môi trường khiến shell coi giá trị là dữ liệu."
+        options: ["Chèn trực tiếp `${{ github.event.pull_request.title }}`","Chèn biểu thức trong nháy kép là đủ","Chèn biểu thức trong nháy đơn là đủ","Truyền qua `env` rồi dùng `\"$TITLE\"`"],
+        answer: 3,
+        explain: "Biểu thức được thay vào script trước khi shell chạy nên nháy kép hay nháy đơn đều không đủ; biến môi trường khiến shell coi giá trị là dữ liệu."
       },
       {
         q: "Vì sao `pull_request_target` nguy hiểm khi checkout code PR từ fork?",
-        options: ["Vì nó chạy chậm", "Vì workflow chạy với secret và token có quyền ghi của repo đích, trong khi code là không tin cậy", "Vì nó không hỗ trợ matrix", "Vì nó xoá PR"],
-        answer: 1,
+        options: ["Vì nó chạy chậm hơn pull_request","Vì nó không hỗ trợ matrix","Vì có secret và token ghi, còn code fork không tin cậy","Vì nó tự xoá PR sau khi chạy"],
+        answer: 2,
         explain: "`pull_request_target` được thiết kế cho tác vụ không chạy code PR, như gắn label. Chạy code fork trong đó trao secret cho người lạ."
       }
     ]
@@ -3788,20 +3805,20 @@ jobs:
     quiz: [
       {
         q: "Trong GitOps pull-based, thành phần nào áp dụng thay đổi vào cluster?",
-        options: ["CI runner chạy kubectl apply", "Agent chạy trong cluster như Argo CD hoặc Flux", "Developer chạy lệnh tay", "Registry"],
-        answer: 1,
+        options: ["CI runner chạy kubectl apply","Developer chạy lệnh tay","Registry tự đẩy image vào cluster","Agent trong cluster như Argo CD, Flux"],
+        answer: 3,
         explain: "Agent trong cluster kéo trạng thái từ Git và áp dụng. CI chỉ cập nhật Git."
       },
       {
         q: "Lợi ích bảo mật của mô hình pull so với push?",
-        options: ["CI không cần giữ credential của cluster", "Không cần Git", "Không cần review", "Image không cần ký"],
-        answer: 0,
+        options: ["Không cần dùng Git nữa","CI không cần giữ credential của cluster","Không cần review thay đổi","Image không cần ký nữa"],
+        answer: 1,
         explain: "Agent trong cluster chỉ cần quyền đọc repo, nên CI bị chiếm không trực tiếp dẫn tới quyền vào cluster."
       },
       {
         q: "Continuously reconciled nghĩa là gì?",
-        options: ["Chỉ đồng bộ khi có người bấm nút", "Agent liên tục so sánh trạng thái thật với trạng thái mong muốn và sửa lệch", "Backup Git hằng ngày", "Chạy CI liên tục"],
-        answer: 1,
+        options: ["Liên tục so sánh với Git và sửa lệch","Chỉ đồng bộ khi có người bấm nút","Backup repo Git mỗi ngày","Chạy pipeline CI liên tục"],
+        answer: 0,
         explain: "Reconcile liên tục là điều giúp phát hiện và sửa drift, kể cả thay đổi tay trên cluster."
       }
     ]
@@ -3902,20 +3919,20 @@ spec:
     quiz: [
       {
         q: "Ứng dụng hiển thị Synced nhưng Degraded nghĩa là gì?",
-        options: ["Cluster chưa khớp Git", "Cluster khớp Git nhưng resource không chạy tốt, ví dụ pod crash", "Argo CD bị lỗi", "Git bị xoá"],
-        answer: 1,
+        options: ["Cluster chưa khớp với Git","Argo CD đang bị lỗi kết nối","Khớp Git nhưng resource chạy lỗi","Repo Git đã bị xoá"],
+        answer: 2,
         explain: "Sync đo sự khớp với Git; Health đo tình trạng chạy. Hai trạng thái độc lập."
       },
       {
         q: "`selfHeal: true` làm gì?",
-        options: ["Tự sửa bug trong code", "Hoàn tác thay đổi tay trên cluster để khớp Git", "Tự restart node", "Tự tạo PR"],
+        options: ["Tự sửa bug trong code ứng dụng","Hoàn tác thay đổi tay để khớp Git","Tự restart node bị lỗi","Tự tạo PR sửa manifest"],
         answer: 1,
         explain: "selfHeal phát hiện drift do sửa tay và đưa cluster về trạng thái trong Git."
       },
       {
         q: "Mẫu app-of-apps giải quyết vấn đề gì?",
-        options: ["Build image nhanh hơn", "Quản lý nhiều Application bằng một Application gốc khai báo trong Git", "Mã hoá secret", "Thay thế Helm"],
-        answer: 1,
+        options: ["Build image nhanh hơn","Mã hoá secret trong repo","Thay thế Helm và Kustomize","Quản lý nhiều Application từ một Application gốc"],
+        answer: 3,
         explain: "Application gốc trỏ tới thư mục chứa các Application khác, thêm dịch vụ chỉ cần thêm file vào Git."
       }
     ]
@@ -4037,14 +4054,14 @@ spec:
       },
       {
         q: "`flux bootstrap` làm gì?",
-        options: ["Build image", "Cài Flux vào cluster và commit manifest của Flux vào repo để Flux tự quản lý chính nó", "Xoá cluster", "Tạo SBOM"],
-        answer: 1,
+        options: ["Cài Flux và commit manifest của Flux vào repo","Build image từ repo config","Xoá cluster rồi dựng lại","Tạo SBOM cho cluster"],
+        answer: 0,
         explain: "Bootstrap cài controller và đưa cấu hình Flux vào Git, từ đó mọi thay đổi Flux cũng qua GitOps."
       },
       {
         q: "Khác biệt triết lý nổi bật giữa Flux và Argo CD?",
-        options: ["Flux không hỗ trợ Helm", "Flux là tập controller cấu hình bằng CRD, không có web UI tích hợp mặc định", "Argo CD không hỗ trợ Git", "Flux chỉ chạy ngoài cluster"],
-        answer: 1,
+        options: ["Flux không hỗ trợ Helm chart","Argo CD không đọc được Git","Flux dùng CRD, không có web UI mặc định","Flux chỉ chạy ngoài cluster"],
+        answer: 2,
         explain: "Flux hướng tới CRD và CLI; Argo CD nổi bật với giao diện web. Cả hai đều hỗ trợ Helm và chạy trong cluster."
       }
     ]
@@ -4169,19 +4186,19 @@ jobs:
     quiz: [
       {
         q: "Trong mô hình GitOps với repo config, promotion lên production thường là hành động gì?",
-        options: ["Chạy kubectl apply", "Merge PR đổi tag image trong overlay production", "Build lại image", "Restart cluster"],
-        answer: 1,
+        options: ["Merge PR đổi tag trong overlay production","Chạy kubectl apply từ CI","Build lại image cho production","Restart toàn bộ cluster"],
+        answer: 0,
         explain: "PR vào repo config là cổng duyệt; merge xong agent GitOps tự đồng bộ."
       },
       {
         q: "Vì sao `GITHUB_TOKEN` của repo app không dùng được để push vào repo config?",
-        options: ["Vì nó hết hạn ngay", "Vì nó chỉ có phạm vi trên repo đang chạy workflow", "Vì Git không hỗ trợ token", "Vì repo config là public"],
-        answer: 1,
+        options: ["Vì nó hết hạn ngay khi tạo","Vì Git không hỗ trợ token","Vì repo config là public","Vì nó chỉ có quyền trên repo chạy workflow"],
+        answer: 3,
         explain: "GITHUB_TOKEN chỉ có quyền trên repo chứa workflow; ghi repo khác cần GitHub App hoặc token riêng."
       },
       {
         q: "Lợi ích của việc tách repo config khỏi repo app?",
-        options: ["Không cần review", "Lịch sử deploy rõ ràng, phân quyền riêng, tránh vòng lặp CI", "Build nhanh hơn", "Không cần Kubernetes"],
+        options: ["Bỏ được bước review production","Tách lịch sử deploy và phân quyền duyệt riêng","Build image nhanh hơn nhờ repo nhỏ","Không cần Kubernetes để deploy"],
         answer: 1,
         explain: "Tách repo giúp audit deploy, phân quyền duyệt production và tránh commit bump tag kích hoạt CI."
       }
@@ -4286,20 +4303,20 @@ sops --encrypt --in-place secrets/production/task-api-db.yaml`
     quiz: [
       {
         q: "Vì sao không được commit Kubernetes Secret YAML thông thường vào Git?",
-        options: ["Vì YAML không hợp lệ", "Vì base64 chỉ là mã hoá ký tự, ai cũng giải được", "Vì Git không lưu được file lớn", "Vì Argo CD không đọc được"],
-        answer: 1,
+        options: ["Vì YAML của Secret không hợp lệ","Vì Git không lưu được file Secret","Vì base64 chỉ là encoding, ai cũng giải được","Vì Argo CD không đọc được Secret"],
+        answer: 2,
         explain: "Base64 là encoding, không phải encryption; ai có repo đều đọc được giá trị."
       },
       {
         q: "External Secrets Operator lưu gì trong Git?",
-        options: ["Giá trị secret đã mã hoá", "Chỉ tham chiếu tới secret trong secret manager bên ngoài", "Giá trị secret dạng plain", "Khoá riêng của cluster"],
-        answer: 1,
+        options: ["Chỉ tham chiếu tới secret ở bên ngoài","Giá trị secret đã được mã hoá","Giá trị secret dạng plain text","Khoá riêng của controller"],
+        answer: 0,
         explain: "ExternalSecret chỉ mô tả lấy key nào từ đâu; giá trị nằm ở secret manager."
       },
       {
         q: "Rủi ro vận hành lớn nhất của Sealed Secrets là gì?",
-        options: ["Không hỗ trợ Kubernetes", "Mất khoá riêng của controller thì không giải mã được các SealedSecret", "Không mã hoá được", "Chạy quá chậm"],
-        answer: 1,
+        options: ["Không hỗ trợ Kubernetes mới","Không mã hoá được giá trị dài","Giải mã quá chậm khi deploy","Mất khoá controller thì không giải mã được"],
+        answer: 3,
         explain: "Chỉ khoá của controller giải mã được; cần backup khoá để khôi phục khi dựng lại cluster."
       }
     ]

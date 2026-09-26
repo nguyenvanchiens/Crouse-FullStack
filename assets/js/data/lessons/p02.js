@@ -74,9 +74,9 @@ Object.assign(window.LESSON_CONTENT, {
       "Thêm ARIA sai (ví dụ `role=\"button\"` cho thẻ `a` có href) làm thông tin đọc ra mâu thuẫn. Chỉ thêm ARIA khi hiểu rõ nó."
     ],
     quiz: [
-      { q: "Vì sao nên dùng `<button>` thay vì `<div onclick>`?", options: ["Button tải nhanh hơn", "Button có sẵn role, focus bàn phím và kích hoạt bằng Enter/Space", "Div không nhận sự kiện click", "Button tự động gửi dữ liệu lên server"], answer: 1, explain: "Button gốc có sẵn ngữ nghĩa và hành vi bàn phím. Div vẫn nhận click nhưng không focus được và không có role. Button chỉ gửi form khi type là submit trong form." },
+      { q: "Vì sao nên dùng `<button>` thay vì `<div onclick>`?", options: ["Button tải nhanh hơn và nhẹ hơn div", "Button có sẵn role, focus và kích hoạt bằng phím", "Div hoàn toàn không nhận được sự kiện click", "Button luôn tự gửi dữ liệu lên server khi bấm"], answer: 1, explain: "Button gốc có sẵn ngữ nghĩa và hành vi bàn phím. Div vẫn nhận click nhưng không focus được và không có role. Button chỉ gửi form khi type là submit trong form." },
       { q: "Ảnh chỉ để trang trí nên có alt thế nào?", options: ["Bỏ hẳn thuộc tính alt", "alt=\"image\"", "alt=\"\" (rỗng)", "alt bằng tên file"], answer: 2, explain: "alt rỗng báo cho screen reader bỏ qua ảnh. Thiếu alt khiến một số screen reader đọc tên file; alt kiểu \"image\" là thông tin vô ích." },
-      { q: "Quy tắc đầu tiên khi dùng ARIA là gì?", options: ["Luôn thêm role cho mọi thẻ", "Nếu có phần tử HTML gốc phù hợp thì dùng nó thay vì ARIA", "ARIA thay thế hoàn toàn label", "Chỉ dùng ARIA cho ảnh"], answer: 1, explain: "HTML gốc đã có sẵn ngữ nghĩa và hành vi. ARIA chỉ thay đổi thông tin cho công nghệ hỗ trợ, không thêm hành vi, nên dùng khi HTML không đáp ứng được." }
+      { q: "Quy tắc đầu tiên khi dùng ARIA là gì?", options: ["Luôn thêm role cho mọi thẻ để screen reader đọc", "Có phần tử HTML gốc phù hợp thì dùng nó thay ARIA", "Dùng aria-label thay cho label của mọi input", "Chỉ dùng ARIA cho ảnh và biểu tượng trang trí"], answer: 1, explain: "HTML gốc đã có sẵn ngữ nghĩa và hành vi. ARIA chỉ thay đổi thông tin cho công nghệ hỗ trợ, không thêm hành vi, nên dùng khi HTML không đáp ứng được." }
     ]
   },
   "p02.m0.t1": {
@@ -157,7 +157,7 @@ body {
     quiz: [
       { q: "Với `box-sizing: border-box`, `width: 200px; padding: 10px; border: 2px` thì hộp rộng bao nhiêu?", options: ["200px", "224px", "220px", "212px"], answer: 0, explain: "border-box tính cả padding và border vào width, nên hộp rộng đúng 200px. 224px là kết quả của content-box." },
       { q: "Selector nào có specificity cao nhất?", options: [".nav .item a", "#menu a", "ul li a.active", "a:hover"], answer: 1, explain: "#menu a là (1,0,1), có một id nên thắng mọi selector không có id: .nav .item a là (0,2,1), ul li a.active là (0,1,3), a:hover là (0,1,1)." },
-      { q: "Điểm khác cơ bản giữa CSS variable và biến Sass là gì?", options: ["CSS variable chỉ dùng được cho màu", "CSS variable được xử lý lúc runtime và kế thừa theo DOM", "Biến Sass có thể đổi bằng JavaScript", "Không có khác biệt"], answer: 1, explain: "Biến Sass bị thay bằng giá trị cố định lúc build. CSS variable tồn tại trong trình duyệt, có thể đổi theo media query, class cha hay JavaScript." }
+      { q: "Điểm khác cơ bản giữa CSS variable và biến Sass là gì?", options: ["CSS variable chỉ dùng được cho giá trị màu", "CSS variable tồn tại lúc runtime, kế thừa theo DOM", "Biến Sass đổi được bằng JavaScript sau khi tải", "Biến Sass kế thừa theo cây DOM như CSS variable"], answer: 1, explain: "Biến Sass bị thay bằng giá trị cố định lúc build. CSS variable tồn tại trong trình duyệt, có thể đổi theo media query, class cha hay JavaScript." }
     ]
   },
   "p02.m0.t2": {
@@ -244,8 +244,8 @@ body {
     ],
     quiz: [
       { q: "Layout nào phù hợp với Grid hơn Flex?", options: ["Nhóm 3 nút trên một hàng", "Căn giữa một spinner", "Dashboard có header, sidebar, nội dung, footer", "Thanh menu ngang"], answer: 2, explain: "Dashboard cần kiểm soát cả hàng và cột nên hợp với Grid. Các lựa chọn còn lại là bố cục một chiều, Flex làm gọn hơn." },
-      { q: "`flex: 1` trên phần tử con có tác dụng gì?", options: ["Phần tử rộng đúng 1px", "Phần tử chiếm phần không gian còn trống, chia đều với các phần tử cũng có flex: 1", "Phần tử luôn nằm đầu hàng", "Phần tử không bao giờ co lại"], answer: 1, explain: "flex: 1 đặt flex-grow bằng 1 và flex-basis bằng 0, nên các phần tử chia đều không gian còn lại. Nó vẫn cho phép co lại vì flex-shrink bằng 1." },
-      { q: "`grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))` làm gì?", options: ["Tạo đúng 200 cột", "Tạo nhiều cột nhất có thể, mỗi cột tối thiểu 200px và giãn đều phần dư", "Tạo 1 cột rộng 200px", "Chỉ hoạt động trên mobile"], answer: 1, explain: "auto-fill tạo số cột tối đa vừa container, minmax đảm bảo mỗi cột ít nhất 200px và chia đều phần dư bằng 1fr. Kết quả là lưới tự xuống dòng theo độ rộng." }
+      { q: "`flex: 1` trên phần tử con có tác dụng gì?", options: ["Phần tử có chiều rộng cố định đúng 1px", "Chia đều không gian trống với phần tử cùng flex: 1", "Phần tử luôn được đẩy lên đầu hàng", "Phần tử giữ nguyên kích thước, không co lại"], answer: 1, explain: "flex: 1 đặt flex-grow bằng 1 và flex-basis bằng 0, nên các phần tử chia đều không gian còn lại. Nó vẫn cho phép co lại vì flex-shrink bằng 1." },
+      { q: "`grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))` làm gì?", options: ["Tạo đúng 200 cột có độ rộng bằng nhau", "Tạo số cột tối đa vừa khung, mỗi cột ≥ 200px", "Tạo một cột duy nhất rộng đúng 200px", "Chỉ tạo lưới khi màn hình hẹp hơn 200px"], answer: 1, explain: "auto-fill tạo số cột tối đa vừa container, minmax đảm bảo mỗi cột ít nhất 200px và chia đều phần dư bằng 1fr. Kết quả là lưới tự xuống dòng theo độ rộng." }
     ]
   },
   "p02.m0.t3": {
@@ -325,7 +325,7 @@ body {
     quiz: [
       { q: "Trong mobile-first, media query thường dùng điều kiện nào?", options: ["max-width", "min-width", "orientation", "hover"], answer: 1, explain: "Style mặc định cho mobile, sau đó min-width bổ sung khi màn hình rộng hơn. max-width là cách tiếp cận desktop-first." },
       { q: "`clamp(1rem, 2vw, 2rem)` trả về gì khi 2vw bằng 40px và 1rem = 16px?", options: ["16px", "40px", "32px", "56px"], answer: 2, explain: "Giá trị ưu tiên 40px vượt mức tối đa 2rem = 32px nên bị giới hạn về 32px." },
-      { q: "Vì sao cần khai báo width và height cho thẻ img?", options: ["Để ảnh tải nhanh hơn", "Để trình duyệt giữ đúng tỉ lệ chỗ trống trước khi ảnh tải xong, tránh layout shift", "Để bắt buộc ảnh có kích thước cố định", "Để SEO tốt hơn"], answer: 1, explain: "Trình duyệt dùng width/height để tính aspect-ratio và giữ chỗ trước, giảm CLS. Ảnh vẫn co giãn được bằng CSS như max-width: 100% và height: auto." }
+      { q: "Vì sao cần khai báo width và height cho thẻ img?", options: ["Để trình duyệt tải ảnh nhanh hơn", "Để giữ chỗ đúng tỉ lệ, tránh layout shift", "Để ảnh không co giãn theo màn hình", "Để công cụ tìm kiếm xếp hạng cao hơn"], answer: 1, explain: "Trình duyệt dùng width/height để tính aspect-ratio và giữ chỗ trước, giảm CLS. Ảnh vẫn co giãn được bằng CSS như max-width: 100% và height: auto." }
     ]
   },
   "p02.m0.t4": {
@@ -403,9 +403,9 @@ export function Button({ variant = "primary", className = "", ...props }: Props)
       "Khi ghép `className` từ ngoài vào, hai class xung đột (ví dụ `p-2` và `p-4`) không đảm bảo class nào thắng theo thứ tự bạn viết. Dùng thư viện như tailwind-merge để xử lý."
     ],
     quiz: [
-      { q: "Vì sao file CSS build ra từ Tailwind thường nhỏ?", options: ["Tailwind nén CSS bằng gzip", "Tailwind chỉ sinh CSS cho các class xuất hiện trong mã nguồn", "Tailwind không dùng CSS", "Tailwind tải CSS từ CDN"], answer: 1, explain: "Tailwind quét file nguồn tìm tên class và chỉ sinh các quy tắc tương ứng. Nén gzip là việc của server, không phải lý do chính." },
-      { q: "Cách tái sử dụng style được khuyến nghị trong dự án React dùng Tailwind là gì?", options: ["Dùng @apply cho mọi nhóm class", "Tạo component React đóng gói các class", "Viết inline style", "Copy class sang mọi nơi"], answer: 1, explain: "Component giữ markup và class ở một chỗ, dễ đổi và có thể nhận prop biến thể. @apply tràn lan tái tạo lại vấn đề của CSS truyền thống." },
-      { q: "Vì sao `className={\"text-\" + color + \"-600\"}` có thể không có style?", options: ["React không cho nối chuỗi", "Tailwind phát hiện class bằng quét tĩnh nên không thấy tên class đầy đủ", "Màu phải viết hoa", "Cần thêm !important"], answer: 1, explain: "Tailwind không chạy code của bạn; nó tìm chuỗi class hoàn chỉnh trong file. Tên được ghép lúc runtime sẽ không được sinh CSS." }
+      { q: "Vì sao file CSS build ra từ Tailwind thường nhỏ?", options: ["Tailwind tự nén CSS bằng gzip khi build", "Tailwind chỉ sinh CSS cho class thấy trong mã", "Tailwind thay CSS bằng inline style lúc chạy", "Tailwind tải phần CSS còn thiếu từ CDN"], answer: 1, explain: "Tailwind quét file nguồn tìm tên class và chỉ sinh các quy tắc tương ứng. Nén gzip là việc của server, không phải lý do chính." },
+      { q: "Cách tái sử dụng style được khuyến nghị trong dự án React dùng Tailwind là gì?", options: ["Gom mọi nhóm class lặp lại vào @apply", "Tạo component React đóng gói các class", "Chuyển toàn bộ style sang inline style", "Copy nguyên nhóm class sang mọi nơi dùng"], answer: 1, explain: "Component giữ markup và class ở một chỗ, dễ đổi và có thể nhận prop biến thể. @apply tràn lan tái tạo lại vấn đề của CSS truyền thống." },
+      { q: "Vì sao `className={\"text-\" + color + \"-600\"}` có thể không có style?", options: ["React không cho nối chuỗi trong className", "Tailwind quét tĩnh, không thấy tên class đầy đủ", "Tên màu trong Tailwind phải viết hoa", "Class ghép động cần thêm !important"], answer: 1, explain: "Tailwind không chạy code của bạn; nó tìm chuỗi class hoàn chỉnh trong file. Tên được ghép lúc runtime sẽ không được sinh CSS." }
     ]
   },
   "p02.m1.t0": {
@@ -472,8 +472,8 @@ form.addEventListener("submit", (event) => {
     ],
     quiz: [
       { q: "Mặc định `addEventListener(\"click\", fn)` lắng nghe ở pha nào?", options: ["Capturing", "Bubbling", "Chỉ pha target", "Cả hai pha"], answer: 1, explain: "Mặc định capture là false nên listener chạy ở pha bubbling (và tại target). Muốn nghe capturing phải truyền { capture: true }." },
-      { q: "Lợi ích chính của event delegation là gì?", options: ["Sự kiện chạy nhanh hơn", "Một listener ở phần tử cha xử lý được cả phần tử con thêm sau", "Không cần event object", "Chặn được mọi sự kiện mặc định"], answer: 1, explain: "Nhờ bubbling, listener ở cha nhận sự kiện từ mọi con, kể cả con mới thêm, và ít listener hơn nên tiết kiệm bộ nhớ." },
-      { q: "`preventDefault()` khác `stopPropagation()` thế nào?", options: ["Giống nhau", "preventDefault hủy hành vi mặc định; stopPropagation dừng sự kiện lan sang phần tử khác", "preventDefault dừng bubbling", "stopPropagation ngăn gửi form"], answer: 1, explain: "Hai hàm độc lập: một cái hủy hành vi của trình duyệt như gửi form, cái kia chặn sự kiện lan lên cha. Bạn có thể dùng một hoặc cả hai." }
+      { q: "Lợi ích chính của event delegation là gì?", options: ["Sự kiện được trình duyệt xử lý nhanh hơn", "Một listener ở cha xử lý cả phần tử con thêm sau", "Không cần dùng đến event object nữa", "Tự chặn mọi hành vi mặc định của trình duyệt"], answer: 1, explain: "Nhờ bubbling, listener ở cha nhận sự kiện từ mọi con, kể cả con mới thêm, và ít listener hơn nên tiết kiệm bộ nhớ." },
+      { q: "`preventDefault()` khác `stopPropagation()` thế nào?", options: ["Hai hàm giống nhau, chỉ khác tên gọi", "preventDefault hủy hành vi mặc định; stopPropagation chặn lan truyền", "preventDefault chặn bubbling; stopPropagation hủy gửi form", "stopPropagation hủy hành vi mặc định; preventDefault chặn lan truyền"], answer: 1, explain: "Hai hàm độc lập: một cái hủy hành vi của trình duyệt như gửi form, cái kia chặn sự kiện lan lên cha. Bạn có thể dùng một hoặc cả hai." }
     ]
   },
   "p02.m1.t1": {
@@ -508,8 +508,8 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
       {
         h: "Hủy request với AbortController và retry",
         p: [
-          "`AbortController` cho phép hủy request đang chạy, ví dụ khi người dùng rời trang hoặc gõ ô tìm kiếm liên tục. Truyền `signal` vào fetch; khi gọi `abort()`, fetch reject với lỗi tên `AbortError`. `AbortSignal.timeout(ms)` tạo sẵn signal tự hủy sau thời gian chờ.",
-          "Retry chỉ nên áp dụng cho lỗi tạm thời: lỗi mạng, 502, 503, 504, hoặc 429. Không retry lỗi 4xx như 400, 401, 404 vì gửi lại cũng vậy. Giữa các lần thử dùng exponential backoff (chờ 200ms, 400ms, 800ms...) để không dội thêm tải lên server đang quá tải. Chỉ retry tự động với request idempotent như GET."
+          "`AbortController` cho phép hủy request đang chạy, ví dụ khi người dùng rời trang hoặc gõ ô tìm kiếm liên tục. Truyền `signal` vào fetch; khi gọi `abort()`, fetch reject với lỗi (DOMException) tên `AbortError`. `AbortSignal.timeout(ms)` tạo sẵn signal tự hủy sau thời gian chờ; khi hết giờ, fetch reject với lỗi tên `TimeoutError` (không phải `AbortError`), nên code xử lý lỗi cần phân biệt cả hai tên.",
+          "Retry chỉ nên áp dụng cho lỗi tạm thời: lỗi mạng, 502, 503, 504, hoặc 429 (Too Many Requests; nếu server gửi header `Retry-After` thì chờ đúng khoảng đó). Không retry các lỗi 4xx khác như 400, 401, 404 vì gửi lại cũng vậy. Giữa các lần thử dùng exponential backoff (chờ 200ms, 400ms, 800ms...) để không dội thêm tải lên server đang quá tải. Chỉ retry tự động với request idempotent như GET."
         ],
         code: {
           lang: "typescript", file: "src/lib/retry.ts",
@@ -548,9 +548,9 @@ export async function fetchWithRetry(url: string, retries = 3): Promise<Response
       "Đặt `Access-Control-Allow-Origin: *` cùng với credentials: trình duyệt sẽ từ chối. Khi gửi cookie phải chỉ định origin cụ thể."
     ],
     quiz: [
-      { q: "Server trả về 500, Promise của fetch sẽ thế nào?", options: ["Reject với lỗi HTTP", "Resolve với response có ok = false", "Treo mãi", "Tự retry"], answer: 1, explain: "fetch chỉ reject khi lỗi mạng hoặc bị hủy. Response 500 vẫn là response hợp lệ, bạn phải tự kiểm tra ok hoặc status." },
+      { q: "Server trả về 500, Promise của fetch sẽ thế nào?", options: ["Reject với một lỗi HTTP 500", "Resolve với response có ok = false", "Treo cho tới khi hết timeout", "Tự retry rồi reject nếu vẫn lỗi"], answer: 1, explain: "fetch chỉ reject khi lỗi mạng hoặc bị hủy. Response 500 vẫn là response hợp lệ, bạn phải tự kiểm tra ok hoặc status." },
       { q: "Lỗi nào không nên retry?", options: ["503 Service Unavailable", "Lỗi mạng tạm thời", "400 Bad Request", "504 Gateway Timeout"], answer: 2, explain: "400 nghĩa là request sai; gửi lại y hệt vẫn sai. 503, 504 và lỗi mạng thường là tạm thời nên retry có ý nghĩa." },
-      { q: "Vì sao cùng một API, gọi bằng curl chạy được nhưng từ trình duyệt bị lỗi CORS?", options: ["curl dùng HTTP/3", "CORS là chính sách do trình duyệt thực thi, curl không áp dụng", "Server chặn trình duyệt", "Trình duyệt không hỗ trợ JSON"], answer: 1, explain: "Same-Origin Policy và CORS nằm trong trình duyệt để bảo vệ người dùng. Công cụ như curl không áp chính sách này." }
+      { q: "Vì sao cùng một API, gọi bằng curl chạy được nhưng từ trình duyệt bị lỗi CORS?", options: ["curl dùng HTTP/3 nên bỏ qua CORS", "CORS do trình duyệt thực thi, curl không áp dụng", "Server nhận diện và chặn riêng trình duyệt", "Trình duyệt không đọc được JSON từ API"], answer: 1, explain: "Same-Origin Policy và CORS nằm trong trình duyệt để bảo vệ người dùng. Công cụ như curl không áp chính sách này." }
     ]
   },
   "p02.m1.t2": {
@@ -627,8 +627,8 @@ export function savePrefs(p: Prefs) {
     ],
     quiz: [
       { q: "Cờ nào khiến JavaScript phía client không đọc được cookie?", options: ["Secure", "SameSite", "HttpOnly", "Domain"], answer: 2, explain: "HttpOnly ẩn cookie khỏi document.cookie. Secure chỉ giới hạn gửi qua HTTPS, SameSite kiểm soát gửi kèm request cross-site." },
-      { q: "Dữ liệu nào hợp để lưu ở sessionStorage?", options: ["Refresh token", "Bước đang làm dở của form nhiều bước trong một tab", "Ảnh offline dung lượng lớn", "Cài đặt theme dùng lâu dài"], answer: 1, explain: "sessionStorage chỉ sống trong tab hiện tại, hợp với trạng thái tạm. Token không nên nằm ở storage đọc được bằng JS, dữ liệu lớn nên ở IndexedDB, cài đặt lâu dài nên ở localStorage." },
-      { q: "Vì sao lưu access token ở localStorage bị coi là rủi ro?", options: ["localStorage bị xóa khi đóng tab", "Bất kỳ script nào chạy trên trang, kể cả do XSS, đều đọc được", "localStorage gửi token cho mọi domain", "localStorage không mã hóa HTTPS"], answer: 1, explain: "Rủi ro chính là XSS: script độc đọc được token rồi gửi đi. localStorage không tự gửi kèm request và không mất khi đóng tab." }
+      { q: "Dữ liệu nào hợp để lưu ở sessionStorage?", options: ["Refresh token dùng để gia hạn phiên", "Bước đang làm dở của form nhiều bước", "Ảnh dung lượng lớn để xem offline", "Cài đặt theme dùng lâu dài giữa các lần mở"], answer: 1, explain: "sessionStorage chỉ sống trong tab hiện tại, hợp với trạng thái tạm. Token không nên nằm ở storage đọc được bằng JS, dữ liệu lớn nên ở IndexedDB, cài đặt lâu dài nên ở localStorage." },
+      { q: "Vì sao lưu access token ở localStorage bị coi là rủi ro?", options: ["localStorage bị xóa ngay khi đóng tab", "Mọi script trên trang, kể cả do XSS, đọc được nó", "localStorage tự gửi token tới mọi domain", "localStorage không được HTTPS mã hóa"], answer: 1, explain: "Rủi ro chính là XSS: script độc đọc được token rồi gửi đi. localStorage không tự gửi kèm request và không mất khi đóng tab." }
     ]
   },
   "p02.m1.t3": {
@@ -636,7 +636,7 @@ export function savePrefs(p: Prefs) {
       {
         h: "Core Web Vitals",
         p: [
-          "Core Web Vitals là ba chỉ số Google dùng để đo trải nghiệm thực tế của người dùng. LCP (Largest Contentful Paint) đo thời gian phần tử nội dung lớn nhất hiển thị, tốt khi ≤ 2.5 giây. INP (Interaction to Next Paint) đo độ trễ từ lúc người dùng tương tác đến lúc giao diện vẽ lại, tốt khi ≤ 200ms; INP đã thay thế FID từ tháng 3/2024. CLS (Cumulative Layout Shift) đo mức độ nội dung bị xô lệch bất ngờ, tốt khi ≤ 0.1.",
+          "Core Web Vitals là ba chỉ số Google dùng để đo trải nghiệm thực tế của người dùng. LCP (Largest Contentful Paint) đo thời gian phần tử nội dung lớn nhất hiển thị, tốt khi ≤ 2.5 giây. INP (Interaction to Next Paint) đo độ trễ từ lúc người dùng tương tác đến lúc giao diện vẽ lại, tốt khi ≤ 200ms; INP quan sát mọi lần click, chạm, gõ phím trong suốt lượt truy cập và báo cáo gần như lần chậm nhất, và đã thay thế FID (chỉ đo độ trễ của tương tác đầu tiên) từ tháng 3/2024. CLS (Cumulative Layout Shift) đo mức độ nội dung bị xô lệch bất ngờ, tốt khi ≤ 0.1.",
           "Ngưỡng được đánh giá ở phân vị 75 của lượt truy cập thật. Dữ liệu phòng lab (Lighthouse) giúp debug, còn dữ liệu thật (field data, ví dụ Chrome UX Report hoặc thư viện `web-vitals`) mới phản ánh người dùng."
         ],
         code: {
@@ -699,7 +699,7 @@ export default function Report() {
     ],
     quiz: [
       { q: "Chỉ số nào đo độ phản hồi khi người dùng tương tác?", options: ["LCP", "CLS", "INP", "TTFB"], answer: 2, explain: "INP đo thời gian từ tương tác đến lần vẽ tiếp theo. LCP đo tải nội dung chính, CLS đo độ ổn định layout, TTFB không phải Core Web Vital." },
-      { q: "Nguyên nhân phổ biến làm CLS cao là gì?", options: ["Server phản hồi chậm", "Ảnh không khai báo kích thước và nội dung chèn động không giữ chỗ", "Quá nhiều CSS", "Dùng HTTPS"], answer: 1, explain: "CLS tăng khi nội dung đẩy các phần tử khác lệch đi sau khi đã hiển thị. Khai báo kích thước và giữ chỗ trước sẽ khắc phục." },
+      { q: "Nguyên nhân phổ biến làm CLS cao là gì?", options: ["Server phản hồi chậm ở request đầu tiên", "Ảnh thiếu kích thước, nội dung chèn không giữ chỗ", "Trang tải quá nhiều file CSS cùng lúc", "Trang dùng HTTPS thay vì HTTP"], answer: 1, explain: "CLS tăng khi nội dung đẩy các phần tử khác lệch đi sau khi đã hiển thị. Khai báo kích thước và giữ chỗ trước sẽ khắc phục." },
       { q: "File `app.3f9a1c.js` nên có Cache-Control thế nào?", options: ["no-store", "no-cache", "public, max-age=31536000, immutable", "private, max-age=0"], answer: 2, explain: "Tên chứa hash nội dung nên khi nội dung đổi, tên file đổi. Vì vậy có thể cache rất lâu và đánh dấu immutable an toàn." }
     ]
   },
@@ -779,9 +779,9 @@ export function SearchPage() {
       "Sao chép props vào state (`useState(props.value)`) rồi không đồng bộ khi props đổi. Thường chỉ cần dùng thẳng props."
     ],
     quiz: [
-      { q: "Hai component anh em cần cùng một giá trị, cách làm chuẩn là gì?", options: ["Mỗi component giữ một bản state riêng", "Nâng state lên component cha chung và truyền xuống qua props", "Dùng biến toàn cục", "Sửa props của nhau"], answer: 1, explain: "Lifting state up tạo một nguồn sự thật duy nhất. Hai bản state riêng sẽ lệch nhau, biến toàn cục không kích hoạt render, props thì chỉ đọc." },
-      { q: "Vì sao không nên dùng index làm key khi danh sách có thể xóa phần tử ở giữa?", options: ["Index không phải số", "React báo lỗi cú pháp", "Key của các phần tử phía sau thay đổi, React có thể gắn nhầm state/DOM", "Index làm chậm mạng"], answer: 2, explain: "Xóa phần tử làm index phía sau dịch đi, React tưởng phần tử cũ vẫn còn và tái dùng state của nó cho dữ liệu khác." },
-      { q: "Điều gì kích hoạt một component render lại?", options: ["Gán lại biến cục bộ trong hàm", "Gọi hàm set của state với giá trị mới", "Gọi console.log", "Sửa DOM thủ công"], answer: 1, explain: "Gọi setState với giá trị khác (so sánh bằng Object.is) sẽ lên lịch render lại. Biến cục bộ bị tạo lại mỗi lần render và không báo cho React." }
+      { q: "Hai component anh em cần cùng một giá trị, cách làm chuẩn là gì?", options: ["Mỗi component giữ một bản state riêng", "Nâng state lên cha chung, truyền qua props", "Lưu giá trị vào một biến toàn cục", "Hai component tự sửa props của nhau"], answer: 1, explain: "Lifting state up tạo một nguồn sự thật duy nhất. Hai bản state riêng sẽ lệch nhau, biến toàn cục không kích hoạt render, props thì chỉ đọc." },
+      { q: "Vì sao không nên dùng index làm key khi danh sách có thể xóa phần tử ở giữa?", options: ["Index không phải chuỗi nên key không hợp lệ", "React báo lỗi cú pháp khi key là số", "Index phía sau dịch đi, state bị gắn nhầm", "Index làm React gửi thêm request mạng"], answer: 2, explain: "Xóa phần tử làm index phía sau dịch đi, React tưởng phần tử cũ vẫn còn và tái dùng state của nó cho dữ liệu khác." },
+      { q: "Điều gì kích hoạt một component render lại?", options: ["Gán lại một biến cục bộ trong hàm", "Gọi hàm set của state với giá trị mới", "Gọi console.log bên trong component", "Sửa DOM thủ công bằng querySelector"], answer: 1, explain: "Gọi setState với giá trị khác (so sánh bằng Object.is) sẽ lên lịch render lại. Biến cục bộ bị tạo lại mỗi lần render và không báo cho React." }
     ]
   },
   "p02.m2.t1": {
@@ -853,9 +853,9 @@ export function useDebounce<T>(value: T, delay = 300): T {
       "Gọi hook trong điều kiện if làm lệch thứ tự hook giữa các lần render và gây lỗi."
     ],
     quiz: [
-      { q: "Khi nào nên dùng useEffect?", options: ["Để tính tổng tiền từ danh sách sản phẩm", "Để đăng ký và hủy đăng ký sự kiện resize của window", "Để xử lý click nút gửi form", "Để thay cho mọi lifecycle"], answer: 1, explain: "Effect dùng để đồng bộ với hệ thống bên ngoài như window. Tổng tiền tính trong render, click xử lý trong event handler." },
+      { q: "Khi nào nên dùng useEffect?", options: ["Để tính tổng tiền từ danh sách sản phẩm", "Để đăng ký và hủy sự kiện resize của window", "Để xử lý click nút gửi form", "Để thay thế mọi phương thức lifecycle của class"], answer: 1, explain: "Effect dùng để đồng bộ với hệ thống bên ngoài như window. Tổng tiền tính trong render, click xử lý trong event handler." },
       { q: "Thay đổi `ref.current` có gây render lại không?", options: ["Có, luôn luôn", "Không", "Chỉ khi là phần tử DOM", "Chỉ trong StrictMode"], answer: 1, explain: "useRef trả về object ổn định; sửa current không báo cho React. Muốn giao diện cập nhật thì phải dùng state." },
-      { q: "Vì sao ở chế độ dev effect có vẻ chạy hai lần?", options: ["Lỗi của React", "StrictMode cố ý mount, unmount, mount lại để phát hiện thiếu cleanup", "Do bundler", "Do trình duyệt"], answer: 1, explain: "StrictMode chỉ ở môi trường dev chạy thêm một chu kỳ setup/cleanup. Effect có cleanup đúng sẽ không bị ảnh hưởng. Production không làm vậy." }
+      { q: "Vì sao ở chế độ dev effect có vẻ chạy hai lần?", options: ["React có lỗi khiến effect chạy lặp", "StrictMode cố ý chạy setup, cleanup, setup lại", "Bundler nạp module hai lần khi dev", "Trình duyệt render trang hai lần khi dev"], answer: 1, explain: "StrictMode chỉ ở môi trường dev chạy thêm một chu kỳ setup/cleanup. Effect có cleanup đúng sẽ không bị ảnh hưởng. Production không làm vậy." }
     ]
   },
   "p02.m2.t2": {
@@ -919,8 +919,8 @@ export function ProductList({ names }: { names: string[] }) {
     ],
     quiz: [
       { q: "Component cha render lại, component con không bọc memo sẽ thế nào?", options: ["Không render lại vì props không đổi", "Render lại", "Bị unmount", "Chỉ render khi có key"], answer: 1, explain: "Mặc định React render lại toàn bộ cây con của component vừa render. memo mới cho phép bỏ qua khi props bằng nhau." },
-      { q: "Vì sao `memo` có thể không có tác dụng?", options: ["Vì memo chỉ dùng cho class component", "Vì cha truyền object hoặc hàm mới mỗi lần render nên so sánh nông luôn khác", "Vì memo so sánh sâu quá chậm", "Vì component con có state"], answer: 1, explain: "memo so sánh bằng Object.is từng prop. Object hay hàm tạo mới mỗi lần render luôn khác tham chiếu, nên memo luôn render lại." },
-      { q: "Đổi `<div>` bọc ngoài thành `<section>` ảnh hưởng gì tới state của các component con?", options: ["Không ảnh hưởng", "Cây con bị hủy và tạo mới, state bị reset", "Chỉ đổi CSS", "React báo lỗi"], answer: 1, explain: "Phần tử khác loại khiến React bỏ cây cũ và mount cây mới, nên state của các con bên trong bị mất." }
+      { q: "Vì sao `memo` có thể không có tác dụng?", options: ["memo chỉ hoạt động với class component", "Cha tạo object hoặc hàm mới mỗi lần render", "memo so sánh sâu nên quá chậm", "Component con có state riêng của nó"], answer: 1, explain: "memo so sánh bằng Object.is từng prop. Object hay hàm tạo mới mỗi lần render luôn khác tham chiếu, nên memo luôn render lại." },
+      { q: "Đổi `<div>` bọc ngoài thành `<section>` ảnh hưởng gì tới state của các component con?", options: ["Không ảnh hưởng vì chỉ đổi thẻ bọc", "Cây con bị hủy và mount lại, mất state", "Chỉ đổi CSS, state vẫn được giữ", "React báo lỗi và dừng render"], answer: 1, explain: "Phần tử khác loại khiến React bỏ cây cũ và mount cây mới, nên state của các con bên trong bị mất." }
     ]
   },
   "p02.m2.t3": {
@@ -990,7 +990,8 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 
 // Phía backend:
 // const result = registerSchema.safeParse(req.body);
-// if (!result.success) return res.status(400).json(result.error.flatten());`
+// if (!result.success) return res.status(400).json(z.flattenError(result.error));
+// (Zod 4: phương thức error.flatten() đã deprecated, dùng z.flattenError hoặc z.treeifyError)`
         }
       }
     ],
@@ -1006,9 +1007,9 @@ export type RegisterInput = z.infer<typeof registerSchema>;
       "Copy schema sang hai nơi rồi sửa một bên, quy tắc lệch nhau. Đặt schema trong package dùng chung."
     ],
     quiz: [
-      { q: "Vì sao React Hook Form thường render ít hơn form tự viết bằng useState cho từng ô?", options: ["Nó không dùng React", "Nó dùng input uncontrolled và chỉ cập nhật khi cần", "Nó cache DOM", "Nó bỏ qua validate"], answer: 1, explain: "RHF đọc giá trị trực tiếp từ input đăng ký qua ref thay vì lưu từng phím gõ vào state, nên không render lại cả form mỗi lần gõ." },
+      { q: "Vì sao React Hook Form thường render ít hơn form tự viết bằng useState cho từng ô?", options: ["Nó không dùng React để render form", "Nó dùng input uncontrolled, ít cập nhật state", "Nó cache DOM của form giữa các trang", "Nó bỏ qua bước validate khi gõ phím"], answer: 1, explain: "RHF đọc giá trị trực tiếp từ input đăng ký qua ref thay vì lưu từng phím gõ vào state, nên không render lại cả form mỗi lần gõ." },
       { q: "`z.infer<typeof schema>` dùng để làm gì?", options: ["Chạy validate lúc runtime", "Suy ra kiểu TypeScript từ schema", "Sinh form tự động", "Chuyển schema sang JSON"], answer: 1, explain: "z.infer là tiện ích kiểu ở compile time, cho kiểu dữ liệu tương ứng schema. Validate lúc runtime dùng parse hoặc safeParse." },
-      { q: "Vì sao backend vẫn phải validate dù frontend đã validate?", options: ["Để chạy chậm hơn", "Vì request có thể được gửi thẳng tới API, bỏ qua frontend", "Vì Zod không chạy trên trình duyệt", "Không cần, frontend là đủ"], answer: 1, explain: "Frontend có thể bị bỏ qua bằng curl hay script. Chỉ validate phía server mới bảo vệ dữ liệu và hệ thống." }
+      { q: "Vì sao backend vẫn phải validate dù frontend đã validate?", options: ["Để request được xử lý chậm và an toàn hơn", "Vì có thể gửi request thẳng tới API", "Vì Zod không chạy được trên trình duyệt", "Không cần, validate frontend là đủ"], answer: 1, explain: "Frontend có thể bị bỏ qua bằng curl hay script. Chỉ validate phía server mới bảo vệ dữ liệu và hệ thống." }
     ]
   },
   "p02.m2.t4": {
@@ -1027,7 +1028,9 @@ export type RegisterInput = z.infer<typeof registerSchema>;
         ],
         code: {
           lang: "tsx", file: "src/router.tsx",
-          src: `import { createBrowserRouter, RouterProvider, Outlet, Link } from "react-router";
+          src: `// React Router v7: gói "react-router"; RouterProvider cho DOM lấy từ "react-router/dom"
+import { createBrowserRouter, Outlet, Link } from "react-router";
+import { RouterProvider } from "react-router/dom";
 
 function DashboardLayout() {
   return (
@@ -1098,9 +1101,9 @@ export function RequireAuth() {
       "Chỉ ẩn route mà không chặn API, người dùng vẫn gọi được endpoint nhạy cảm."
     ],
     quiz: [
-      { q: "Người dùng F5 ở `/orders/5` của một SPA thì bị 404. Nguyên nhân thường là gì?", options: ["Router bị lỗi", "Server không cấu hình trả index.html cho các đường dẫn không phải file", "Thiếu key trong list", "Trình duyệt chặn JavaScript"], answer: 1, explain: "Khi F5, trình duyệt gửi request thật tới server. Server phải fallback về index.html để router phía client xử lý đường dẫn." },
-      { q: "`<Outlet />` dùng để làm gì?", options: ["Chuyển hướng người dùng", "Đánh dấu vị trí route con được render bên trong route cha", "Tải dữ liệu", "Đăng xuất"], answer: 1, explain: "Outlet là chỗ trống trong layout cha, nơi route con khớp với URL sẽ hiển thị." },
-      { q: "Protected route phía client có đủ để bảo vệ dữ liệu không?", options: ["Có, vì người dùng không thấy trang", "Không, API phải tự kiểm tra xác thực và phân quyền", "Có, nếu dùng TanStack Router", "Có, nếu minify code"], answer: 1, explain: "Mọi logic phía client đều có thể bị bỏ qua. Người dùng có thể gọi thẳng API, nên server phải kiểm tra." }
+      { q: "Người dùng F5 ở `/orders/5` của một SPA thì bị 404. Nguyên nhân thường là gì?", options: ["Router phía client bị lỗi cấu hình", "Server không fallback về index.html", "Danh sách route thiếu prop key", "Trình duyệt chặn JavaScript khi F5"], answer: 1, explain: "Khi F5, trình duyệt gửi request thật tới server. Server phải fallback về index.html để router phía client xử lý đường dẫn." },
+      { q: "`<Outlet />` dùng để làm gì?", options: ["Chuyển hướng người dùng sang route khác", "Vị trí route con hiển thị trong layout cha", "Tải dữ liệu trước khi render route", "Xóa phiên đăng nhập của người dùng"], answer: 1, explain: "Outlet là chỗ trống trong layout cha, nơi route con khớp với URL sẽ hiển thị." },
+      { q: "Protected route phía client có đủ để bảo vệ dữ liệu không?", options: ["Có, vì người dùng không thấy được trang", "Không, API phải tự kiểm tra quyền", "Có, nếu dùng TanStack Router", "Có, nếu code đã được minify"], answer: 1, explain: "Mọi logic phía client đều có thể bị bỏ qua. Người dùng có thể gọi thẳng API, nên server phải kiểm tra." }
     ]
   },
   "p02.m2.t5": {
@@ -1167,8 +1170,8 @@ export const useCart = create<CartState>()((set) => ({
     ],
     quiz: [
       { q: "Dữ liệu nào là server state?", options: ["Trạng thái mở/đóng của modal", "Danh sách đơn hàng lấy từ API", "Tab đang chọn", "Giá trị ô tìm kiếm đang gõ"], answer: 1, explain: "Danh sách đơn hàng là bản sao dữ liệu trên server, có thể cũ đi và cần đồng bộ. Các lựa chọn khác chỉ tồn tại trên client." },
-      { q: "Điểm yếu của Context với dữ liệu thay đổi liên tục là gì?", options: ["Không truyền được hàm", "Mọi component dùng context đó render lại khi value đổi", "Chỉ dùng được một lần", "Không hỗ trợ TypeScript"], answer: 1, explain: "Context không có selector; value đổi thì mọi consumer render lại, dễ gây chậm với dữ liệu cập nhật thường xuyên." },
-      { q: "Vì sao dùng selector khi đọc Zustand store?", options: ["Bắt buộc về cú pháp", "Component chỉ render lại khi phần state được chọn thay đổi", "Để lưu vào localStorage", "Để chạy trên server"], answer: 1, explain: "Zustand so sánh kết quả selector giữa các lần cập nhật; chỉ khi khác mới render lại. Không có selector thì mọi thay đổi đều gây render." }
+      { q: "Điểm yếu của Context với dữ liệu thay đổi liên tục là gì?", options: ["Không truyền được hàm qua context", "Value đổi thì mọi consumer render lại", "Mỗi context chỉ dùng được một lần", "Context không hỗ trợ TypeScript"], answer: 1, explain: "Context không có selector; value đổi thì mọi consumer render lại, dễ gây chậm với dữ liệu cập nhật thường xuyên." },
+      { q: "Vì sao dùng selector khi đọc Zustand store?", options: ["Cú pháp của Zustand bắt buộc có selector", "Chỉ render lại khi phần được chọn đổi", "Selector tự lưu store vào localStorage", "Selector giúp store chạy được trên server"], answer: 1, explain: "Zustand so sánh kết quả selector giữa các lần cập nhật; chỉ khi khác mới render lại. Không có selector thì mọi thay đổi đều gây render." }
     ]
   },
   "p02.m2.t6": {
@@ -1257,9 +1260,9 @@ export function useToggleTodo(page: number) {
       "Copy dữ liệu từ useQuery sang useState rồi sửa, mất đồng bộ với cache. Đọc thẳng từ `data` hoặc cập nhật qua `setQueryData`."
     ],
     quiz: [
-      { q: "Với `staleTime` mặc định là 0 ở TanStack Query v5, điều gì xảy ra khi cửa sổ được focus lại?", options: ["Không có gì", "Query được refetch ngầm vì dữ liệu đã cũ", "Cache bị xóa", "Trang tải lại"], answer: 1, explain: "Dữ liệu cũ ngay sau khi fetch, và refetchOnWindowFocus mặc định bật, nên query được refetch ngầm trong khi vẫn hiển thị dữ liệu cũ." },
-      { q: "Trong optimistic update, `onError` nên làm gì?", options: ["Hiện alert rồi thôi", "Khôi phục dữ liệu từ snapshot đã lưu trong onMutate", "Xóa toàn bộ cache", "Gọi lại mutation vô hạn"], answer: 1, explain: "UI đã cập nhật trước khi server xác nhận. Nếu lỗi, cần trả cache về trạng thái cũ từ snapshot để giao diện đúng với server." },
-      { q: "`gcTime` quy định điều gì?", options: ["Thời gian dữ liệu được coi là mới", "Thời gian cache không còn component nào dùng trước khi bị dọn", "Thời gian timeout request", "Khoảng cách giữa các lần retry"], answer: 1, explain: "gcTime (tên cũ cacheTime) là thời gian giữ cache không hoạt động. Thời gian dữ liệu còn mới là staleTime." }
+      { q: "Với `staleTime` mặc định là 0 ở TanStack Query v5, điều gì xảy ra khi cửa sổ được focus lại?", options: ["Không có gì xảy ra cho tới lần mount sau", "Query được refetch ngầm vì dữ liệu đã cũ", "Cache của query bị xóa hoàn toàn", "Toàn bộ trang được tải lại từ server"], answer: 1, explain: "Dữ liệu cũ ngay sau khi fetch, và refetchOnWindowFocus mặc định bật, nên query được refetch ngầm trong khi vẫn hiển thị dữ liệu cũ." },
+      { q: "Trong optimistic update, `onError` nên làm gì?", options: ["Hiện alert báo lỗi rồi giữ nguyên cache", "Khôi phục cache từ snapshot lưu ở onMutate", "Xóa toàn bộ cache của QueryClient", "Gọi lại mutation cho tới khi thành công"], answer: 1, explain: "UI đã cập nhật trước khi server xác nhận. Nếu lỗi, cần trả cache về trạng thái cũ từ snapshot để giao diện đúng với server." },
+      { q: "`gcTime` quy định điều gì?", options: ["Thời gian dữ liệu còn được coi là mới", "Thời gian giữ cache khi không còn ai dùng", "Thời gian tối đa chờ một request", "Khoảng cách giữa các lần retry"], answer: 1, explain: "gcTime (tên cũ cacheTime) là thời gian giữ cache không hoạt động. Thời gian dữ liệu còn mới là staleTime." }
     ]
   },
   "p02.m3.t0": {
@@ -1288,7 +1291,8 @@ export function useToggleTodo(page: number) {
       {
         h: "Ví dụ trong Next.js App Router",
         p: [
-          "Trong App Router, trang mặc định là Server Component. Cách bạn fetch dữ liệu và các tùy chọn cache quyết định trang được render tĩnh hay động. Mặc định giữa các phiên bản Next.js đã thay đổi (từ Next.js 15, `fetch` không còn được cache mặc định), nên hãy khai báo rõ ý định thay vì dựa vào mặc định."
+          "Trong App Router, trang mặc định là Server Component. Cách bạn fetch dữ liệu và các tùy chọn cache quyết định trang được render tĩnh hay động. Mặc định giữa các phiên bản Next.js đã thay đổi (từ Next.js 15, `fetch` không còn được cache mặc định), nên hãy khai báo rõ ý định thay vì dựa vào mặc định.",
+          "Ví dụ dưới dùng mô hình cache truyền thống (route segment config `revalidate` và tùy chọn `next.revalidate` của fetch). Từ Next.js 16 có thêm chế độ Cache Components (bật bằng `cacheComponents: true` trong `next.config.ts`): dữ liệu mặc định là động, bạn chủ động đánh dấu phần cần cache bằng chỉ thị `\"use cache\"` kết hợp `cacheLife` và `cacheTag`, và trang được prerender thành một khung tĩnh rồi stream phần động vào (Partial Prerendering). Khi bật chế độ này, một số route segment config như `revalidate` được thay bằng `cacheLife`, nên hãy đọc hướng dẫn migrate trước khi bật."
         ],
         code: {
           lang: "tsx", file: "app/products/[id]/page.tsx",
@@ -1326,8 +1330,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     ],
     quiz: [
       { q: "Blog cá nhân cập nhật vài lần mỗi tuần, cần SEO tốt. Chiến lược phù hợp nhất?", options: ["CSR", "SSR mỗi request", "SSG hoặc ISR", "Chỉ dùng Web Worker"], answer: 2, explain: "Nội dung ít đổi nên tạo sẵn HTML và phục vụ từ CDN là nhanh và rẻ nhất; ISR giúp cập nhật mà không cần build lại toàn bộ." },
-      { q: "Đặc điểm nổi bật của React Server Components là gì?", options: ["Chạy trên trình duyệt nhanh hơn", "Code của chúng không được gửi xuống client trong bundle JS", "Thay thế hoàn toàn API backend", "Chỉ dùng cho SSG"], answer: 1, explain: "RSC render trên server và chỉ gửi kết quả; code và thư viện dùng bên trong không vào bundle client. Chúng vẫn kết hợp được với SSR, SSG." },
-      { q: "Hydration là gì?", options: ["Nén HTML", "React gắn sự kiện và state vào HTML đã render sẵn từ server", "Tải ảnh lười", "Tạo HTML lúc build"], answer: 1, explain: "Hydration biến HTML tĩnh từ server thành ứng dụng tương tác bằng cách chạy JS và gắn event handler." }
+      { q: "Đặc điểm nổi bật của React Server Components là gì?", options: ["Chạy trên trình duyệt nhanh hơn component thường", "Code của chúng không nằm trong bundle JS client", "Thay thế hoàn toàn API backend của ứng dụng", "Chỉ dùng được với trang SSG tạo lúc build"], answer: 1, explain: "RSC render trên server và chỉ gửi kết quả; code và thư viện dùng bên trong không vào bundle client. Chúng vẫn kết hợp được với SSR, SSG." },
+      { q: "Hydration là gì?", options: ["Nén HTML trước khi gửi xuống client", "Gắn event handler vào HTML render từ server", "Trì hoãn tải ảnh nằm dưới màn hình đầu", "Tạo sẵn HTML cho mọi trang lúc build"], answer: 1, explain: "Hydration biến HTML tĩnh từ server thành ứng dụng tương tác bằng cách chạy JS và gắn event handler." }
     ]
   },
   "p02.m3.t1": {
@@ -1381,7 +1385,8 @@ export default async function OrdersPage() {
         h: "Server Actions",
         p: [
           "Server Action là hàm async đánh dấu `\"use server\"`, chạy trên server nhưng có thể gọi từ form hoặc Client Component. Next.js tự tạo endpoint và xử lý việc gửi dữ liệu. Với `<form action={createTodo}>`, form vẫn hoạt động kể cả khi JavaScript chưa tải xong (progressive enhancement).",
-          "Hãy coi Server Action như một API công khai: ai cũng gọi được. Luôn kiểm tra đăng nhập, phân quyền và validate dữ liệu bên trong nó. Sau khi ghi dữ liệu, gọi `revalidatePath` hoặc `revalidateTag` để làm mới dữ liệu đã cache. Hook `useActionState` của React 19 giúp nhận kết quả và trạng thái đang gửi."
+          "Hãy coi Server Action như một API công khai: ai cũng gọi được. Luôn kiểm tra đăng nhập, phân quyền và validate dữ liệu bên trong nó. Sau khi ghi dữ liệu, gọi `revalidatePath(\"/todos\")` hoặc `revalidateTag(\"todos\", \"max\")` để làm mới dữ liệu đã cache (từ Next.js 16, `revalidateTag` nhận tham số thứ hai là cache profile; dạng một tham số đã deprecated, còn `updateTag` dùng trong Server Action khi cần hết hạn ngay). Hook `useActionState` của React 19 giúp nhận kết quả và trạng thái đang gửi; khi dùng nó, action nhận thêm tham số đầu là state trước đó: `(prevState, formData)`.",
+          "Tài liệu React hiện gọi chung các hàm `\"use server\"` là Server Functions; khi được truyền vào `action` của form hoặc gọi trong transition thì gọi là Server Action. Next.js vẫn dùng tên Server Actions trong tài liệu của mình."
         ],
         code: {
           lang: "tsx", file: "app/todos/actions.ts",
@@ -1421,8 +1426,8 @@ export async function createTodo(formData: FormData) {
     ],
     quiz: [
       { q: "Muốn dùng `useState` trong component thuộc thư mục `app/`, bạn cần làm gì?", options: ["Không cần gì", "Thêm \"use client\" ở đầu file", "Thêm \"use server\"", "Đổi tên file thành client.tsx"], answer: 1, explain: "Component trong app/ mặc định là Server Component và không dùng được hook state. \"use client\" đánh dấu file là Client Component." },
-      { q: "`loading.tsx` hoạt động dựa trên cơ chế nào?", options: ["Một Suspense boundary bọc quanh page của đoạn route đó", "Một middleware", "Một Service Worker", "Một Server Action"], answer: 0, explain: "Next.js tự bọc page trong Suspense với fallback là loading.tsx, nên nội dung hiện ra ngay khi dữ liệu sẵn sàng qua streaming." },
-      { q: "Vì sao phải kiểm tra xác thực bên trong Server Action?", options: ["Vì Next.js yêu cầu cú pháp", "Vì Server Action được gọi qua một endpoint HTTP mà ai cũng có thể gửi request tới", "Vì nó chạy trên trình duyệt", "Không cần kiểm tra"], answer: 1, explain: "Server Action được lộ ra dưới dạng endpoint. Kẻ xấu có thể gọi trực tiếp nên phải kiểm tra phiên và quyền như mọi API." }
+      { q: "`loading.tsx` hoạt động dựa trên cơ chế nào?", options: ["Một Suspense boundary bọc page của route", "Một middleware chạy trước mỗi request", "Một Service Worker cache trang đang tải", "Một Server Action trả về trạng thái chờ"], answer: 0, explain: "Next.js tự bọc page trong Suspense với fallback là loading.tsx, nên nội dung hiện ra ngay khi dữ liệu sẵn sàng qua streaming." },
+      { q: "Vì sao phải kiểm tra xác thực bên trong Server Action?", options: ["Vì Next.js bắt buộc về mặt cú pháp", "Vì ai cũng gửi request tới endpoint của nó được", "Vì Server Action chạy trên trình duyệt", "Không cần, Next.js tự kiểm tra phiên"], answer: 1, explain: "Server Action được lộ ra dưới dạng endpoint. Kẻ xấu có thể gọi trực tiếp nên phải kiểm tra phiên và quyền như mọi API." }
     ]
   },
   "p02.m3.t2": {
@@ -1490,8 +1495,8 @@ pnpm outdated`
     ],
     quiz: [
       { q: "`\"react\": \"^19.1.0\"` cho phép cài phiên bản nào?", options: ["Chỉ 19.1.0", "19.1.x", ">=19.1.0 và <20.0.0", "Mọi phiên bản"], answer: 2, explain: "Dấu ^ với major khác 0 cho phép nâng minor và patch nhưng giữ nguyên major." },
-      { q: "Vì sao dùng `npm ci` trong CI thay cho `npm install`?", options: ["Nó cài nhiều gói hơn", "Nó cài đúng theo lockfile và báo lỗi nếu lockfile không khớp package.json", "Nó bỏ qua devDependencies", "Nó cập nhật lockfile"], answer: 1, explain: "npm ci xóa node_modules, cài chính xác theo lockfile và không sửa lockfile, giúp build lặp lại được." },
-      { q: "Turborepo tăng tốc CI chủ yếu nhờ điều gì?", options: ["Viết lại code bằng Rust", "Cache kết quả task theo đầu vào và chạy song song theo đồ thị phụ thuộc", "Bỏ qua test", "Nén node_modules"], answer: 1, explain: "Nếu đầu vào của task không đổi, Turborepo lấy kết quả từ cache. Task độc lập chạy song song theo đồ thị phụ thuộc." }
+      { q: "Vì sao dùng `npm ci` trong CI thay cho `npm install`?", options: ["Nó cài thêm nhiều gói tối ưu hơn", "Nó cài đúng theo lockfile, lệch thì báo lỗi", "Nó bỏ qua toàn bộ devDependencies", "Nó tự cập nhật lockfile lên bản mới"], answer: 1, explain: "npm ci xóa node_modules, cài chính xác theo lockfile và không sửa lockfile, giúp build lặp lại được." },
+      { q: "Turborepo tăng tốc CI chủ yếu nhờ điều gì?", options: ["Biên dịch lại code ứng dụng bằng Rust", "Cache kết quả task và chạy song song", "Tắt bớt các bước test trong pipeline", "Nén node_modules trước khi cài"], answer: 1, explain: "Nếu đầu vào của task không đổi, Turborepo lấy kết quả từ cache. Task độc lập chạy song song theo đồ thị phụ thuộc." }
     ]
   },
   "p02.m3.t3": {
@@ -1506,7 +1511,7 @@ pnpm outdated`
       {
         h: "Vitest + Testing Library",
         p: [
-          "Vitest là test runner tương thích API kiểu Jest, dùng chung cấu hình với Vite nên chạy nhanh và hỗ trợ TypeScript sẵn. Cấu hình `environment: \"jsdom\"` để có DOM giả lập. Với các hàm gọi API, bạn có thể mock bằng `vi.fn()` hoặc dùng MSW để chặn request ở tầng mạng."
+          "Vitest là test runner tương thích API kiểu Jest, dùng chung cấu hình với Vite nên chạy nhanh và hỗ trợ TypeScript sẵn. Cấu hình `environment: \"jsdom\"` để có DOM giả lập. Các matcher như `toHaveTextContent`, `toBeInTheDocument` không có sẵn trong Vitest mà đến từ gói `@testing-library/jest-dom`; nạp nó trong file setup (`import \"@testing-library/jest-dom/vitest\"`, khai báo ở `setupFiles`). Với các hàm gọi API, bạn có thể mock bằng `vi.fn()` hoặc dùng MSW để chặn request ở tầng mạng."
         ],
         code: {
           lang: "tsx", file: "src/features/auth/LoginForm.test.tsx",
@@ -1575,7 +1580,239 @@ test("người dùng đăng nhập và thấy dashboard", async ({ page }) => {
     quiz: [
       { q: "Query nào được Testing Library khuyến khích nhất?", options: ["container.querySelector(\".btn\")", "getByTestId(\"submit\")", "getByRole(\"button\", { name: \"Gửi\" })", "getElementsByClassName"], answer: 2, explain: "getByRole phản ánh cách người dùng và công nghệ hỗ trợ nhận biết phần tử. testId và class là chi tiết cài đặt, chỉ dùng khi không còn cách khác." },
       { q: "Phần tử hiện ra sau khi API trả về, nên dùng query nào?", options: ["getByText", "queryByText", "findByText", "getAllByText"], answer: 2, explain: "findBy trả về Promise và chờ tới khi phần tử xuất hiện hoặc hết thời gian. getBy tìm ngay và thất bại nếu chưa có." },
-      { q: "Vì sao không nên viết quá nhiều test e2e?", options: ["Playwright không ổn định", "E2e chậm, tốn công bảo trì; logic chi tiết nên kiểm tra ở unit/component test", "E2e không chạy được trong CI", "E2e không test được backend"], answer: 1, explain: "E2e chạy toàn hệ thống nên chậm và dễ vỡ khi UI đổi. Dùng cho vài luồng quan trọng, còn lại kiểm tra ở tầng nhanh hơn." }
+      { q: "Vì sao không nên viết quá nhiều test e2e?", options: ["Playwright không ổn định trên CI", "E2e chậm và tốn công bảo trì hơn nhiều", "E2e không chạy được trong CI", "E2e không kiểm tra được backend"], answer: 1, explain: "E2e chạy toàn hệ thống nên chậm và dễ vỡ khi UI đổi. Dùng cho vài luồng quan trọng, còn lại kiểm tra ở tầng nhanh hơn." }
+    ]
+  },
+  "p02.m3.t4": {
+    sections: [
+      {
+        h: "PaaS cho frontend làm gì thay bạn",
+        p: [
+          "PaaS (Platform as a Service) cho frontend như Vercel, Netlify, Cloudflare Pages/Workers nhận mã nguồn từ Git, tự chạy lệnh build, rồi phân phối kết quả qua CDN toàn cầu. Bạn không phải tự dựng server, cấu hình Nginx hay xin chứng chỉ HTTPS. Với trang tĩnh (Vite build ra thư mục `dist`), nền tảng chỉ cần phục vụ file. Với Next.js có SSR, Server Actions hay ISR, nền tảng còn phải chạy phần code server dưới dạng hàm serverless hoặc edge function.",
+          "Luồng làm việc chuẩn: kết nối repository, khai báo lệnh build và thư mục đầu ra (thường được nhận diện tự động theo framework), rồi mỗi lần push là một lần deploy. Nhánh production (thường là `main`) cập nhật domain chính; các nhánh khác và pull request nhận bản deploy riêng."
+        ],
+        list: [
+          "Vercel: do đội phát triển Next.js làm, hỗ trợ đầy đủ tính năng Next.js mà gần như không cần cấu hình.",
+          "Netlify: mạnh với site tĩnh và Jamstack, cấu hình bằng `netlify.toml`, có sẵn form và function.",
+          "Cloudflare Pages/Workers: chạy trên mạng edge của Cloudflare. Workers không phải môi trường Node.js đầy đủ, nên framework có phần server như Next.js cần adapter; xem hướng dẫn framework trong tài liệu Cloudflare trước khi chọn."
+        ]
+      },
+      {
+        h: "Preview theo pull request",
+        p: [
+          "Preview deployment là bản deploy tạm thời với URL riêng cho từng pull request hoặc từng commit. Reviewer bấm link để xem giao diện thật thay vì đọc diff, designer và QA kiểm tra trước khi merge, và bạn có thể chạy test e2e Playwright nhắm vào URL preview đó. Khi PR được merge, nhánh production được build lại và lên domain chính.",
+          "Hai điều cần nhớ: bản preview có thể công khai với bất kỳ ai có link, nên bật bảo vệ bằng mật khẩu hoặc đăng nhập nếu nội dung nhạy cảm; và preview nên trỏ tới API và database của môi trường staging, không phải production, để test không làm bẩn dữ liệu thật."
+        ]
+      },
+      {
+        h: "Biến môi trường và bí mật",
+        p: [
+          "Mỗi nền tảng cho phép đặt biến môi trường riêng cho production, preview và development. Điểm dễ sai nhất: biến có tiền tố `NEXT_PUBLIC_` (Next.js) hoặc `VITE_` (Vite) được chèn thẳng vào bundle JavaScript lúc build, ai mở DevTools cũng đọc được. Chỉ đặt vào đó giá trị công khai như URL API. Khóa bí mật (API key của bên thứ ba, chuỗi kết nối database) để ở biến không có tiền tố và chỉ đọc trong code chạy trên server (Server Component, Route Handler, Server Action).",
+          "Vì biến công khai được chèn lúc build, đổi giá trị trên dashboard xong phải build lại mới có hiệu lực. Với SPA thuần (không có server), đừng quên cấu hình fallback về `index.html` để F5 ở đường dẫn con không bị 404."
+        ],
+        code: {
+          lang: "text", file: "netlify.toml",
+          src: `[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA: mọi đường dẫn không khớp file tĩnh đều trả về index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200`
+        }
+      },
+      {
+        h: "Domain riêng và rollback",
+        p: [
+          "Để dùng domain riêng, bạn thêm domain trong dashboard của nền tảng rồi tạo bản ghi DNS theo hướng dẫn: subdomain như `app.example.com` thường dùng bản ghi CNAME trỏ tới nền tảng, còn domain gốc `example.com` dùng bản ghi A hoặc ALIAS/ANAME theo giá trị nền tảng cung cấp. Chứng chỉ HTTPS được cấp và gia hạn tự động sau khi DNS trỏ đúng.",
+          "Mỗi lần deploy là bất biến (immutable) và được giữ lại, nên khi bản mới lỗi, bạn có thể đưa bản deploy trước đó lên production gần như tức thì thay vì build lại. Hãy biết rõ nút rollback nằm ở đâu trước khi cần tới nó."
+        ]
+      }
+    ],
+    summary: [
+      "PaaS frontend build từ Git và phục vụ qua CDN; Next.js có phần server cần nền tảng chạy được function.",
+      "Mỗi pull request có preview URL riêng để review và chạy e2e.",
+      "Biến `NEXT_PUBLIC_`/`VITE_` lộ ra trình duyệt; bí mật chỉ đọc ở server.",
+      "Domain riêng cấu hình bằng CNAME/A/ALIAS; HTTPS tự động.",
+      "Deploy bất biến nên rollback về bản trước rất nhanh."
+    ],
+    pitfalls: [
+      "Đặt API key bí mật vào biến `NEXT_PUBLIC_` hoặc `VITE_`: khóa bị đóng gói vào bundle và lộ công khai. Chuyển lời gọi đó về server.",
+      "Preview deployment trỏ vào database production, test trên PR làm hỏng dữ liệu thật. Tách biến môi trường cho preview.",
+      "Đổi biến môi trường trên dashboard rồi thắc mắc vì sao trang không đổi. Biến dùng lúc build cần một lần build lại."
+    ],
+    quiz: [
+      { q: "Biến `NEXT_PUBLIC_API_KEY` trong dự án Next.js sẽ thế nào?", options: ["Chỉ đọc được trong Server Component", "Được chèn vào bundle client, ai cũng đọc được", "Được nền tảng mã hóa trước khi gửi đi", "Bị bỏ qua khi build ở môi trường production"], answer: 1, explain: "Tiền tố NEXT_PUBLIC_ báo Next.js chèn giá trị vào JavaScript gửi xuống trình duyệt. Bí mật phải dùng biến không có tiền tố và chỉ đọc ở server." },
+      { q: "Lợi ích chính của preview deployment là gì?", options: ["Thay thế hoàn toàn cho test tự động", "Mỗi PR có URL riêng để xem và test trước khi merge", "Giúp bản production build nhanh hơn", "Tự động sửa lỗi giao diện trong PR"], answer: 1, explain: "Preview cho reviewer, QA xem bản chạy thật của từng PR và có thể chạy e2e nhắm vào URL đó. Nó bổ sung chứ không thay thế test tự động." },
+      { q: "Bản deploy mới gây lỗi trên production. Cách phục hồi nhanh nhất trên PaaS thường là gì?", options: ["Sửa code rồi chờ pipeline build lại", "Đưa bản deploy trước đó lên production", "Xóa domain rồi thêm lại từ đầu", "Tắt CDN để người dùng tải trực tiếp"], answer: 1, explain: "Các bản deploy được giữ lại và bất biến, nên đưa bản cũ lên production gần như tức thì. Sửa code và build lại mất nhiều thời gian hơn khi người dùng đang bị ảnh hưởng." }
+    ]
+  },
+  "p02.m2.t7": {
+    sections: [
+      {
+        h: "Kiểu cho props và children",
+        p: [
+          "TypeScript trong React giúp bắt lỗi ngay khi gõ: quên truyền prop bắt buộc, truyền sai kiểu, gõ nhầm tên prop. Props của component chỉ là tham số đầu tiên của một hàm, nên bạn khai báo kiểu bằng `type` hoặc `interface` như với mọi hàm khác. Prop không bắt buộc đánh dấu `?` và gán giá trị mặc định ngay khi destructuring.",
+          "Với `children`, dùng `React.ReactNode`: đây là union của mọi thứ JSX có thể render (chuỗi, số, element, mảng, `null`). `React.ReactElement` hẹp hơn, chỉ nhận JSX element, không nhận chuỗi hay số.",
+          "Khi bọc một thẻ HTML như `button` hay `input`, đừng tự liệt kê lại hàng chục thuộc tính. Dùng `ComponentProps<'button'>` để lấy đầy đủ props gốc (kể cả `onClick`, `disabled`, `type`) rồi cộng thêm prop riêng. Dùng `Omit` nếu muốn thay kiểu của một prop có sẵn."
+        ],
+        code: {
+          lang: "tsx",
+          file: "src/components/Button.tsx",
+          src: `import type { ComponentProps, ReactNode } from 'react';
+
+type ButtonProps = ComponentProps<'button'> & {
+  variant?: 'primary' | 'ghost';
+  icon?: ReactNode;
+};
+
+export function Button({ variant = 'primary', icon, children, className, ...rest }: ButtonProps) {
+  return (
+    <button className={\`btn btn-\${variant} \${className ?? ''}\`} {...rest}>
+      {icon}
+      {children}
+    </button>
+  );
+}
+
+// <Button variant="danger" />  -> lỗi kiểu: "danger" không thuộc union variant`
+        }
+      },
+      {
+        h: "Event và ref",
+        p: [
+          "Khi viết handler inline như `onChange={(e) => setQ(e.currentTarget.value)}`, TypeScript tự suy ra kiểu của `e`. Chỉ khi tách handler ra hàm riêng bạn mới cần ghi kiểu, ví dụ `React.ChangeEvent<HTMLInputElement>` hay `React.KeyboardEvent<HTMLInputElement>`. Đọc giá trị qua `currentTarget` vì nó có kiểu đúng là phần tử gắn handler.",
+          "Với React 19, `useRef` bắt buộc có đối số. `useRef<HTMLInputElement>(null)` trả về `RefObject<HTMLInputElement | null>`, nên phải kiểm tra `ref.current?.focus()`. Component hàm nhận `ref` như một prop bình thường, không cần `forwardRef` nữa; `ComponentProps<'input'>` đã chứa sẵn prop `ref`. Ref callback không được trả về giá trị ngầm định, vì TypeScript hiểu giá trị trả về là hàm cleanup."
+        ],
+        code: {
+          lang: "tsx",
+          file: "src/components/SearchBox.tsx",
+          src: `import { useRef, type ChangeEvent, type ComponentProps } from 'react';
+
+type SearchBoxProps = Omit<ComponentProps<'input'>, 'onChange'> & {
+  onQueryChange: (query: string) => void;
+};
+
+export function SearchBox({ onQueryChange, ref, ...rest }: SearchBoxProps) {
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    onQueryChange(e.currentTarget.value.trim());
+  }
+  return <input type="search" ref={ref} onChange={handleChange} {...rest} />;
+}
+
+export function ProductFilter() {
+  const inputRef = useRef<HTMLInputElement>(null); // RefObject<HTMLInputElement | null>
+  return (
+    <>
+      <SearchBox ref={inputRef} placeholder="Tìm sản phẩm" onQueryChange={console.log} />
+      <button onClick={() => inputRef.current?.focus()}>Tìm</button>
+    </>
+  );
+}`
+        }
+      },
+      {
+        h: "Custom hook và component generic",
+        p: [
+          "Custom hook là hàm bình thường nên có thể dùng generic. Hook gọi API nên trả về discriminated union theo `status`: khi đã kiểm tra `status === 'success'`, TypeScript biết chắc `data` tồn tại, không cần `data!`.",
+          "Component generic hữu ích cho bảng, danh sách, select dùng chung cho nhiều loại dữ liệu. Kiểu `T` được suy ra từ prop `items`, nên trong `renderItem` bạn có đầy đủ gợi ý thuộc tính. Trong file `.tsx`, arrow function generic phải viết `<T,>` để không bị hiểu nhầm là thẻ JSX; dùng `function` thì không gặp vấn đề này."
+        ],
+        code: {
+          lang: "tsx",
+          file: "src/features/orders/OrderList.tsx",
+          src: `import { useEffect, useState, type ReactNode } from 'react';
+
+type FetchState<T> =
+  | { status: 'loading' }
+  | { status: 'error'; error: Error }
+  | { status: 'success'; data: T };
+
+export function useFetch<T>(url: string): FetchState<T> {
+  const [state, setState] = useState<FetchState<T>>({ status: 'loading' });
+  useEffect(() => {
+    const ctrl = new AbortController();
+    setState({ status: 'loading' });
+    fetch(url, { signal: ctrl.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+        return res.json() as Promise<T>; // chỉ là ép kiểu, chưa kiểm tra dữ liệu
+      })
+      .then((data) => setState({ status: 'success', data }))
+      .catch((err: unknown) => {
+        if (!ctrl.signal.aborted) setState({ status: 'error', error: err instanceof Error ? err : new Error(String(err)) });
+      });
+    return () => ctrl.abort();
+  }, [url]);
+  return state;
+}
+
+type ListProps<T> = { items: T[]; getKey: (item: T) => string | number; renderItem: (item: T) => ReactNode };
+
+export function List<T>({ items, getKey, renderItem }: ListProps<T>) {
+  return <ul>{items.map((item) => <li key={getKey(item)}>{renderItem(item)}</li>)}</ul>;
+}
+
+type Order = { id: number; total: number };
+
+export function OrderList() {
+  const orders = useFetch<Order[]>('/api/orders');
+  if (orders.status === 'loading') return <p>Đang tải...</p>;
+  if (orders.status === 'error') return <p>{orders.error.message}</p>;
+  return <List items={orders.data} getKey={(o) => o.id} renderItem={(o) => <span>#{o.id}: {o.total}đ</span>} />;
+}`
+        }
+      },
+      {
+        h: "Khi nào để TypeScript tự suy luận",
+        p: [
+          "Không cần ghi kiểu ở mọi nơi. `useState(false)` đã là `boolean`, `useState('')` đã là `string`; kiểu trả về của component cũng được suy ra từ JSX. Ghi kiểu thừa làm code dài và dễ lệch khi sửa.",
+          "Hãy ghi kiểu rõ ràng khi giá trị ban đầu không nói hết: `useState<User | null>(null)`, `useState<Status>('idle')` với `type Status = 'idle' | 'loading' | 'error'`, `createContext<AuthContextValue | null>(null)`, và luôn ghi kiểu cho props, tham số hàm export ra ngoài."
+        ]
+      }
+    ],
+    summary: [
+      "Khai báo kiểu props bằng type/interface; children dùng React.ReactNode",
+      "Bọc thẻ HTML thì mở rộng từ ComponentProps<'button'> thay vì tự liệt kê thuộc tính",
+      "React 19: useRef bắt buộc có đối số, ref là prop bình thường, không cần forwardRef cho component mới",
+      "Custom hook trả về discriminated union giúp TypeScript thu hẹp kiểu theo status",
+      "Để TypeScript tự suy luận khi giá trị ban đầu đủ rõ; ghi kiểu khi có null hoặc union"
+    ],
+    pitfalls: [
+      "Dùng `res.json() as T` rồi tin tuyệt đối vào dữ liệu API; ép kiểu không kiểm tra lúc chạy, nên validate bằng zod hoặc schema khi dữ liệu quan trọng",
+      "Viết `useState(null)` rồi gán object sau đó, TypeScript suy ra kiểu `null` và báo lỗi; cần `useState<User | null>(null)`",
+      "Viết ref callback dạng `ref={(el) => (node = el)}` bị TypeScript báo lỗi ở React 19 vì trả về giá trị; dùng thân hàm có ngoặc nhọn"
+    ],
+    quiz: [
+      {
+        q: "Trong React 19, cách nên dùng để component hàm mới nhận `ref` từ component cha là gì?",
+        options: [
+          "Bắt buộc bọc component bằng `forwardRef`",
+          "Khai báo `ref` như một prop bình thường",
+          "Gọi `useImperativeHandle` mà không cần prop",
+          "Chuyển component hàm thành class component"
+        ],
+        answer: 1,
+        explain: "Từ React 19, component hàm đọc được `ref` trực tiếp từ props. `forwardRef` vẫn chạy nhưng không cần cho component mới và sẽ bị deprecate trong tương lai."
+      },
+      {
+        q: "Với @types/react 19, `useRef<HTMLInputElement>(null)` trả về kiểu gì?",
+        options: [
+          "`MutableRefObject<HTMLInputElement>`",
+          "`HTMLInputElement | null` trực tiếp",
+          "`Ref<HTMLInputElement>` chỉ đọc",
+          "`RefObject<HTMLInputElement | null>`"
+        ],
+        answer: 3,
+        explain: "React 19 gộp về một kiểu `RefObject<T>` có `current` ghi được; overload cho đối số `null` trả về `RefObject<T | null>`. `MutableRefObject` đã bị đánh dấu deprecated."
+      },
+      {
+        q: "Kiểu nào phù hợp cho prop `children` cần nhận cả chuỗi, số, JSX và mảng?",
+        options: ["`React.ReactNode`", "`React.ReactElement`", "`React.CSSProperties`", "`string | number`"],
+        answer: 0,
+        explain: "`ReactNode` là union mọi thứ JSX render được. `ReactElement` chỉ nhận JSX element, còn `string | number` bỏ sót element và mảng."
+      }
     ]
   },
 });

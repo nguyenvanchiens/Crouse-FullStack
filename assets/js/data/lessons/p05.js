@@ -52,7 +52,7 @@ export async function verifyAndUpgrade(user: { id: number; passwordHash: string 
       {
         h: "Thực hành tốt quanh việc hash",
         p: [
-          "Hash chỉ là một phần. Hãy đặt độ dài tối thiểu (NIST khuyến nghị ít nhất 8 ký tự, tốt hơn là 12–15 trở lên) và cho phép mật khẩu dài; chặn mật khẩu nằm trong danh sách đã lộ (ví dụ qua API k-anonymity của Have I Been Pwned) thay vì ép quy tắc \"phải có ký tự đặc biệt\".",
+          "Hash chỉ là một phần. NIST SP 800-63B-4 (bản 2025) yêu cầu mật khẩu tối thiểu 15 ký tự khi mật khẩu là yếu tố xác thực duy nhất, và tối thiểu 8 ký tự khi nó chỉ là một phần của MFA; nên cho phép dài ít nhất 64 ký tự. NIST cũng yêu cầu đối chiếu với danh sách mật khẩu phổ biến/đã lộ (ví dụ qua API k-anonymity của Have I Been Pwned) và KHÔNG ép quy tắc thành phần kiểu \"phải có ký tự đặc biệt\".",
           "Hash tốn khoảng vài chục đến vài trăm mili giây là bình thường, nên endpoint đăng nhập cần rate limit để không bị lợi dụng làm DoS. Khi email không tồn tại, vẫn nên trả cùng thông báo lỗi chung để không lộ tài khoản nào có trong hệ thống.",
           "Pepper (một bí mật chung lưu ngoài DB, như trong secret manager) có thể thêm một lớp bảo vệ, nhưng không thay thế salt và thuật toán chậm."
         ]
@@ -73,10 +73,10 @@ export async function verifyAndUpgrade(user: { id: number; passwordHash: string 
       {
         q: "Vì sao SHA-256 không phù hợp để hash mật khẩu?",
         options: [
-          "Vì SHA-256 quá nhanh, cho phép thử hàng tỉ mật khẩu mỗi giây bằng GPU",
-          "Vì SHA-256 có thể giải mã ngược",
-          "Vì SHA-256 cho kết quả quá dài",
-          "Vì SHA-256 không có trong Node.js"
+          "Vì SHA-256 quá nhanh, GPU thử được hàng tỉ lần/giây",
+          "Vì SHA-256 có thể giải mã ngược nếu có khoá",
+          "Vì SHA-256 cho chuỗi quá dài, khó lưu vào DB",
+          "Vì SHA-256 đã bị gỡ khỏi node:crypto"
         ],
         answer: 0,
         explain: "SHA-256 là hàm một chiều, không giải mã được, nhưng nó được thiết kế để nhanh. Hash mật khẩu cần chậm và tốn bộ nhớ có chủ đích như Argon2id."
@@ -84,10 +84,10 @@ export async function verifyAndUpgrade(user: { id: number; passwordHash: string 
       {
         q: "Salt trong hash mật khẩu dùng để làm gì?",
         options: [
-          "Mã hoá mật khẩu để giải mã được sau này",
-          "Làm mỗi hash khác nhau kể cả khi mật khẩu giống nhau, vô hiệu hoá bảng tra sẵn",
-          "Làm mật khẩu ngắn hơn",
-          "Thay thế cho việc dùng thuật toán chậm"
+          "Mã hoá mật khẩu để giải mã được khi cần",
+          "Làm hash khác nhau dù mật khẩu giống nhau",
+          "Rút ngắn mật khẩu trước khi đưa vào hàm hash",
+          "Thay thế cho việc dùng thuật toán hash chậm"
         ],
         answer: 1,
         explain: "Salt ngẫu nhiên khiến kẻ tấn công phải tấn công từng hash riêng lẻ và không nhận ra người dùng trùng mật khẩu. Salt không thay thế được thuật toán chậm."
@@ -95,13 +95,13 @@ export async function verifyAndUpgrade(user: { id: number; passwordHash: string 
       {
         q: "Bạn muốn tăng memoryCost của Argon2id cho người dùng cũ. Cách làm hợp lý?",
         options: [
-          "Bắt mọi người đổi mật khẩu ngay",
-          "Giải mã hash cũ rồi hash lại",
-          "Khi người dùng đăng nhập thành công, kiểm tra needsRehash và hash lại bằng tham số mới",
-          "Hash lại chuỗi hash cũ"
+          "Bắt mọi người dùng đổi mật khẩu ngay hôm nay",
+          "Giải mã hash cũ ra mật khẩu rồi hash lại",
+          "Hash lại khi họ đăng nhập thành công lần tới",
+          "Chạy job hash lại chuỗi hash cũ bằng tham số mới"
         ],
         answer: 2,
-        explain: "Chỉ lúc đăng nhập bạn mới có mật khẩu gốc để hash lại. Hash không giải mã được; ép đổi mật khẩu gây phiền không cần thiết."
+        explain: "Chỉ lúc đăng nhập bạn mới có mật khẩu gốc để hash lại (kiểm tra bằng needsRehash). Hash không giải mã được; hash chồng lên hash cũ làm phức tạp việc verify; ép đổi mật khẩu gây phiền không cần thiết."
       }
     ]
   },
@@ -170,10 +170,10 @@ export async function revokeAllSessions(userId: number) {
       {
         q: "Ưu điểm chính của stateful session so với JWT là gì?",
         options: [
-          "Không cần lưu trữ gì ở server",
-          "Nhanh hơn trong mọi trường hợp",
-          "Không cần cookie",
-          "Thu hồi phiên dễ dàng bằng cách xoá bản ghi session"
+          "Không cần lưu trữ gì ở phía server",
+          "Nhanh hơn JWT trong mọi trường hợp",
+          "Không cần dùng cookie hay header",
+          "Thu hồi phiên ngay bằng cách xoá bản ghi"
         ],
         answer: 3,
         explain: "Server nắm trạng thái nên xoá session là phiên mất hiệu lực ngay. Session cần store ở server và thường dùng cookie."
@@ -181,10 +181,10 @@ export async function revokeAllSessions(userId: number) {
       {
         q: "Vì sao access token JWT nên có thời hạn ngắn?",
         options: [
-          "Vì JWT khó thu hồi trước hạn, hạn ngắn giới hạn thiệt hại khi token bị lộ",
-          "Vì JWT dài sẽ không ký được",
+          "Vì JWT khó thu hồi, hạn ngắn thu hẹp thiệt hại",
+          "Vì token có exp xa sẽ không ký được bằng HS256",
           "Vì trình duyệt tự xoá JWT sau 15 phút",
-          "Vì chuẩn JWT bắt buộc"
+          "Vì RFC 7519 bắt buộc exp tối đa 15 phút"
         ],
         answer: 0,
         explain: "Server không tra DB khi xác thực JWT nên không biết token đã bị thu hồi, hạn ngắn làm cửa sổ rủi ro nhỏ. Chuẩn JWT không quy định thời hạn cụ thể."
@@ -192,10 +192,10 @@ export async function revokeAllSessions(userId: number) {
       {
         q: "Phát biểu nào đúng về session id?",
         options: [
-          "Nên chứa userId để server khỏi tra cứu",
-          "Là chuỗi ngẫu nhiên đủ dài, không mang thông tin, được tạo mới sau khi đăng nhập",
-          "Có thể dùng id tăng dần",
-          "Nên lưu trong localStorage"
+          "Nên chứa userId để server khỏi tra cứu store",
+          "Là chuỗi ngẫu nhiên, cấp mới mỗi lần đăng nhập",
+          "Có thể dùng id tăng dần vì đã có HttpOnly",
+          "Nên lưu trong localStorage để gửi qua header"
         ],
         answer: 1,
         explain: "Session id phải không đoán được và không mang dữ liệu; tạo mới khi đăng nhập để chống session fixation. Nên lưu trong cookie HttpOnly thay vì localStorage."
@@ -253,7 +253,8 @@ export async function verifyAccessToken(token: string) {
         p: [
           "Access token ngắn hạn (5–15 phút) đi kèm refresh token dài hạn hơn (vài ngày đến vài tuần). Refresh token là chuỗi ngẫu nhiên (không cần là JWT), server lưu dạng hash trong DB để có thể thu hồi.",
           "Rotation: mỗi lần dùng refresh token để lấy access token mới, server cấp một refresh token mới và vô hiệu hoá cái cũ. Các token nối tiếp nhau thuộc cùng một \"family\".",
-          "Phát hiện tái sử dụng: nếu một refresh token đã dùng rồi lại được gửi lên, nghĩa là nó đã bị đánh cắp (hoặc người dùng thật đang dùng bản cũ). Server thu hồi toàn bộ family, buộc đăng nhập lại. Kẻ trộm chỉ dùng được đến lần xoay tiếp theo của người dùng thật."
+          "Phát hiện tái sử dụng: nếu một refresh token đã dùng rồi lại được gửi lên, nghĩa là nó đã bị đánh cắp (hoặc người dùng thật đang dùng bản cũ). Server thu hồi toàn bộ family, buộc đăng nhập lại. Kẻ trộm chỉ dùng được đến lần xoay tiếp theo của người dùng thật.",
+          "Chú ý race condition: hai tab cùng gửi một refresh token gần như đồng thời. Bước đánh dấu \"đã dùng\" phải là UPDATE có điều kiện (`WHERE used_at IS NULL`) để chỉ một request thắng. Một số hệ thống còn cho khoảng ân hạn vài giây với token vừa xoay để tránh đăng xuất nhầm người dùng thật; đó là đánh đổi giữa trải nghiệm và độ chặt."
         ],
         code: {
           lang: "typescript",
@@ -272,13 +273,18 @@ export async function rotateRefreshToken(presented: string) {
   }
 
   const next = randomBytes(32).toString('base64url');
-  await db.$transaction([
-    db.refreshToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
-    db.refreshToken.create({
+  await db.$transaction(async (tx) => {
+    // Đánh dấu "đã dùng" có điều kiện: hai request đồng thời cùng token thì chỉ một bên thắng
+    const claimed = await tx.refreshToken.updateMany({
+      where: { id: record.id, usedAt: null, revokedAt: null },
+      data: { usedAt: new Date() },
+    });
+    if (claimed.count === 0) throw new UnauthorizedException('Refresh token reuse detected');
+    await tx.refreshToken.create({
       data: { tokenHash: sha256(next), familyId: record.familyId, userId: record.userId,
-              expiresAt: new Date(Date.now() + 14 * 864e5) },
-    }),
-  ]);
+              expiresAt: new Date(Date.now() + 14 * 864e5) }, // 864e5 ms = 1 ngày
+    });
+  });
   return { refreshToken: next, accessToken: await signAccessToken(String(record.userId), []) };
 }`
         }
@@ -299,10 +305,10 @@ export async function rotateRefreshToken(presented: string) {
       {
         q: "Phát biểu nào đúng về payload của JWT đã ký (JWS)?",
         options: [
-          "Được mã hoá nên không ai đọc được",
-          "Chỉ server mới giải mã được",
-          "Chỉ được mã hoá base64url, ai có token đều đọc được; chữ ký chỉ chống sửa đổi",
-          "Tự động bị xoá khi hết hạn"
+          "Được mã hoá bằng secret nên không ai đọc được",
+          "Chỉ server giữ private key mới giải mã được",
+          "Ai có token đều đọc được, chữ ký chỉ chống sửa",
+          "Tự động bị trình duyệt xoá khi hết hạn exp"
         ],
         answer: 2,
         explain: "Base64url là mã hoá hiển thị, không phải mã hoá bí mật. Muốn giấu nội dung cần JWE, nhưng cách tốt hơn là không đặt dữ liệu nhạy cảm vào token."
@@ -311,9 +317,9 @@ export async function rotateRefreshToken(presented: string) {
         q: "Refresh token đã dùng trước đó lại được gửi lên. Server nên làm gì theo cơ chế reuse detection?",
         options: [
           "Cấp access token mới như bình thường",
-          "Tăng hạn của token",
-          "Bỏ qua và trả 200",
-          "Thu hồi toàn bộ family token đó và buộc người dùng đăng nhập lại"
+          "Gia hạn token đó thêm một chu kỳ",
+          "Bỏ qua lỗi và trả 200 rỗng",
+          "Thu hồi cả family, buộc đăng nhập lại"
         ],
         answer: 3,
         explain: "Token cũ bị dùng lại là dấu hiệu bị đánh cắp. Thu hồi cả family vô hiệu hoá cả token của kẻ trộm lẫn chuỗi hiện tại."
@@ -321,13 +327,13 @@ export async function rotateRefreshToken(presented: string) {
       {
         q: "Vì sao phải truyền `algorithms: ['HS256']` khi verify?",
         options: [
-          "Để chặn token giả mạo đổi alg trong header (như none hoặc nhầm lẫn RS256/HS256)",
-          "Để verify nhanh hơn",
-          "Vì jose không có giá trị mặc định",
-          "Để token ngắn hơn"
+          "Để không tin alg do token tự khai trong header",
+          "Để thư viện bỏ qua bước so chữ ký cho nhanh",
+          "Vì jwtVerify báo lỗi nếu thiếu tham số này",
+          "Để token sinh ra ngắn hơn khi ký"
         ],
         answer: 0,
-        explain: "Header do client gửi lên nên không đáng tin. Cố định thuật toán chấp nhận ngăn các tấn công lợi dụng việc thư viện làm theo alg trong header."
+        explain: "Header do client gửi lên nên không đáng tin. Cố định thuật toán (RFC 8725) ngăn các tấn công như alg: none hay nhầm lẫn RS256/HS256. Tham số này không bắt buộc về cú pháp trong jose và không làm token ngắn đi."
       }
     ]
   },
@@ -339,7 +345,7 @@ export async function rotateRefreshToken(presented: string) {
         list: [
           "`HttpOnly`: JavaScript trên trang không đọc được cookie qua `document.cookie`. Nếu có lỗ hổng XSS, kẻ tấn công không lấy trộm được session id. Luôn bật cho cookie xác thực.",
           "`Secure`: chỉ gửi qua HTTPS, không lộ trên mạng Wi-Fi công cộng.",
-          "`SameSite`: kiểm soát việc gửi cookie trong request từ site khác. `Strict` không bao giờ gửi cross-site; `Lax` gửi khi người dùng điều hướng cấp cao nhất bằng GET (bấm link), chặn POST từ site khác; `None` luôn gửi và bắt buộc có `Secure`. Chrome coi cookie không khai báo SameSite là `Lax`.",
+          "`SameSite`: kiểm soát việc gửi cookie trong request từ site khác. `Strict` không bao giờ gửi cross-site; `Lax` gửi khi người dùng điều hướng cấp cao nhất bằng GET (bấm link), chặn POST từ site khác; `None` luôn gửi và bắt buộc có `Secure`. Chrome coi cookie không khai báo SameSite là `Lax` (kèm ngoại lệ cho POST cấp cao nhất trong 2 phút đầu sau khi cookie được đặt), còn trình duyệt khác chưa chắc làm vậy, nên luôn khai báo SameSite tường minh.",
           "`Domain` và `Path`: phạm vi gửi cookie. Không đặt `Domain` thì cookie chỉ gửi tới đúng host đã tạo nó, an toàn hơn so với chia sẻ cho mọi subdomain.",
           "`Max-Age`/`Expires`: thời hạn. Không có hai thuộc tính này là session cookie, mất khi đóng trình duyệt (dù nhiều trình duyệt khôi phục phiên)."
         ],
@@ -378,7 +384,7 @@ export function clearSessionCookie(res: Response) {
         h: "Chọn thời hạn và các lưu ý",
         p: [
           "Thời hạn là đánh đổi giữa tiện lợi và rủi ro. Ứng dụng ngân hàng có thể hết hạn sau 15 phút không hoạt động; mạng xã hội có thể giữ vài tuần với \"ghi nhớ đăng nhập\". Hãy kết hợp idle timeout (không hoạt động) và absolute timeout (tối đa kể từ khi đăng nhập) ở phía server, vì thời hạn cookie chỉ là gợi ý cho trình duyệt.",
-          "Khi đăng xuất, xoá cả session trên server lẫn cookie trên trình duyệt. Để xoá cookie, phải gửi lại cùng tên, `Path` và `Domain` như lúc tạo. Ở môi trường dev chạy `http://localhost`, các trình duyệt hiện đại coi localhost là ngữ cảnh an toàn nên cookie `Secure` vẫn hoạt động."
+          "Khi đăng xuất, xoá cả session trên server lẫn cookie trên trình duyệt. Để xoá cookie, phải gửi lại cùng tên, `Path` và `Domain` như lúc tạo. Ở môi trường dev chạy `http://localhost`, Chrome và Firefox coi localhost là ngữ cảnh an toàn nên vẫn nhận cookie `Secure`; Safari có thể không, nên nếu gặp lỗi đăng nhập ở dev, hãy chạy dev server bằng HTTPS (ví dụ chứng chỉ tự ký qua mkcert)."
         ]
       }
     ],
@@ -404,9 +410,9 @@ export function clearSessionCookie(res: Response) {
         q: "Cookie tên `__Host-sid` bắt buộc những điều kiện nào?",
         options: [
           "Có Domain và HttpOnly",
-          "SameSite=Strict",
-          "Có Secure, Path=/ và không có Domain",
-          "Không có thời hạn"
+          "Có SameSite=Strict và HttpOnly",
+          "Có Secure, Path=/, không có Domain",
+          "Không có Max-Age và Expires"
         ],
         answer: 2,
         explain: "Đó là quy tắc của tiền tố __Host-. HttpOnly và SameSite vẫn nên đặt nhưng không phải điều kiện bắt buộc của tiền tố."
@@ -414,10 +420,10 @@ export function clearSessionCookie(res: Response) {
       {
         q: "Với `SameSite=Lax`, trường hợp nào cookie VẪN được gửi từ site khác?",
         options: [
-          "Form POST tự động từ trang của kẻ tấn công",
-          "Iframe nhúng trang của bạn",
-          "Request fetch() nền từ site khác",
-          "Người dùng bấm link điều hướng GET cấp cao nhất sang trang của bạn"
+          "Form POST tự submit từ trang kẻ tấn công",
+          "Iframe trên site khác nhúng trang của bạn",
+          "Request fetch() chạy nền từ site khác",
+          "Người dùng bấm link GET sang trang của bạn"
         ],
         answer: 3,
         explain: "Lax cho phép gửi cookie khi điều hướng cấp cao nhất bằng phương thức an toàn như GET, để người dùng bấm link vẫn đăng nhập. POST, fetch và iframe cross-site không nhận cookie."
@@ -438,7 +444,8 @@ export function clearSessionCookie(res: Response) {
       {
         h: "Authorization Code + PKCE",
         p: [
-          "Đây là flow được khuyến nghị cho mọi client có người dùng: web server, SPA, mobile. Implicit flow (trả token thẳng trên URL) không còn được khuyến nghị vì token dễ lộ qua lịch sử trình duyệt, log và header Referer. OAuth 2.1 đang được chuẩn hoá cũng loại bỏ implicit và bắt buộc PKCE."
+          "Đây là flow được khuyến nghị cho mọi client có người dùng: web server, SPA, mobile. Implicit flow (trả token thẳng trên URL) không còn được khuyến nghị vì token dễ lộ qua lịch sử trình duyệt, log và header Referer. RFC 9700 (OAuth 2.0 Security Best Current Practice, 01/2025) đã chính thức khuyến nghị không dùng implicit (SHOULD NOT), cấm password grant (MUST NOT), bắt buộc PKCE cho client công khai (SPA, mobile) và khuyến nghị PKCE cho cả client bí mật. OAuth 2.1 (vẫn đang là bản nháp IETF) gom các quy tắc đó thành chuẩn mới.",
+          "Hai loại client: confidential client (backend của bạn, giữ được `client_secret` an toàn) và public client (SPA, mobile app: mọi thứ trong code đều bị đọc được, nên không có secret). PKCE thay thế vai trò của secret cho public client ở bước đổi code."
         ],
         list: [
           "Client sinh `code_verifier` ngẫu nhiên (43–128 ký tự) và tính `code_challenge = BASE64URL(SHA256(code_verifier))`.",
@@ -490,7 +497,7 @@ export function buildAuthorizeUrl(state: string, challenge: string) {
     ],
     summary: [
       "OAuth 2.0 là ủy quyền truy cập tài nguyên, không phải giao thức đăng nhập.",
-      "SPA/mobile/web dùng Authorization Code + PKCE; implicit flow không còn khuyến nghị.",
+      "SPA/mobile/web dùng Authorization Code + PKCE; implicit và password grant không còn khuyến nghị (RFC 9700).",
       "PKCE: code_challenge = BASE64URL(SHA256(code_verifier)); code bị chặn cũng vô dụng khi thiếu verifier.",
       "`state` chống CSRF trong flow đăng nhập; client credentials cho service-to-service."
     ],
@@ -509,10 +516,10 @@ export function buildAuthorizeUrl(state: string, challenge: string) {
       {
         q: "PKCE bảo vệ khỏi nguy cơ nào?",
         options: [
-          "SQL injection",
-          "Authorization code bị đánh cắp rồi đổi lấy token",
-          "Mật khẩu yếu",
-          "DDoS"
+          "SQL injection ở token endpoint",
+          "Code bị chặn rồi đem đổi lấy token",
+          "Người dùng đặt mật khẩu yếu ở IdP",
+          "DDoS vào authorization endpoint"
         ],
         answer: 1,
         explain: "Chỉ client ban đầu có code_verifier; kẻ chặn được code không thể hoàn tất bước đổi token."
@@ -546,15 +553,18 @@ export function buildAuthorizeUrl(state: string, challenge: string) {
           file: "oidc.ts",
           src: `import { createRemoteJWKSet, jwtVerify } from 'jose';
 
-const GOOGLE_ISSUER = 'https://accounts.google.com';
+// Google tài liệu hoá hai giá trị iss hợp lệ
+const GOOGLE_ISSUERS = ['https://accounts.google.com', 'accounts.google.com'];
 const jwks = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 
 export async function verifyGoogleIdToken(idToken: string, expectedNonce: string) {
   const { payload } = await jwtVerify(idToken, jwks, {
-    issuer: GOOGLE_ISSUER,
-    audience: process.env.GOOGLE_CLIENT_ID,
+    issuer: GOOGLE_ISSUERS,
+    audience: process.env.GOOGLE_CLIENT_ID!,
+    algorithms: ['RS256'],
   });
-  if (payload.nonce !== expectedNonce) throw new Error('Invalid nonce');
+  // jose không tự kiểm tra nonce: phải so với giá trị đã lưu lúc bắt đầu đăng nhập
+  if (!expectedNonce || payload.nonce !== expectedNonce) throw new Error('Invalid nonce');
   return payload;
 }
 
@@ -604,20 +614,20 @@ export async function findOrCreateUser(p: { sub: string; email?: string; email_v
         q: "Tài liệu discovery của OIDC nằm ở đâu?",
         options: [
           "<issuer>/.well-known/openid-configuration",
-          "/oauth/token",
-          "/api/users/me",
-          "/robots.txt"
+          "<issuer>/oauth2/token",
+          "<issuer>/userinfo",
+          "<issuer>/.well-known/jwks.json"
         ],
         answer: 0,
-        explain: "Đường dẫn chuẩn là /.well-known/openid-configuration dưới issuer, chứa endpoint và jwks_uri."
+        explain: "Đường dẫn chuẩn là /.well-known/openid-configuration dưới issuer, chứa các endpoint và jwks_uri. Token endpoint, userinfo và địa chỉ JWKS được liệt kê TRONG tài liệu discovery, đường dẫn cụ thể tuỳ nhà cung cấp."
       },
       {
         q: "Mục đích của `nonce` trong OIDC?",
         options: [
-          "Mã hoá ID token",
-          "Gắn ID token với đúng yêu cầu đăng nhập của client, chống replay token",
-          "Chứa mật khẩu tạm",
-          "Xác định thời hạn token"
+          "Làm khoá để mã hoá nội dung ID token",
+          "Gắn ID token với đúng lượt đăng nhập, chống replay",
+          "Chứa mật khẩu dùng một lần cho người dùng",
+          "Xác định thời điểm ID token hết hạn"
         ],
         answer: 1,
         explain: "Client tạo nonce ngẫu nhiên khi bắt đầu, IdP đưa nó vào ID token, client kiểm tra khớp. Thời hạn nằm ở exp; nonce không mã hoá gì."
@@ -678,7 +688,7 @@ export function verifyTotp(secret: Buffer, code: string, now = Date.now()): bigi
         h: "Luồng quên mật khẩu",
         p: [
           "Token reset mật khẩu thực chất là một mật khẩu tạm thời, nên phải được bảo vệ tương xứng: sinh ngẫu nhiên từ CSPRNG (tối thiểu 128 bit), chỉ dùng một lần, có hạn ngắn (ví dụ 15–60 phút), và lưu dạng hash trong DB. Vì token có entropy cao, SHA-256 là đủ để hash nó (khác với mật khẩu người dùng đặt).",
-          "Luôn trả cùng một thông báo \"Nếu email tồn tại, chúng tôi đã gửi hướng dẫn\" để không lộ email nào đã đăng ký. Sau khi đặt lại thành công: vô hiệu hoá token, thu hồi mọi session và refresh token đang có, gửi email thông báo mật khẩu đã đổi. Link reset phải dùng domain cố định trong cấu hình, không lấy từ header `Host` của request."
+          "Luôn trả cùng một thông báo \"Nếu email tồn tại, chúng tôi đã gửi hướng dẫn\" để không lộ email nào đã đăng ký; thời gian phản hồi cũng phải tương đương, nên thực tế hãy đẩy việc gửi email vào queue thay vì `await` gửi ngay trong request như ví dụ rút gọn bên dưới. Sau khi đặt lại thành công: vô hiệu hoá token, thu hồi mọi session và refresh token đang có, gửi email thông báo mật khẩu đã đổi. Link reset phải dùng domain cố định trong cấu hình, không lấy từ header `Host` của request."
         ],
         code: {
           lang: "typescript",
@@ -725,10 +735,10 @@ export async function resetPassword(token: string, newPassword: string) {
       {
         q: "Vì sao secret TOTP được mã hoá chứ không hash như mật khẩu?",
         options: [
-          "Vì hash quá chậm",
-          "Vì TOTP không cần bảo mật",
-          "Vì server cần đọc lại secret gốc để tính mã và so sánh",
-          "Vì hash làm mã dài hơn"
+          "Vì Argon2id quá chậm cho mỗi lần nhập mã",
+          "Vì secret TOTP không cần bảo mật như mật khẩu",
+          "Vì server cần secret gốc để tự tính lại mã",
+          "Vì hash làm mã 6 số dài thêm vài ký tự"
         ],
         answer: 2,
         explain: "Mật khẩu chỉ cần so sánh nên hash là đủ; TOTP phải tính lại HMAC từ secret gốc nên cần mã hoá có thể giải mã, với khoá đặt ngoài DB."
@@ -739,7 +749,7 @@ export async function resetPassword(token: string, newPassword: string) {
           "Sinh ngẫu nhiên từ CSPRNG",
           "Dùng một lần và có hạn ngắn",
           "Lưu dạng hash trong DB",
-          "Chứa email người dùng dạng rõ để tiện tra cứu"
+          "Chứa email dạng rõ để tra cứu"
         ],
         answer: 3,
         explain: "Token không nên mang thông tin người dùng; server tra bằng hash của token. Ba tính chất còn lại là bắt buộc."
@@ -747,10 +757,10 @@ export async function resetPassword(token: string, newPassword: string) {
       {
         q: "Khi người dùng nhập email không tồn tại ở form quên mật khẩu, nên phản hồi thế nào?",
         options: [
-          "Trả cùng thông báo chung như khi email tồn tại",
-          "Báo \"Email không tồn tại\"",
-          "Trả lỗi 500",
-          "Tự tạo tài khoản mới"
+          "Trả cùng thông báo như khi email tồn tại",
+          "Báo rõ \"Email không tồn tại trong hệ thống\"",
+          "Trả lỗi 404 Not Found cho email đó",
+          "Tự tạo tài khoản mới với email đó"
         ],
         answer: 0,
         explain: "Thông báo giống nhau ngăn kẻ tấn công dò xem email nào đã đăng ký (user enumeration)."
@@ -856,27 +866,27 @@ export class PermissionsGuard implements CanActivate {
       {
         q: "Vì sao nên kiểm tra theo permission (`article:publish`) thay vì theo tên role?",
         options: [
-          "Vì permission ngắn hơn",
-          "Vì có thể thay đổi role nào có quyền gì bằng dữ liệu mà không sửa code",
-          "Vì NestJS không hỗ trợ role",
-          "Vì role không lưu được trong DB"
+          "Vì chuỗi permission ngắn hơn tên role",
+          "Vì đổi quyền của role chỉ cần sửa dữ liệu",
+          "Vì NestJS Guard không đọc được tên role",
+          "Vì role không lưu được trong database"
         ],
         answer: 1,
         explain: "Code chỉ phụ thuộc vào quyền cần có; việc role nào mang quyền đó là cấu hình. Thêm role mới không cần deploy lại."
       },
       {
         q: "Trong NestJS, thành phần nào thường dùng để chặn request không đủ quyền trước khi vào handler?",
-        options: ["Pipe", "Interceptor chỉ dùng để log", "Guard", "DTO"],
+        options: ["Pipe", "Interceptor", "Guard", "DTO"],
         answer: 2,
-        explain: "Guard quyết định request có được đi tiếp hay không. Pipe để validate/biến đổi dữ liệu; DTO mô tả dữ liệu đầu vào."
+        explain: "Guard chạy trước interceptor và pipe, và có nhiệm vụ chuyên biệt là quyết định request có được đi tiếp hay không. Interceptor bọc quanh handler (log, biến đổi response, cache); Pipe để validate/biến đổi dữ liệu; DTO mô tả dữ liệu đầu vào."
       },
       {
         q: "Nguyên tắc \"mặc định từ chối\" nghĩa là gì?",
         options: [
-          "Mọi route đều cho phép trừ khi bị đánh dấu cấm",
-          "Chỉ cho phép phương thức GET",
-          "Từ chối mọi request của admin",
-          "Mọi route đều yêu cầu xác thực/quyền trừ khi được đánh dấu công khai rõ ràng"
+          "Mọi route đều mở, trừ route bị đánh dấu cấm",
+          "Chỉ cho phép phương thức GET khi chưa đăng nhập",
+          "Từ chối mọi request đến từ tài khoản admin",
+          "Mọi route đều bị chặn, trừ route đánh dấu công khai"
         ],
         answer: 3,
         explain: "Quên đánh dấu một route thì nó vẫn được bảo vệ, an toàn hơn nhiều so với quên chặn một route."
@@ -974,10 +984,10 @@ allow if {
       {
         q: "Khi dùng CASL, vì sao phải nạp tài nguyên từ DB trước khi gọi ability.can?",
         options: [
-          "Vì CASL không chạy khi không có DB",
-          "Vì điều kiện (authorId, status) phải được so trên dữ liệu thật, không phải dữ liệu client gửi",
-          "Để tăng tốc",
-          "Vì CASL chỉ hỗ trợ MongoDB"
+          "Vì CASL cần kết nối DB để chạy được",
+          "Vì điều kiện phải so trên dữ liệu thật trong DB",
+          "Vì nạp trước giúp ability.can chạy nhanh hơn",
+          "Vì createMongoAbility chỉ chạy với MongoDB"
         ],
         answer: 1,
         explain: "Quyết định dựa trên thuộc tính chỉ đúng khi thuộc tính đáng tin. createMongoAbility chỉ dùng cú pháp điều kiện kiểu MongoDB, không đòi hỏi dùng MongoDB."
@@ -985,10 +995,10 @@ allow if {
       {
         q: "Lợi ích chính của OPA là gì?",
         options: [
-          "Thay thế hoàn toàn việc xác thực",
-          "Tự động mã hoá dữ liệu",
-          "Tách policy khỏi code, quản lý và test tập trung, dùng chung cho nhiều service",
-          "Thay thế database"
+          "Thay thế hoàn toàn bước xác thực người dùng",
+          "Tự động mã hoá dữ liệu trước khi lưu",
+          "Tách policy khỏi code, dùng chung nhiều service",
+          "Lưu trữ dữ liệu người dùng thay cho database"
         ],
         answer: 2,
         explain: "OPA là policy engine đa dụng: service hỏi, OPA trả lời theo policy Rego. Nó không làm xác thực hay mã hoá."
@@ -1065,10 +1075,10 @@ async createInvoice(currentUserId: string, dto: CreateInvoiceDto) {
       {
         q: "Cách sửa IDOR đáng tin cậy nhất là gì?",
         options: [
-          "Đổi id sang UUID",
-          "Ẩn id khỏi giao diện",
-          "Mã hoá id bằng base64",
-          "Kiểm tra quyền sở hữu phía server, ví dụ đưa `customerId = currentUser` vào điều kiện truy vấn"
+          "Đổi id tăng dần sang UUID ngẫu nhiên",
+          "Ẩn id khỏi URL và giao diện",
+          "Mã hoá id bằng base64 trước khi trả về",
+          "Đưa điều kiện sở hữu vào truy vấn ở server"
         ],
         answer: 3,
         explain: "Chỉ kiểm tra phía server mới ngăn truy cập trái phép. UUID, ẩn id hay base64 chỉ làm việc đoán khó hơn, không kiểm soát truy cập."
@@ -1082,10 +1092,10 @@ async createInvoice(currentUserId: string, dto: CreateInvoiceDto) {
       {
         q: "Mass assignment là gì?",
         options: [
-          "Gửi quá nhiều request",
-          "Client gửi thêm trường không được phép (như role) và API lưu thẳng vào DB",
-          "Gán nhiều role cho một user",
-          "Tạo nhiều bản ghi cùng lúc"
+          "Client gửi quá nhiều request trong một giây",
+          "API lưu cả trường client tự thêm, như role",
+          "Admin gán nhiều role cho cùng một user",
+          "API tạo hàng loạt bản ghi trong một request"
         ],
         answer: 1,
         explain: "Lỗi xảy ra khi API map toàn bộ body vào model. Dùng DTO whitelist để chỉ nhận trường cho phép."
@@ -1131,9 +1141,11 @@ CREATE INDEX projects_tenant_idx ON projects (tenant_id, id);`
           src: `ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects FORCE ROW LEVEL SECURITY;
 
+-- nullif: sau khi transaction trước kết thúc, biến có thể còn là chuỗi rỗng '' (không phải NULL);
+-- ''::uuid sẽ báo lỗi, còn NULL làm điều kiện sai => không thấy dòng nào (fail closed)
 CREATE POLICY tenant_isolation ON projects
-  USING (tenant_id = current_setting('app.tenant_id', true)::uuid)
-  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
+  USING (tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid)
+  WITH CHECK (tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid);
 
 -- Role ứng dụng: không phải owner, không BYPASSRLS
 CREATE ROLE app_user LOGIN PASSWORD 'đổi-bằng-secret-thật';
@@ -1175,21 +1187,21 @@ COMMIT;`
       {
         q: "Vì sao nên dùng `set_config('app.tenant_id', x, true)` thay vì SET mức session?",
         options: [
-          "Vì nhanh hơn",
-          "Vì RLS chỉ đọc biến của set_config",
-          "Vì SET không hỗ trợ uuid",
-          "Vì giá trị chỉ tồn tại trong transaction hiện tại, không rò sang request khác dùng chung kết nối"
+          "Vì set_config chạy nhanh hơn lệnh SET",
+          "Vì policy RLS chỉ đọc được biến tạo bằng set_config",
+          "Vì lệnh SET không nhận giá trị kiểu uuid",
+          "Vì giá trị hết hiệu lực khi transaction kết thúc"
         ],
         answer: 3,
-        explain: "Tham số true làm giá trị có hiệu lực cục bộ trong transaction. Với pool, kết nối được tái sử dụng nên giá trị mức session có thể rò sang request khác."
+        explain: "Tham số true làm giá trị có hiệu lực cục bộ trong transaction (tương đương SET LOCAL). Với pool, kết nối được tái sử dụng nên giá trị mức session có thể rò sang request khác. current_setting đọc được cả biến đặt bằng SET lẫn set_config."
       },
       {
         q: "Trường hợp nào RLS KHÔNG được áp dụng?",
         options: [
-          "Superuser hoặc role có BYPASSRLS",
-          "Role thường không phải owner",
-          "Truy vấn có ORDER BY",
-          "Bảng có index"
+          "Kết nối bằng superuser hoặc role BYPASSRLS",
+          "Kết nối bằng role thường, không phải owner",
+          "Truy vấn có ORDER BY và LIMIT",
+          "Bảng có index trên cột tenant_id"
         ],
         answer: 0,
         explain: "Superuser và role BYPASSRLS luôn bỏ qua RLS; owner cũng bỏ qua nếu không FORCE. Vì vậy ứng dụng phải dùng role thường."
@@ -1347,7 +1359,7 @@ await prisma.$queryRaw\`SELECT id FROM users WHERE email = \${email}\`;`
           src: `import { z } from 'zod';
 
 const LoginDto = z.object({
-  email: z.string().email(),
+  email: z.email(), // Zod 4; bản 3 viết z.string().email()
   password: z.string().min(1).max(200),
 });
 
@@ -1378,10 +1390,10 @@ export async function login(body: unknown) {
       {
         q: "Vì sao parameterized query chống được SQL injection?",
         options: [
-          "Vì câu lệnh được phân tích trước và giá trị gửi riêng, nên dữ liệu không bao giờ được hiểu là SQL",
-          "Vì nó mã hoá dữ liệu",
-          "Vì nó xoá dấu nháy",
-          "Vì nó chỉ cho phép số"
+          "Vì giá trị gửi tách khỏi câu lệnh, không bị hiểu là SQL",
+          "Vì driver mã hoá giá trị trước khi gửi tới DB",
+          "Vì driver tự xoá dấu nháy và từ khoá SQL",
+          "Vì tham số chỉ được phép là số hoặc UUID"
         ],
         answer: 0,
         explain: "Tách cấu trúc câu lệnh khỏi dữ liệu là bản chất của phòng chống injection. Không có mã hoá hay xoá ký tự nào ở đây."
@@ -1494,10 +1506,10 @@ export function safeHref(url: string) {
       {
         q: "Vai trò của Content-Security-Policy là gì?",
         options: [
-          "Giới hạn nguồn script/tài nguyên trình duyệt được phép chạy, giảm thiệt hại khi có XSS",
-          "Thay thế hoàn toàn việc escape output",
-          "Mã hoá cookie",
-          "Chặn SQL injection"
+          "Giới hạn nguồn script được chạy, giảm thiệt hại XSS",
+          "Thay thế hoàn toàn việc escape output ở server",
+          "Mã hoá cookie phiên trước khi gửi cho trình duyệt",
+          "Chặn SQL injection trong tham số query string"
         ],
         answer: 0,
         explain: "CSP là lớp phòng thủ bổ sung ở trình duyệt. Escape output vẫn là biện pháp chính; CSP không liên quan SQL hay cookie."
@@ -1505,13 +1517,13 @@ export function safeHref(url: string) {
       {
         q: "Khi cần hiển thị HTML do người dùng soạn, cách đúng là gì?",
         options: [
-          "Đưa thẳng vào innerHTML",
-          "Sanitize bằng thư viện như DOMPurify với danh sách thẻ và thuộc tính cho phép",
-          "Xoá mọi dấu < bằng regex",
-          "Base64 nội dung"
+          "Đưa thẳng vào innerHTML vì đã escape khi lưu",
+          "Sanitize bằng DOMPurify với whitelist thẻ",
+          "Xoá thẻ <script> bằng một regex tự viết",
+          "Base64 nội dung rồi giải mã ở trình duyệt"
         ],
         answer: 1,
-        explain: "Thư viện sanitize phân tích HTML thật sự và loại bỏ phần nguy hiểm. Regex tự viết rất dễ bị vượt qua; base64 không hiển thị được."
+        explain: "Thư viện sanitize phân tích HTML thật sự và loại bỏ phần nguy hiểm. Regex tự viết rất dễ bị vượt qua (onerror, javascript:, thẻ lồng); base64 rồi giải mã chỉ đưa lại đúng payload cũ; escape khi lưu không bảo vệ khi render bằng innerHTML ở ngữ cảnh khác."
       }
     ]
   },
@@ -1590,10 +1602,10 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
       {
         q: "Vì sao API dùng `Authorization: Bearer` do JavaScript gắn không bị CSRF kiểu truyền thống?",
         options: [
-          "Vì Bearer token được mã hoá",
-          "Vì Bearer token luôn ngắn hạn",
-          "Vì trình duyệt không tự động gửi header Authorization đó cho request từ site khác",
-          "Vì CORS chặn mọi request"
+          "Vì Bearer token luôn được mã hoá bằng JWE",
+          "Vì Bearer token luôn có hạn dưới 15 phút",
+          "Vì trình duyệt không tự đính kèm header đó",
+          "Vì CORS chặn mọi request cross-site tới API"
         ],
         answer: 2,
         explain: "CSRF dựa vào thông tin xác thực trình duyệt tự đính kèm như cookie. Trang của kẻ tấn công không có token để tự gắn vào header."
@@ -1601,10 +1613,10 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
       {
         q: "Tại sao CSRF token chống được CSRF?",
         options: [
-          "Vì token làm request nhanh hơn",
-          "Vì token mã hoá body",
-          "Vì token thay thế cookie phiên",
-          "Vì trang của kẻ tấn công không đọc được token hợp lệ nên không gửi kèm được"
+          "Vì token làm server xử lý request nhanh hơn",
+          "Vì token dùng để mã hoá body của request",
+          "Vì token thay thế hoàn toàn cookie phiên",
+          "Vì trang kẻ tấn công không đọc được token"
         ],
         answer: 3,
         explain: "Same-Origin Policy ngăn trang khác đọc token từ trang của bạn, nên request giả mạo thiếu token và bị từ chối."
@@ -1613,9 +1625,9 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
         q: "Với SameSite=Lax, loại request cross-site nào vẫn mang cookie?",
         options: [
           "Điều hướng cấp cao nhất bằng GET",
-          "Form POST tự submit",
-          "fetch() với method PUT",
-          "Iframe POST"
+          "Form POST tự submit từ site khác",
+          "fetch() với method PUT từ site khác",
+          "Form POST bên trong iframe cross-site"
         ],
         answer: 0,
         explain: "Lax cho phép cookie trong điều hướng cấp cao nhất bằng GET. Vì vậy GET không được có tác dụng phụ."
@@ -1702,10 +1714,10 @@ bootstrap();`
       {
         q: "Phát biểu nào đúng về CORS?",
         options: [
-          "CORS ngăn mọi client gọi API của bạn",
-          "CORS là cơ chế trình duyệt quyết định JavaScript có được đọc response cross-origin hay không",
-          "CORS thay thế xác thực",
-          "CORS mã hoá dữ liệu"
+          "CORS chặn mọi client lạ gọi tới API của bạn",
+          "CORS do trình duyệt thực thi, curl bỏ qua được",
+          "CORS có thể thay thế bước xác thực người dùng",
+          "CORS mã hoá response giữa hai origin"
         ],
         answer: 1,
         explain: "CORS chỉ có hiệu lực trong trình duyệt. Client khác như curl bỏ qua nó, nên API vẫn cần xác thực và phân quyền."
@@ -1724,13 +1736,13 @@ bootstrap();`
       {
         q: "Khi nào trình duyệt gửi preflight OPTIONS?",
         options: [
-          "Với mọi request",
+          "Với mọi request, kể cả cùng origin",
           "Chỉ khi server yêu cầu bằng header",
-          "Chỉ với request cùng origin",
-          "Với request cross-origin không đơn giản, ví dụ PATCH hoặc có header Authorization"
+          "Chỉ với request GET cùng origin",
+          "Với request cross-origin như PATCH"
         ],
         answer: 3,
-        explain: "Preflight dành cho request cross-origin dùng method hoặc header ngoài nhóm \"đơn giản\". Request cùng origin không cần CORS."
+        explain: "Preflight dành cho request cross-origin dùng method (PUT, PATCH, DELETE) hoặc header (Authorization, Content-Type: application/json) ngoài nhóm \"đơn giản\". Request cùng origin không cần CORS."
       }
     ]
   },
@@ -1814,10 +1826,10 @@ const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5
       {
         q: "Vì sao địa chỉ 169.254.169.254 là mục tiêu phổ biến của SSRF trên cloud?",
         options: [
-          "Vì đó là dịch vụ metadata của instance, có thể trả credential tạm thời của IAM role",
-          "Vì đó là DNS server công cộng",
-          "Vì đó là địa chỉ của load balancer",
-          "Vì đó là địa chỉ broadcast"
+          "Vì đó là metadata service, có thể trả credential",
+          "Vì đó là DNS server công cộng của cloud",
+          "Vì đó là địa chỉ nội bộ của load balancer",
+          "Vì đó là địa chỉ broadcast của VPC"
         ],
         answer: 0,
         explain: "Metadata service link-local chỉ truy cập được từ bên trong instance; SSRF biến server thành cầu nối để đọc nó."
@@ -1825,10 +1837,10 @@ const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5
       {
         q: "DNS rebinding vượt qua kiểm tra SSRF như thế nào?",
         options: [
-          "Bằng cách mã hoá URL",
-          "Tên miền trả IP công khai lúc kiểm tra nhưng trả IP nội bộ lúc server thực sự kết nối",
-          "Bằng cách dùng HTTPS",
-          "Bằng cách gửi nhiều request"
+          "Mã hoá URL bằng percent-encoding để qua bộ lọc",
+          "DNS trả IP công khai lúc kiểm tra, IP nội bộ lúc kết nối",
+          "Dùng HTTPS để bộ lọc không đọc được hostname",
+          "Gửi thật nhiều request cho đến khi bộ lọc quá tải"
         ],
         answer: 1,
         explain: "Nếu kiểm tra và kết nối phân giải DNS hai lần, kẻ tấn công đổi kết quả ở giữa. Cách phòng là kết nối bằng đúng IP đã kiểm tra."
@@ -1859,12 +1871,12 @@ const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5
       {
         h: "Cấu hình trong NestJS",
         p: [
-          "`@nestjs/throttler` cung cấp guard giới hạn theo IP mặc định. Bạn đặt giới hạn chung cho toàn ứng dụng và giới hạn chặt hơn cho endpoint nhạy cảm. Khi chạy nhiều instance, cấu hình storage dùng Redis. Nếu ứng dụng đứng sau load balancer, cấu hình `trust proxy` đúng số tầng để lấy IP thật của client, nếu không mọi người dùng sẽ có chung IP của proxy (hoặc tệ hơn, kẻ tấn công tự giả mạo `X-Forwarded-For`)."
+          "`@nestjs/throttler` cung cấp guard giới hạn theo IP mặc định. Bạn đặt giới hạn chung cho toàn ứng dụng và giới hạn chặt hơn cho endpoint nhạy cảm. Chú ý đơn vị: từ `@nestjs/throttler` v5, `ttl` tính bằng mili giây (bài viết cũ dùng giây sẽ sai 1000 lần). Mặc định bộ đếm nằm trong bộ nhớ của từng process; khi chạy nhiều instance, cấu hình tuỳ chọn `storage` bằng một storage Redis (ví dụ package cộng đồng `@nest-lab/throttler-storage-redis`). Nếu ứng dụng đứng sau load balancer, cấu hình `trust proxy` đúng số tầng để lấy IP thật của client, nếu không mọi người dùng sẽ có chung IP của proxy (hoặc tệ hơn, kẻ tấn công tự giả mạo `X-Forwarded-For`)."
         ],
         code: {
           lang: "typescript",
           file: "app.module.ts",
-          src: `import { Module } from '@nestjs/common';
+          src: `import { Body, Controller, Module, Post } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule, Throttle } from '@nestjs/throttler';
 
@@ -1877,6 +1889,7 @@ import { ThrottlerGuard, ThrottlerModule, Throttle } from '@nestjs/throttler';
 export class AppModule {}
 
 // auth.controller.ts: siết chặt endpoint đăng nhập
+@Controller('auth')
 export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
@@ -1916,10 +1929,10 @@ export class AuthController {
       {
         q: "Vì sao chỉ giới hạn theo IP là chưa đủ cho endpoint đăng nhập?",
         options: [
-          "Vì IP luôn giống nhau",
-          "Vì IP là dữ liệu nhạy cảm",
-          "Vì Redis không lưu được IP",
-          "Vì botnet dùng rất nhiều IP khác nhau để tấn công cùng một tài khoản"
+          "Vì mọi client đều có chung một địa chỉ IP",
+          "Vì IP là dữ liệu cá nhân nên không được lưu",
+          "Vì Redis không lưu được địa chỉ IPv6",
+          "Vì botnet dùng nhiều IP cho cùng một tài khoản"
         ],
         answer: 3,
         explain: "Mỗi IP chỉ thử vài lần là dưới ngưỡng, nhưng tổng hàng nghìn IP thì thành brute-force. Kết hợp giới hạn theo tài khoản."
@@ -1933,10 +1946,10 @@ export class AuthController {
       {
         q: "Rủi ro của việc khoá cứng tài khoản sau 5 lần đăng nhập sai là gì?",
         options: [
-          "Không có rủi ro",
-          "Kẻ tấn công có thể cố tình khoá tài khoản của người dùng thật (từ chối dịch vụ)",
-          "Làm mật khẩu yếu đi",
-          "Làm lộ mật khẩu"
+          "Không có rủi ro, càng khoá sớm càng an toàn",
+          "Kẻ xấu cố tình khoá tài khoản người dùng thật",
+          "Làm hash mật khẩu trong DB yếu đi",
+          "Làm lộ mật khẩu qua thông báo lỗi"
         ],
         answer: 1,
         explain: "Chỉ cần biết email là có thể khoá tài khoản nạn nhân. Khoá tạm thời, độ trễ tăng dần và CAPTCHA cân bằng tốt hơn."
@@ -2027,10 +2040,10 @@ bootstrap();`
       {
         q: "HSTS bảo vệ khỏi điều gì?",
         options: [
-          "SQL injection",
-          "Brute-force",
-          "XSS",
-          "Kết nối bị hạ cấp xuống HTTP và bị nghe lén/sửa đổi"
+          "SQL injection qua form đăng nhập",
+          "Brute-force mật khẩu từ nhiều IP",
+          "XSS từ script của bên thứ ba",
+          "Kết nối bị hạ cấp xuống HTTP thường"
         ],
         answer: 3,
         explain: "HSTS khiến trình duyệt tự dùng HTTPS cho domain, không gửi request HTTP có thể bị chặn giữa đường."
@@ -2038,10 +2051,10 @@ bootstrap();`
       {
         q: "`X-Content-Type-Options: nosniff` có tác dụng gì?",
         options: [
-          "Ngăn trình duyệt tự đoán kiểu nội dung khác với Content-Type đã khai báo",
-          "Nén response",
-          "Chặn cookie",
-          "Bật HTTPS"
+          "Cấm trình duyệt tự đoán kiểu nội dung",
+          "Yêu cầu trình duyệt không nén response",
+          "Chặn trình duyệt lưu cookie của trang",
+          "Buộc trình duyệt chuyển sang HTTPS"
         ],
         answer: 0,
         explain: "Không cho MIME sniffing giúp một file khai báo là ảnh hay văn bản không bị trình duyệt thực thi như script."
@@ -2071,7 +2084,7 @@ bootstrap();`
 import { z } from 'zod';
 
 const Secrets = z.object({
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.url(), // Zod 4; bản 3 viết z.string().url()
   JWT_SECRET: z.string().min(32),
   STRIPE_API_KEY: z.string().startsWith('sk_'),
 });
@@ -2111,10 +2124,10 @@ export async function loadSecrets() {
       {
         q: "Bạn phát hiện file `.env` chứa mật khẩu DB production đã bị push lên GitHub. Việc đầu tiên nên làm?",
         options: [
-          "Xoá file và force push",
-          "Đổi (rotate) mật khẩu DB ngay, coi như secret đã lộ",
-          "Chuyển repo sang private",
-          "Không làm gì nếu repo ít người xem"
+          "Xoá file khỏi lịch sử rồi force push",
+          "Đổi mật khẩu DB ngay, coi như đã lộ",
+          "Chuyển repo sang private ngay lập tức",
+          "Bỏ qua nếu repo ít người theo dõi"
         ],
         answer: 1,
         explain: "Secret đã lên remote có thể đã bị bot quét trong vài phút. Chỉ thay secret mới vô hiệu hoá được nó; dọn lịch sử là bước sau."
@@ -2122,10 +2135,10 @@ export async function loadSecrets() {
       {
         q: "Phát biểu nào đúng về Kubernetes Secret mặc định?",
         options: [
-          "Được mã hoá mạnh bằng AES",
-          "Không thể đọc được bởi ai",
-          "Chỉ được mã hoá base64, cần bật encryption at rest hoặc dùng secret manager bên ngoài",
-          "Tự động rotate"
+          "Được mã hoá AES trong etcd theo mặc định",
+          "Không ai đọc được, kể cả cluster admin",
+          "Chỉ là base64, ai có quyền đọc là giải được",
+          "Tự động rotate giá trị theo chu kỳ 90 ngày"
         ],
         answer: 2,
         explain: "Base64 chỉ là cách mã hoá hiển thị, ai có quyền đọc Secret đều giải được. Encryption at rest cho etcd và phân quyền RBAC là cần thiết."
@@ -2133,10 +2146,10 @@ export async function loadSecrets() {
       {
         q: "Vì sao ứng dụng nên truy cập secret manager bằng IAM role/workload identity?",
         options: [
-          "Vì nhanh hơn",
-          "Vì bắt buộc bởi Node.js",
-          "Vì secret manager không hỗ trợ access key",
-          "Vì không phải lưu thêm một access key dài hạn, vốn lại là một secret có thể bị lộ"
+          "Vì lấy secret bằng IAM role nhanh hơn",
+          "Vì AWS SDK cho Node.js bắt buộc như vậy",
+          "Vì secret manager không nhận access key",
+          "Vì khỏi phải giữ thêm một access key dài hạn"
         ],
         answer: 3,
         explain: "Danh tính workload cấp credential ngắn hạn tự động, tránh bài toán \"secret để lấy secret\"."
@@ -2199,6 +2212,8 @@ updates:
     groups:
       minor-and-patch:
         update-types: ["minor", "patch"]
+    cooldown:
+      default-days: 7        # chỉ đề xuất bản đã phát hành ít nhất 7 ngày
     open-pull-requests-limit: 10
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -2216,16 +2231,16 @@ updates:
     pitfalls: [
       "Dùng `npm install` trong CI, phiên bản có thể trôi khác với máy dev. Dùng `npm ci`.",
       "Bỏ qua cảnh báo audit mãi vì \"toàn lỗi dev dependency\" và rồi bỏ lỡ lỗi thật ở production dependency. Tách `--omit=dev` và xử lý lỗi production.",
-      "Cài package vừa được phát hành vài giờ trước vào production. Các package độc hại thường bị phát hiện và gỡ trong vài ngày; để có độ trễ trước khi nâng cấp."
+      "Cài package vừa được phát hành vài giờ trước vào production. Các package độc hại thường bị phát hiện và gỡ trong vài ngày; đặt độ trễ trước khi nâng cấp bằng `cooldown` của Dependabot, `minimumReleaseAge` của Renovate hoặc của pnpm."
     ],
     quiz: [
       {
         q: "Vì sao nên dùng `npm ci` thay cho `npm install` trong CI?",
         options: [
-          "Vì npm ci cài chính xác theo lockfile và báo lỗi nếu lockfile lệch package.json",
-          "Vì npm ci cài bản mới nhất",
-          "Vì npm ci không cần mạng",
-          "Vì npm install không có trong Node.js 24"
+          "Vì npm ci cài đúng lockfile, lệch là báo lỗi",
+          "Vì npm ci luôn cài bản mới nhất của mỗi gói",
+          "Vì npm ci cài offline, không cần tải từ registry",
+          "Vì npm install đã bị gỡ khỏi npm đi kèm Node.js 24"
         ],
         answer: 0,
         explain: "npm ci đảm bảo build tái lập được, đúng với những gì đã được review trong lockfile. Nó vẫn cần tải package và không cài bản mới nhất."
@@ -2233,10 +2248,10 @@ updates:
       {
         q: "Typosquatting là gì?",
         options: [
-          "Lỗi chính tả trong code",
-          "Phát hành package độc hại có tên gần giống package phổ biến để người dùng gõ nhầm",
-          "Package bị bỏ bảo trì",
-          "Package có quá nhiều dependency"
+          "Lỗi chính tả trong tên biến của code",
+          "Package độc hại đặt tên gần giống gói phổ biến",
+          "Package phổ biến bị maintainer bỏ bảo trì",
+          "Package kéo theo quá nhiều dependency gián tiếp"
         ],
         answer: 1,
         explain: "Kẻ tấn công lợi dụng lỗi gõ nhầm tên như expresss, lodahs. Kiểm tra kỹ tên package khi cài."
@@ -2244,10 +2259,10 @@ updates:
       {
         q: "Lợi ích của lockfile là gì?",
         options: [
-          "Làm package nhỏ hơn",
-          "Tự động vá lỗ hổng",
-          "Ghim chính xác phiên bản và hash toàn vẹn của mọi package, kể cả gián tiếp",
-          "Chặn mọi package độc hại"
+          "Làm dung lượng node_modules nhỏ hơn",
+          "Tự động nâng lên bản đã vá lỗ hổng",
+          "Ghim phiên bản và hash của mọi package",
+          "Chặn mọi package độc hại khi cài"
         ],
         answer: 2,
         explain: "Lockfile giúp mọi nơi cài cùng một cây dependency và phát hiện file bị thay đổi. Nó không tự vá lỗi hay chặn được package độc hại đã có trong lockfile."
@@ -2331,10 +2346,10 @@ export function decrypt(payload: string): string {
       {
         q: "Khác biệt giữa `sslmode=require` và `sslmode=verify-full` trong Postgres?",
         options: [
-          "Không khác",
-          "require nhanh gấp đôi",
-          "verify-full không mã hoá",
-          "require chỉ mã hoá; verify-full còn kiểm tra chứng chỉ và hostname của server"
+          "Không khác, chỉ là hai tên gọi",
+          "require dùng TLS 1.3, verify-full dùng TLS 1.2",
+          "verify-full kiểm tra chứng chỉ nhưng không mã hoá",
+          "verify-full kiểm tra thêm CA và hostname"
         ],
         answer: 3,
         explain: "Không xác minh chứng chỉ thì kẻ đứng giữa có thể giả làm server. verify-full kiểm tra CA và tên host."
@@ -2342,10 +2357,10 @@ export function decrypt(payload: string): string {
       {
         q: "Vì sao chọn AES-GCM thay vì AES-CBC tự ghép?",
         options: [
-          "Vì GCM là mã hoá có xác thực, phát hiện được bản mã bị sửa đổi",
-          "Vì GCM không cần khoá",
+          "Vì GCM phát hiện được bản mã bị sửa",
+          "Vì GCM không cần quản lý khoá",
           "Vì GCM cho bản mã ngắn hơn plaintext",
-          "Vì CBC không còn trong Node.js"
+          "Vì CBC đã bị gỡ khỏi node:crypto"
         ],
         answer: 0,
         explain: "GCM tạo auth tag; giải mã sẽ lỗi nếu dữ liệu bị sửa. CBC không có xác thực và cần ghép thêm MAC đúng cách, dễ sai."
@@ -2353,13 +2368,13 @@ export function decrypt(payload: string): string {
       {
         q: "Envelope encryption mang lại lợi ích gì?",
         options: [
-          "Không cần khoá",
-          "Master key nằm trong KMS không rời đi; rotate master key không cần mã hoá lại toàn bộ dữ liệu",
-          "Dữ liệu không cần mã hoá",
-          "Thay thế TLS"
+          "Ứng dụng không cần dùng khoá nào",
+          "Rotate master key không phải mã hoá lại dữ liệu",
+          "Dữ liệu được lưu dạng rõ, chỉ khoá được mã hoá",
+          "Thay thế được TLS khi truyền dữ liệu"
         ],
         answer: 1,
-        explain: "Chỉ các data key (nhỏ) được mã hoá lại khi rotate master key. Dữ liệu vẫn được mã hoá bằng data key."
+        explain: "Master key nằm trong KMS không rời đi; khi rotate chỉ các data key (nhỏ) được mã hoá lại. Dữ liệu vẫn được mã hoá bằng data key, và envelope encryption không thay thế TLS."
       }
     ]
   },
@@ -2449,10 +2464,10 @@ export function maskEmail(email: string) {
       {
         q: "Tính chất quan trọng nhất của audit log là gì?",
         options: [
-          "Lưu trong RAM để nhanh",
-          "Chứa mật khẩu để tiện điều tra",
-          "Chỉ ghi thêm, không ai sửa hoặc xoá được, kể cả admin ứng dụng",
-          "Xoá sau 1 ngày"
+          "Lưu trong RAM để ghi thật nhanh",
+          "Chứa cả mật khẩu để tiện điều tra",
+          "Chỉ ghi thêm, không ai sửa hay xoá được",
+          "Tự xoá sau 1 ngày để tiết kiệm dung lượng"
         ],
         answer: 2,
         explain: "Audit log chỉ có giá trị khi đáng tin; nếu kẻ tấn công sửa được thì không còn là bằng chứng. Không bao giờ chứa mật khẩu."
@@ -2466,13 +2481,281 @@ export function maskEmail(email: string) {
       {
         q: "Cách tốt nhất để tránh PII lọt vào log là gì?",
         options: [
-          "Cấu hình redact tự động ở logger và chỉ log định danh thay vì dữ liệu cá nhân",
-          "Nhắc dev cẩn thận",
-          "Tắt toàn bộ log",
-          "Mã hoá base64 dữ liệu trước khi log"
+          "Redact tự động ở logger, chỉ log userId",
+          "Nhắc dev cẩn thận trong mỗi lần review",
+          "Tắt toàn bộ log trên môi trường production",
+          "Base64 các trường cá nhân trước khi log"
         ],
         answer: 0,
         explain: "Biện pháp tự động ở một chỗ đáng tin hơn trông chờ con người. Tắt log làm mất khả năng điều tra; base64 không che giấu gì."
+      }
+    ]
+  },
+
+  "p05.m0.t7": {
+    sections: [
+      {
+        h: "Passkey là gì và vì sao chống được phishing?",
+        p: [
+          "Mật khẩu có hai điểm yếu cố hữu: người dùng dùng lại mật khẩu ở nhiều nơi, và họ có thể bị lừa gõ mật khẩu vào trang giả. Ngay cả OTP qua SMS hay ứng dụng cũng bị trang phishing chuyển tiếp theo thời gian thực. Passkey là cách đăng nhập không mật khẩu do FIDO Alliance cùng W3C chuẩn hoá qua đặc tả WebAuthn.",
+          "Cơ chế cốt lõi là mật mã khoá công khai. Khi đăng ký, thiết bị của người dùng (điện thoại, laptop, khoá bảo mật) tạo một cặp khoá riêng cho website đó. Server chỉ lưu khoá công khai; khoá bí mật không bao giờ rời thiết bị hoặc trình quản lý passkey. Khi đăng nhập, server gửi một challenge ngẫu nhiên, thiết bị ký challenge sau khi người dùng mở khoá bằng vân tay, khuôn mặt hoặc PIN.",
+          "Phần chống phishing nằm ở chỗ credential gắn với một RP ID, tức tên miền của relying party (website của bạn). Trình duyệt tự đưa origin thật vào dữ liệu được ký (`clientDataJSON`), nên trang giả `examp1e.com` không thể dùng passkey của `example.com`. Nếu database bị lộ, kẻ tấn công cũng không có gì để đăng nhập vì khoá công khai không thay được khoá bí mật."
+        ]
+      },
+      {
+        h: "Hai nghi thức: đăng ký và xác thực",
+        list: [
+          "Đăng ký (registration): server tạo options gồm challenge, thông tin RP (`rpID`, `rpName`) và user; trình duyệt gọi `navigator.credentials.create()`; server kiểm tra challenge, origin, RP ID rồi lưu credential ID, khoá công khai, counter, transports.",
+          "Xác thực (authentication): server tạo challenge mới; trình duyệt gọi `navigator.credentials.get()`; server tìm credential theo ID, kiểm tra chữ ký bằng khoá công khai đã lưu.",
+          "Challenge phải ngẫu nhiên, chỉ dùng một lần và có hạn ngắn; lưu phía server (session hoặc Redis) chứ không tin giá trị client gửi lên.",
+          "Discoverable credential (passkey thực thụ) cho phép đăng nhập mà không cần gõ username: người dùng chọn tài khoản ngay trong hộp thoại của hệ điều hành."
+        ],
+        p: [
+          "Tự phân tích CBOR, COSE key và kiểm tra chữ ký rất dễ sai, vì vậy hãy dùng thư viện đã được kiểm chứng như SimpleWebAuthn (`@simplewebauthn/server` ở backend, `@simplewebauthn/browser` ở frontend)."
+        ]
+      },
+      {
+        h: "Triển khai với SimpleWebAuthn trong NestJS",
+        p: [
+          "Ví dụ dưới đây là phần service phía server. Frontend gọi `startRegistration({ optionsJSON })` hoặc `startAuthentication({ optionsJSON })` của `@simplewebauthn/browser` rồi POST kết quả về. Trường `counter` có thể luôn bằng 0 với passkey được đồng bộ qua cloud, nên đừng coi counter không tăng là tấn công trong trường hợp đó."
+        ],
+        code: {
+          lang: "typescript",
+          file: "passkey.service.ts",
+          src: `import {
+  generateRegistrationOptions, verifyRegistrationResponse,
+  generateAuthenticationOptions, verifyAuthenticationResponse,
+} from '@simplewebauthn/server';
+
+const rpID = 'example.com';
+const origin = 'https://example.com';
+
+export async function startRegister(user: { id: string; email: string }) {
+  const existing = await db.passkey.findMany({ where: { userId: user.id } });
+  const options = await generateRegistrationOptions({
+    rpName: 'DevPath Shop',
+    rpID,
+    userName: user.email,
+    attestationType: 'none',
+    excludeCredentials: existing.map((c) => ({ id: c.id, transports: c.transports })),
+    authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
+  });
+  await redis.set(\`webauthn:reg:\${user.id}\`, options.challenge, 'EX', 300);
+  return options; // gửi cho frontend
+}
+
+export async function finishRegister(userId: string, body: any) {
+  const expectedChallenge = await redis.getdel(\`webauthn:reg:\${userId}\`);
+  if (!expectedChallenge) throw new Error('Challenge hết hạn');
+  const { verified, registrationInfo } = await verifyRegistrationResponse({
+    response: body, expectedChallenge, expectedOrigin: origin, expectedRPID: rpID,
+  });
+  if (!verified || !registrationInfo) throw new Error('Đăng ký thất bại');
+  const { credential } = registrationInfo;
+  await db.passkey.create({ data: {
+    id: credential.id, userId, publicKey: Buffer.from(credential.publicKey),
+    counter: credential.counter, transports: credential.transports ?? [],
+  } });
+}
+
+export async function finishLogin(sessionId: string, body: any) {
+  const expectedChallenge = await redis.getdel(\`webauthn:auth:\${sessionId}\`);
+  const passkey = await db.passkey.findUnique({ where: { id: body.id } });
+  if (!expectedChallenge || !passkey) throw new Error('Không hợp lệ');
+  const { verified, authenticationInfo } = await verifyAuthenticationResponse({
+    response: body, expectedChallenge, expectedOrigin: origin, expectedRPID: rpID,
+    credential: { id: passkey.id, publicKey: new Uint8Array(passkey.publicKey),
+                  counter: passkey.counter, transports: passkey.transports },
+  });
+  if (!verified) throw new Error('Sai chữ ký');
+  await db.passkey.update({ where: { id: passkey.id },
+    data: { counter: authenticationInfo.newCounter } });
+  return passkey.userId; // tạo session như bình thường
+}
+// startLogin: generateAuthenticationOptions({ rpID }) rồi lưu challenge tương tự`
+        }
+      }
+    ],
+    summary: [
+      "Passkey dùng cặp khoá công khai/bí mật; server chỉ lưu khoá công khai nên lộ DB không lộ thông tin đăng nhập.",
+      "Credential gắn với RP ID và trình duyệt ký kèm origin thật, nên trang phishing không dùng được passkey.",
+      "Hai nghi thức: đăng ký (`credentials.create`) và xác thực (`credentials.get`), đều dựa trên challenge ngẫu nhiên, dùng một lần.",
+      "Dùng thư viện đã kiểm chứng như SimpleWebAuthn thay vì tự kiểm tra CBOR/chữ ký.",
+      "Cho phép một tài khoản có nhiều passkey và giữ phương án khôi phục tài khoản an toàn."
+    ],
+    pitfalls: [
+      "Đặt `rpID` sai (ví dụ có cổng hoặc `https://`) hoặc đổi tên miền sau khi triển khai, mọi passkey đã đăng ký thành vô dụng. RP ID là tên miền thuần, chọn cẩn thận ngay từ đầu.",
+      "Lưu challenge ở client hoặc cho dùng lại nhiều lần, mở đường cho tấn công replay. Lưu phía server, đặt TTL ngắn và xoá ngay sau khi kiểm tra.",
+      "Làm passkey rất chắc nhưng luồng khôi phục tài khoản chỉ cần email yếu hoặc SMS, kẻ tấn công sẽ đi đường vòng đó. Bảo vệ luồng khôi phục tương xứng."
+    ],
+    quiz: [
+      {
+        q: "Điều gì giúp passkey chống được trang phishing giả mạo tên miền?",
+        options: [
+          "Server lưu khoá bí mật và so sánh với khoá người dùng gửi lên",
+          "Người dùng phải nhập thêm mã OTP gửi qua SMS mỗi lần đăng nhập",
+          "Trình duyệt mã hoá mật khẩu trước khi gửi nó lên cho server",
+          "Credential gắn với RP ID và trình duyệt ký kèm origin thật"
+        ],
+        answer: 3,
+        explain: "Trình duyệt chỉ cho dùng credential với đúng RP ID và đưa origin vào `clientDataJSON` được ký, nên trang giả không nhận được chữ ký hợp lệ. Server chỉ lưu khoá công khai; passkey không dùng OTP hay mật khẩu."
+      },
+      {
+        q: "Khi đăng ký passkey thành công, server cần lưu những gì?",
+        options: [
+          "Credential ID, khoá công khai, counter và transports",
+          "Khoá bí mật, credential ID và vân tay của người dùng",
+          "Challenge, khoá bí mật và tên thiết bị của người dùng",
+          "Mật khẩu đã băm, challenge và mã PIN của thiết bị"
+        ],
+        answer: 0,
+        explain: "Khoá bí mật và dữ liệu sinh trắc học không bao giờ rời thiết bị. Server lưu credential ID để tra cứu, khoá công khai để kiểm tra chữ ký, counter và transports; challenge chỉ tồn tại tạm thời."
+      },
+      {
+        q: "Vì sao challenge phải được sinh và lưu ở server, dùng một lần?",
+        options: [
+          "Để trình duyệt có thể tạo cặp khoá mới nhanh hơn",
+          "Để chữ ký cũ bị bắt được không thể gửi lại lần nữa",
+          "Để server có thể giải mã khoá bí mật của thiết bị",
+          "Để thiết bị có thể bỏ qua bước xác minh người dùng"
+        ],
+        answer: 1,
+        explain: "Mỗi lần xác thực ký trên một challenge mới, nên chữ ký cũ không khớp với challenge hiện tại và bị từ chối, chống replay. Challenge không liên quan tới tốc độ tạo khoá hay bước xác minh người dùng, và server không bao giờ có khoá bí mật."
+      }
+    ]
+  },
+
+  "p05.m2.t8": {
+    sections: [
+      {
+        h: "Upload file: mọi thứ từ client đều có thể giả",
+        p: [
+          "Chức năng upload avatar hay hoá đơn trông đơn giản nhưng là cửa ngõ tấn công quen thuộc: kẻ xấu tải lên file `.php` hay `.html` rồi truy cập để chạy mã, gửi file vài GB làm đầy đĩa, dùng tên file như `../../etc/passwd` để ghi đè, hoặc tải SVG chứa JavaScript để XSS người xem. Header `Content-Type` và phần đuôi tên file đều do client gửi nên có thể giả tuỳ ý.",
+          "OWASP File Upload Cheat Sheet đưa ra các nguyên tắc chính:"
+        ],
+        list: [
+          "Giới hạn kích thước ngay ở tầng nhận request (multer, reverse proxy), không đợi nhận xong mới kiểm tra.",
+          "Dùng allowlist đuôi file cần cho nghiệp vụ, không dùng blocklist; kiểm tra thêm chữ ký file (magic bytes) thay vì tin `Content-Type`.",
+          "Tự sinh tên file (UUID), không dùng tên người dùng gửi lên làm đường dẫn.",
+          "Lưu ngoài web root, tốt nhất là object storage (S3, R2, MinIO) hoặc domain riêng; trả file với `Content-Disposition: attachment` nếu không cần hiển thị.",
+          "Với file từ người lạ, cân nhắc quét malware hoặc xử lý lại (re-encode ảnh) để loại nội dung nhúng."
+        ]
+      },
+      {
+        h: "Ví dụ trong NestJS",
+        p: [
+          "Đoạn code giới hạn 5 MB bằng tuỳ chọn `limits` của multer, kiểm tra magic bytes của PNG/JPEG, sinh tên ngẫu nhiên rồi đẩy lên S3. Với file lớn, cách tốt hơn là cấp presigned URL để client upload thẳng lên S3, nhưng vẫn phải giới hạn kích thước và kiểm tra lại file sau khi upload."
+        ],
+        code: {
+          lang: "typescript",
+          file: "avatar.controller.ts",
+          src: `import { BadRequestException, Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { randomUUID } from 'node:crypto';
+
+const SIGNATURES: Record<string, number[]> = {
+  png: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+  jpg: [0xff, 0xd8, 0xff],
+};
+
+function detectType(buf: Buffer): string | null {
+  for (const [ext, sig] of Object.entries(SIGNATURES)) {
+    if (sig.every((b, i) => buf[i] === b)) return ext;
+  }
+  return null;
+}
+
+@Controller('avatars')
+export class AvatarController {
+  @Post()
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024, files: 1 } }))
+  async upload(@UploadedFile() file: Express.Multer.File) {
+    const ext = file && detectType(file.buffer);
+    if (!ext) throw new BadRequestException('Chỉ chấp nhận ảnh PNG hoặc JPEG');
+    const key = \`avatars/\${randomUUID()}.\${ext}\`;   // không dùng file.originalname
+    await s3.putObject({ Bucket: 'user-uploads', Key: key, Body: file.buffer,
+      ContentType: ext === 'png' ? 'image/png' : 'image/jpeg' });
+    return { key };
+  }
+}`
+        }
+      },
+      {
+        h: "Webhook: ký bằng HMAC và chống replay",
+        p: [
+          "Webhook là URL công khai để dịch vụ khác (Stripe, GitHub, cổng thanh toán) gọi vào báo sự kiện như \"đơn đã thanh toán\". Nếu không xác minh, bất kỳ ai cũng có thể POST một sự kiện giả. Cách chuẩn là HMAC-SHA256: hai bên chia sẻ một secret, bên gửi tính chữ ký trên body và gửi kèm header; bên nhận tính lại và so sánh. GitHub gửi `X-Hub-Signature-256: sha256=<hex>`; Stripe gửi `Stripe-Signature: t=<timestamp>,v1=<hex>` và ký chuỗi `timestamp + \".\" + body`.",
+          "Ba chi tiết hay sai: phải ký trên raw body đúng từng byte (trong NestJS bật `rawBody: true` ở `NestFactory.create` và đọc `req.rawBody`), vì parse JSON rồi stringify lại sẽ ra chuỗi khác; so sánh bằng `crypto.timingSafeEqual` thay vì `===` để không lộ thông tin qua thời gian phản hồi (hàm này ném lỗi nếu hai buffer khác độ dài, nên kiểm tra độ dài trước); và từ chối timestamp quá cũ (thư viện Stripe mặc định cho phép lệch 5 phút) để kẻ bắt được request không gửi lại được. Cuối cùng, lưu event ID đã xử lý vì bên gửi có thể gửi lại cùng một sự kiện."
+        ],
+        code: {
+          lang: "typescript",
+          file: "verify-webhook.ts",
+          src: `import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const TOLERANCE_SEC = 300;
+
+export function verifyWebhook(rawBody: Buffer, header: string, secret: string): boolean {
+  // header dạng: t=1758873600,v1=5257a8...
+  // (Stripe có thể gửi nhiều v1 khi đang xoay secret; bản rút gọn này chỉ lấy một)
+  const parts = Object.fromEntries(header.split(',').map((kv) => kv.split('=', 2)));
+  const t = Number(parts.t);
+  if (!t || !parts.v1) return false;
+  if (Math.abs(Date.now() / 1000 - t) > TOLERANCE_SEC) return false; // chống replay
+
+  const expected = createHmac('sha256', secret)
+    .update(\`\${t}.\`)
+    .update(rawBody)
+    .digest();
+  const received = Buffer.from(parts.v1, 'hex');
+  return received.length === expected.length && timingSafeEqual(received, expected);
+}`
+        }
+      }
+    ],
+    summary: [
+      "Không tin `Content-Type` hay tên file từ client; dùng allowlist, kiểm tra magic bytes và tự sinh tên file.",
+      "Giới hạn kích thước ngay khi nhận và lưu file ngoài web root, tốt nhất ở object storage.",
+      "Xác minh webhook bằng HMAC-SHA256 trên raw body với secret dùng chung.",
+      "So sánh chữ ký bằng `crypto.timingSafeEqual` và kiểm tra độ dài trước.",
+      "Chống replay bằng timestamp nằm trong phần được ký, cộng với lưu event ID để xử lý idempotent."
+    ],
+    pitfalls: [
+      "Lưu file upload vào thư mục `public/` do web server phục vụ trực tiếp, file `.html` hay `.svg` độc hại chạy ngay trên domain của bạn. Lưu ở bucket riêng và phục vụ qua domain tách biệt.",
+      "Tính HMAC trên `JSON.stringify(req.body)` thay vì raw body, chữ ký lúc đúng lúc sai tuỳ khoảng trắng và thứ tự khoá. Luôn dùng buffer gốc.",
+      "Xác minh chữ ký đúng nhưng không kiểm tra timestamp hay event ID, kẻ tấn công gửi lại một webhook \"đã thanh toán\" cũ nhiều lần. Kiểm tra độ mới và lưu ID đã xử lý."
+    ],
+    quiz: [
+      {
+        q: "Cách nào đáng tin nhất để biết file upload thực sự là ảnh PNG?",
+        options: [
+          "Kiểm tra header `Content-Type` là `image/png`",
+          "Kiểm tra tên file kết thúc bằng đuôi `.png`",
+          "Kiểm tra magic bytes ở đầu nội dung file",
+          "Kiểm tra dung lượng file nhỏ hơn 5 MB"
+        ],
+        answer: 2,
+        explain: "Content-Type và tên file đều do client gửi nên giả được dễ dàng. Magic bytes nằm trong nội dung file, đáng tin hơn (dù vẫn nên kết hợp allowlist và re-encode). Giới hạn dung lượng chống DoS chứ không xác định loại file."
+      },
+      {
+        q: "Vì sao nên dùng `crypto.timingSafeEqual` khi so sánh chữ ký webhook?",
+        options: [
+          "Vì nó tự tính lại HMAC từ raw body của request",
+          "Vì nó tự từ chối các request có timestamp quá cũ",
+          "Vì nó so sánh nhanh hơn `===` với chuỗi hex dài",
+          "Vì thời gian so sánh không lộ vị trí byte sai đầu tiên"
+        ],
+        answer: 3,
+        explain: "So sánh thường dừng ở byte khác đầu tiên, kẻ tấn công có thể đo thời gian để đoán dần chữ ký. timingSafeEqual chạy thời gian hằng; nó không tính HMAC, không kiểm tra timestamp và không nhằm mục đích nhanh hơn."
+      },
+      {
+        q: "Timestamp trong header chữ ký webhook giúp chống kiểu tấn công nào?",
+        options: [
+          "Kẻ tấn công gửi lại một request hợp lệ đã bắt được",
+          "Kẻ tấn công sửa body nhưng vẫn giữ nguyên chữ ký cũ",
+          "Kẻ tấn công đoán secret bằng cách thử rất nhiều lần",
+          "Kẻ tấn công tải lên file lớn làm đầy ổ đĩa của server"
+        ],
+        answer: 0,
+        explain: "Timestamp nằm trong chuỗi được ký nên không sửa được; server từ chối request quá cũ, chặn replay. Sửa body đã bị chính HMAC phát hiện; đoán secret và upload file lớn cần biện pháp khác."
       }
     ]
   },

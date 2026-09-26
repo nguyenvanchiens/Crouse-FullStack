@@ -74,9 +74,9 @@ export const log = () => als.getStore()?.log ?? logger;
       "Để level `debug` ở production, chi phí lưu trữ tăng vọt và log quan trọng bị chìm."
     ],
     quiz: [
-      { q: "Lợi ích chính của log JSON so với log chữ tự do là gì?", options: ["Dễ đọc hơn với mắt người", "Có thể lọc và tổng hợp theo từng trường trong hệ thống log", "Dung lượng luôn nhỏ hơn", "Không cần hệ thống log tập trung"], answer: 1, explain: "Trường có cấu trúc cho phép truy vấn chính xác như service=x và level=error. JSON thường không nhỏ hơn, cũng không dễ đọc hơn với người." },
-      { q: "Vì sao nên gắn request_id vào mọi dòng log?", options: ["Để log đẹp hơn", "Để gom được mọi log của một request khi điều tra", "Để thay thế metrics", "Để mã hóa log"], answer: 1, explain: "Một request sinh nhiều dòng log xen kẽ với request khác. Lọc theo request_id cho bạn đúng chuỗi sự kiện của request đó." },
-      { q: "Chiến lược sampling hợp lý là gì?", options: ["Giữ 10% mọi loại log", "Giữ toàn bộ log error, lấy mẫu log info có giá trị thấp", "Bỏ toàn bộ log error", "Chỉ log debug"], answer: 1, explain: "Log lỗi hiếm và quan trọng nên giữ hết. Log lặp lại nhiều, giá trị thấp như health check có thể lấy mẫu để giảm chi phí." }
+      { q: "Lợi ích chính của log JSON so với log chữ tự do là gì?", options: ["Dễ đọc hơn khi xem bằng mắt thường", "Lọc và tổng hợp được theo từng trường", "Dung lượng luôn nhỏ hơn log chữ", "Không cần hệ thống log tập trung"], answer: 1, explain: "Trường có cấu trúc cho phép truy vấn chính xác như service=x và level=error. JSON thường không nhỏ hơn, cũng không dễ đọc hơn với người." },
+      { q: "Vì sao nên gắn request_id vào mọi dòng log?", options: ["Để log hiển thị đẹp hơn trong terminal", "Để gom mọi log của một request khi điều tra", "Để thay thế hoàn toàn cho metrics", "Để mã hóa nội dung từng dòng log"], answer: 1, explain: "Một request sinh nhiều dòng log xen kẽ với request khác. Lọc theo request_id cho bạn đúng chuỗi sự kiện của request đó." },
+      { q: "Chiến lược sampling hợp lý là gì?", options: ["Giữ ngẫu nhiên 10% của mọi loại log", "Giữ hết log error, lấy mẫu log info giá trị thấp", "Bỏ log error, giữ toàn bộ log info", "Chỉ giữ log debug để đủ chi tiết"], answer: 1, explain: "Log lỗi hiếm và quan trọng nên giữ hết. Log lặp lại nhiều, giá trị thấp như health check có thể lấy mẫu để giảm chi phí." }
     ]
   },
   "p11.m0.t1": {
@@ -145,7 +145,7 @@ queueDepth.set(42);`
     quiz: [
       { q: "Số kết nối database đang mở nên dùng loại metric nào?", options: ["Counter", "Gauge", "Histogram", "Summary"], answer: 1, explain: "Số kết nối tăng giảm theo thời gian và là giá trị tại một thời điểm, đúng định nghĩa gauge." },
       { q: "Chữ E trong RED nghĩa là gì?", options: ["Efficiency", "Errors", "Events", "Energy"], answer: 1, explain: "RED gồm Rate, Errors, Duration: tốc độ request, lỗi và độ trễ." },
-      { q: "Vì sao histogram thường được ưu tiên hơn summary khi chạy nhiều instance?", options: ["Histogram chính xác tuyệt đối", "Bucket của histogram cộng gộp được giữa các instance rồi mới tính percentile", "Summary không có trong prom-client", "Histogram không tốn bộ nhớ"], answer: 1, explain: "Percentile đã tính sẵn của summary không cộng được với nhau. Histogram cộng số đếm từng bucket rồi dùng histogram_quantile trên tổng." }
+      { q: "Vì sao histogram thường được ưu tiên hơn summary khi chạy nhiều instance?", options: ["Histogram cho percentile chính xác tuyệt đối", "Bucket cộng gộp được giữa các instance", "Summary không có trong thư viện prom-client", "Histogram hầu như không tốn bộ nhớ"], answer: 1, explain: "Percentile đã tính sẵn của summary không cộng được với nhau. Histogram cộng số đếm từng bucket rồi dùng histogram_quantile trên tổng." }
     ]
   },
   "p11.m0.t2": {
@@ -225,9 +225,9 @@ up == 0`
       "Bỏ nhãn `le` khi gộp trước `histogram_quantile`, hàm không tính được. Giữ `by (le, ...)`."
     ],
     quiz: [
-      { q: "Trong mô hình pull, ai chủ động khởi tạo kết nối để lấy metric?", options: ["Ứng dụng đẩy lên Prometheus", "Prometheus gọi tới endpoint /metrics của target", "Grafana", "Alertmanager"], answer: 1, explain: "Prometheus scrape theo chu kỳ. Ứng dụng chỉ phơi endpoint. Pushgateway là ngoại lệ cho job ngắn hạn." },
-      { q: "Nhãn nào an toàn về cardinality?", options: ["user_id", "request_id", "route dạng template như /orders/:id", "URL đầy đủ có query string"], answer: 2, explain: "Route template có số giá trị nhỏ và hữu hạn. Các lựa chọn còn lại có số giá trị gần như vô hạn, mỗi giá trị là một chuỗi mới." },
-      { q: "Vì sao dùng `rate()` với counter thay vì nhìn giá trị thô?", options: ["Giá trị thô luôn bằng 0", "Counter chỉ tăng dần, tốc độ tăng mới phản ánh tải hiện tại, và rate xử lý được việc reset", "rate làm tròn số", "Prometheus không lưu giá trị thô"], answer: 1, explain: "Giá trị thô của counter là tổng từ lúc process khởi động, không có ý nghĩa trực tiếp. rate cho số sự kiện mỗi giây và bù trừ khi counter về 0 do restart." }
+      { q: "Trong mô hình pull, ai chủ động khởi tạo kết nối để lấy metric?", options: ["Ứng dụng đẩy metric lên Prometheus", "Prometheus gọi tới /metrics của target", "Grafana kéo metric từ ứng dụng", "Alertmanager thu thập metric định kỳ"], answer: 1, explain: "Prometheus scrape theo chu kỳ. Ứng dụng chỉ phơi endpoint. Pushgateway là ngoại lệ cho job ngắn hạn." },
+      { q: "Nhãn nào an toàn về cardinality?", options: ["user_id của người gọi", "request_id của mỗi request", "route template như /orders/:id", "URL đầy đủ có query string"], answer: 2, explain: "Route template có số giá trị nhỏ và hữu hạn. Các lựa chọn còn lại có số giá trị gần như vô hạn, mỗi giá trị là một chuỗi mới." },
+      { q: "Vì sao dùng `rate()` với counter thay vì nhìn giá trị thô?", options: ["Giá trị thô của counter luôn bằng 0", "Tốc độ tăng mới phản ánh tải, rate xử lý reset", "rate làm tròn số để dễ vẽ biểu đồ", "Prometheus không lưu giá trị thô"], answer: 1, explain: "Giá trị thô của counter là tổng từ lúc process khởi động, không có ý nghĩa trực tiếp. rate cho số sự kiện mỗi giây và bù trừ khi counter về 0 do restart." }
     ]
   },
   "p11.m0.t3": {
@@ -291,9 +291,9 @@ providers:
       "Sửa dashboard provisioning trực tiếp trên giao diện rồi mất khi Grafana khởi động lại. Sửa trong Git."
     ],
     quiz: [
-      { q: "Dashboard cho một API nên ưu tiên hiển thị gì ở đầu?", options: ["Danh sách container", "Ba chỉ số RED: rate, tỉ lệ lỗi, độ trễ percentile", "Số dòng code", "Nhiệt độ CPU"], answer: 1, explain: "RED phản ánh trực tiếp trải nghiệm người dùng của service. Tài nguyên như CPU dùng để tìm nguyên nhân sau đó." },
-      { q: "Biến template kiểu Query trong Grafana dùng để làm gì?", options: ["Lưu mật khẩu data source", "Lấy danh sách giá trị từ data source cho dropdown, các panel dùng lại qua $ten_bien", "Tạo alert", "Đổi theme"], answer: 1, explain: "Biến Query lấy giá trị như danh sách job hoặc route, giúp người xem lọc dashboard mà không phải sửa truy vấn." },
-      { q: "Lợi ích của dashboard as code là gì?", options: ["Dashboard tải nhanh hơn", "Có lịch sử thay đổi, review được và dựng lại được từ Git", "Không cần data source", "Tự động tạo alert"], answer: 1, explain: "Lưu JSON trong Git cho phép review, rollback và tái tạo môi trường. Nó không đổi tốc độ hiển thị." }
+      { q: "Dashboard cho một API nên ưu tiên hiển thị gì ở đầu?", options: ["Danh sách container đang chạy", "Rate, tỉ lệ lỗi và độ trễ percentile", "Số dòng code của service", "Nhiệt độ CPU của từng node"], answer: 1, explain: "RED phản ánh trực tiếp trải nghiệm người dùng của service. Tài nguyên như CPU dùng để tìm nguyên nhân sau đó." },
+      { q: "Biến template kiểu Query trong Grafana dùng để làm gì?", options: ["Lưu mật khẩu của data source", "Lấy giá trị từ data source làm dropdown lọc", "Tạo alert từ truy vấn của panel", "Đổi theme sáng/tối của dashboard"], answer: 1, explain: "Biến Query lấy giá trị như danh sách job hoặc route, giúp người xem lọc dashboard mà không phải sửa truy vấn." },
+      { q: "Lợi ích của dashboard as code là gì?", options: ["Dashboard tải và hiển thị nhanh hơn", "Có lịch sử, review được, dựng lại từ Git", "Không cần cấu hình data source nữa", "Grafana tự động tạo alert từ panel"], answer: 1, explain: "Lưu JSON trong Git cho phép review, rollback và tái tạo môi trường. Nó không đổi tốc độ hiển thị." }
     ]
   },
   "p11.m0.t4": {
@@ -348,7 +348,7 @@ providers:
     quiz: [
       { q: "Header W3C nào mang ngữ cảnh trace giữa các service?", options: ["x-request-id", "traceparent", "authorization", "x-forwarded-for"], answer: 1, explain: "traceparent là header chuẩn của W3C Trace Context chứa trace-id, parent span-id và flags. x-request-id là quy ước riêng, không phải chuẩn tracing." },
       { q: "Waterfall của một trace có 40 span `SELECT` gần giống nhau chạy tuần tự. Đây thường là dấu hiệu của gì?", options: ["Cache hoạt động tốt", "N+1 query", "Mạng nhanh", "Sampling sai"], answer: 1, explain: "Truy vấn lặp lại cho từng phần tử là mẫu N+1. Nên gộp thành một truy vấn hoặc dùng join/batch." },
-      { q: "Ưu điểm của tail sampling so với head sampling là gì?", options: ["Không tốn tài nguyên", "Quyết định sau khi trace hoàn tất nên giữ được mọi trace lỗi hoặc chậm", "Không cần Collector", "Giữ 100% trace"], answer: 1, explain: "Head sampling quyết định trước khi biết kết quả. Tail sampling nhìn toàn bộ trace nên chọn giữ được trace đáng quan tâm, đổi lại cần gom span ở Collector." }
+      { q: "Ưu điểm của tail sampling so với head sampling là gì?", options: ["Không tốn thêm tài nguyên nào", "Giữ được trace lỗi/chậm vì quyết định sau cùng", "Không cần Collector hay thành phần trung gian", "Luôn giữ lại 100% trace đã tạo"], answer: 1, explain: "Head sampling quyết định trước khi biết kết quả. Tail sampling nhìn toàn bộ trace nên chọn giữ được trace đáng quan tâm, đổi lại cần gom span ở Collector." }
     ]
   },
   "p11.m0.t5": {
@@ -363,7 +363,7 @@ providers:
       {
         h: "SDK và auto-instrumentation cho Node.js",
         p: [
-          "Với Node.js, gói `@opentelemetry/sdk-node` kết hợp `@opentelemetry/auto-instrumentations-node` sẽ tự tạo span cho request HTTP đến và đi, truy vấn PostgreSQL, gọi Redis mà bạn không phải sửa code nghiệp vụ. File khởi tạo phải chạy trước khi ứng dụng import các thư viện đó, vì instrumentation hoạt động bằng cách vá (patch) module lúc được nạp. Thường dùng cờ `--import` (ESM) hoặc `--require` (CommonJS) khi khởi động Node."
+          "Với Node.js, gói `@opentelemetry/sdk-node` kết hợp `@opentelemetry/auto-instrumentations-node` sẽ tự tạo span cho request HTTP đến và đi, truy vấn PostgreSQL, gọi Redis mà bạn không phải sửa code nghiệp vụ. File khởi tạo phải chạy trước khi ứng dụng import các thư viện đó, vì instrumentation hoạt động bằng cách vá (patch) module lúc được nạp. Với ứng dụng CommonJS (trường hợp phổ biến khi TypeScript biên dịch ra CommonJS, như NestJS mặc định), dùng cờ `--require` để nạp file này trước. Nếu ứng dụng là ES Modules, tài liệu OpenTelemetry yêu cầu thêm loader hook, ví dụ `node --experimental-loader=@opentelemetry/instrumentation/hook.mjs --require ./instrumentation.js app.js`; không có hook thì các module ESM sẽ không được vá."
         ],
         code: {
           lang: "typescript", file: "src/instrumentation.ts",
@@ -383,7 +383,7 @@ const sdk = new NodeSDK({
 sdk.start();
 process.on("SIGTERM", () => sdk.shutdown().finally(() => process.exit(0)));
 
-// Khởi động: node --import ./dist/instrumentation.js dist/main.js
+// Khởi động (CommonJS): node --require ./dist/instrumentation.js dist/main.js
 // Cấu hình qua biến môi trường: OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318`
         }
       },
@@ -405,15 +405,15 @@ processors:
   batch: {}
 
 exporters:
-  otlp/tempo:
+  otlp_grpc/tempo:          # Collector bản cũ đặt tên exporter này là "otlp"
     endpoint: tempo:4317
     tls: { insecure: true }
-  prometheus:
+  prometheus:               # có trong bản phân phối contrib
     endpoint: 0.0.0.0:8889
 
 service:
   pipelines:
-    traces:  { receivers: [otlp], processors: [batch], exporters: [otlp/tempo] }
+    traces:  { receivers: [otlp], processors: [batch], exporters: [otlp_grpc/tempo] }
     metrics: { receivers: [otlp], processors: [batch], exporters: [prometheus] }`
         }
       }
@@ -425,13 +425,13 @@ service:
       "Collector nhận OTLP, xử lý, rồi xuất tới Jaeger, Tempo, Prometheus, Datadog."
     ],
     pitfalls: [
-      "Import SDK sau khi đã import express hoặc pg, instrumentation không vá kịp nên không có span. Dùng `--import`/`--require` để nạp trước.",
+      "Import SDK sau khi đã import express hoặc pg, instrumentation không vá kịp nên không có span. Dùng `--require` để nạp trước (ứng dụng ESM cần thêm loader hook).",
       "Không gọi `sdk.shutdown()` khi tắt process, mất các span còn trong bộ đệm.",
       "Bật mọi instrumentation mặc định khiến dữ liệu nhiều và nhiễu (ví dụ span của thao tác file system). Tắt các instrumentation không cần qua cấu hình."
     ],
     quiz: [
-      { q: "Lợi ích chính của OpenTelemetry so với SDK riêng của từng nhà cung cấp là gì?", options: ["Miễn phí lưu trữ", "Instrument một lần theo chuẩn mở, đổi backend bằng cấu hình", "Không cần sampling", "Tự sửa lỗi code"], answer: 1, explain: "OTel tách việc tạo telemetry khỏi nơi lưu trữ. Đổi nhà cung cấp chỉ cần đổi exporter hoặc cấu hình Collector." },
-      { q: "Vì sao file khởi tạo OTel phải được nạp trước code ứng dụng?", options: ["Để giảm dung lượng bundle", "Vì auto-instrumentation vá module lúc chúng được nạp", "Vì TypeScript yêu cầu", "Để bật HTTPS"], answer: 1, explain: "Instrumentation chèn logic vào module khi module được require/import. Nếu thư viện đã được nạp trước thì có thể không bị vá." },
+      { q: "Lợi ích chính của OpenTelemetry so với SDK riêng của từng nhà cung cấp là gì?", options: ["Lưu trữ telemetry miễn phí vĩnh viễn", "Instrument một lần, đổi backend bằng cấu hình", "Không cần cấu hình sampling nữa", "Tự phát hiện và sửa lỗi trong code"], answer: 1, explain: "OTel tách việc tạo telemetry khỏi nơi lưu trữ. Đổi nhà cung cấp chỉ cần đổi exporter hoặc cấu hình Collector." },
+      { q: "Vì sao file khởi tạo OTel phải được nạp trước code ứng dụng?", options: ["Để giảm dung lượng bundle của ứng dụng", "Vì instrumentation vá module lúc được nạp", "Vì TypeScript yêu cầu thứ tự import đó", "Để Node.js bật HTTPS cho exporter"], answer: 1, explain: "Instrumentation chèn logic vào module khi module được require/import. Nếu thư viện đã được nạp trước thì có thể không bị vá." },
       { q: "Thành phần nào của Collector chịu trách nhiệm gửi dữ liệu tới Tempo hay Datadog?", options: ["Receiver", "Processor", "Exporter", "Extension"], answer: 2, explain: "Receiver nhận dữ liệu vào, processor biến đổi hoặc gom lô, exporter gửi dữ liệu ra backend." }
     ]
   },
@@ -440,7 +440,8 @@ service:
       {
         h: "Vì sao cần tập trung log",
         p: [
-          "Khi ứng dụng chạy trên nhiều container, SSH vào từng máy để đọc log là bất khả thi, và container bị xóa thì log cũng mất. Tập trung log nghĩa là một agent (Promtail, Grafana Alloy, Fluent Bit, Vector) thu log từ stdout của mọi container, gắn thêm metadata (service, pod, namespace) và gửi về một nơi lưu trữ chung để tìm kiếm.",
+          "Khi ứng dụng chạy trên nhiều container, SSH vào từng máy để đọc log là bất khả thi, và container bị xóa thì log cũng mất. Tập trung log nghĩa là một agent (Grafana Alloy, Fluent Bit, Vector, OpenTelemetry Collector) thu log từ stdout của mọi container, gắn thêm metadata (service, pod, namespace) và gửi về một nơi lưu trữ chung để tìm kiếm.",
+          "Lưu ý: nhiều tài liệu cũ dùng Promtail để đẩy log vào Loki, nhưng Promtail đã hết vòng đời (EOL) từ 2/3/2026; Grafana khuyến nghị chuyển sang Grafana Alloy (có lệnh `alloy convert` để chuyển cấu hình Promtail).",
           "Ba lựa chọn phổ biến có cách lưu khác nhau, dẫn tới chi phí và khả năng truy vấn khác nhau."
         ]
       },
@@ -484,9 +485,9 @@ sum by (service) (count_over_time({env="prod"} | json | level="error" [1m]))`
       "Không đặt retention (giữ vô thời hạn) trên CloudWatch, chi phí tăng dần mà không ai để ý."
     ],
     quiz: [
-      { q: "Vì sao Loki thường rẻ hơn Elasticsearch khi lưu cùng lượng log?", options: ["Loki không lưu nội dung log", "Loki chỉ đánh chỉ mục nhãn và nén nội dung trên object storage", "Loki xóa log sau 1 giờ", "Loki không hỗ trợ truy vấn"], answer: 1, explain: "Index toàn văn tốn nhiều tài nguyên. Loki chỉ index tập nhãn nhỏ, nội dung lưu nén giá rẻ, đổi lại tìm toàn văn chậm hơn." },
+      { q: "Vì sao Loki thường rẻ hơn Elasticsearch khi lưu cùng lượng log?", options: ["Loki bỏ qua, không lưu nội dung log", "Loki chỉ index nhãn, nén nội dung giá rẻ", "Loki tự động xóa log sau một giờ", "Loki không cho truy vấn theo thời gian"], answer: 1, explain: "Index toàn văn tốn nhiều tài nguyên. Loki chỉ index tập nhãn nhỏ, nội dung lưu nén giá rẻ, đổi lại tìm toàn văn chậm hơn." },
       { q: "Ứng dụng trong container nên ghi log ra đâu?", options: ["File trong container", "stdout/stderr", "Gửi email", "localStorage"], answer: 1, explain: "Runtime container thu stdout/stderr và agent log đọc từ đó. File trong container mất khi container bị xóa." },
-      { q: "Cách giảm chi phí log hiệu quả nhất là gì?", options: ["Tăng retention", "Giảm lượng log ngay tại nguồn: bỏ log vô ích, lấy mẫu, không log payload lớn", "Chuyển hết sang level debug", "Tắt nén"], answer: 1, explain: "Chi phí tỉ lệ với dữ liệu nạp và lưu. Ít log vô ích hơn thì mọi chi phí phía sau đều giảm." }
+      { q: "Cách giảm chi phí log hiệu quả nhất là gì?", options: ["Tăng thời gian retention của log", "Giảm lượng log ngay tại nguồn", "Chuyển mọi log sang level debug", "Tắt nén log để ghi nhanh hơn"], answer: 1, explain: "Chi phí tỉ lệ với dữ liệu nạp và lưu. Ít log vô ích hơn thì mọi chi phí phía sau đều giảm." }
     ]
   },
   "p11.m1.t0": {
@@ -545,8 +546,8 @@ sum(increase(http_request_duration_seconds_bucket{le="0.3", status!~"5.."}[30d])
     ],
     quiz: [
       { q: "SLO 99.9% trong 30 ngày tương ứng error budget khoảng bao nhiêu thời gian?", options: ["4.3 phút", "43 phút", "7.2 giờ", "3 ngày"], answer: 1, explain: "30 ngày có 43.200 phút; 0.1% của nó là 43.2 phút. 4.3 phút ứng với 99.99%, 7.2 giờ ứng với 99%." },
-      { q: "Quan hệ hợp lý giữa SLA và SLO là gì?", options: ["SLA chặt hơn SLO", "SLA lỏng hơn SLO để có vùng đệm trước khi vi phạm cam kết", "Luôn bằng nhau", "Không liên quan"], answer: 1, explain: "SLO nội bộ chặt hơn giúp bạn phát hiện và xử lý trước khi chạm ngưỡng SLA có phạt." },
-      { q: "Khi error budget đã hết, cách phản ứng phù hợp là gì?", options: ["Deploy thêm tính năng để bù", "Tạm dừng tính năng mới, ưu tiên công việc tăng độ ổn định", "Nâng SLO lên cao hơn", "Tắt cảnh báo"], answer: 1, explain: "Hết budget nghĩa là người dùng đã chịu quá mức cho phép. Chính sách chuẩn là dồn sức cho độ ổn định đến khi budget hồi phục." }
+      { q: "Quan hệ hợp lý giữa SLA và SLO là gì?", options: ["SLA chặt hơn SLO để giữ khách", "SLA lỏng hơn SLO để có vùng đệm", "SLA và SLO luôn bằng nhau", "SLA và SLO không liên quan"], answer: 1, explain: "SLO nội bộ chặt hơn giúp bạn phát hiện và xử lý trước khi chạm ngưỡng SLA có phạt." },
+      { q: "Khi error budget đã hết, cách phản ứng phù hợp là gì?", options: ["Deploy thêm tính năng mới để bù lại", "Dừng tính năng mới, ưu tiên độ ổn định", "Nâng SLO lên cao hơn để tạo áp lực", "Tắt cảnh báo cho tới cuối tháng"], answer: 1, explain: "Hết budget nghĩa là người dùng đã chịu quá mức cho phép. Chính sách chuẩn là dồn sức cho độ ổn định đến khi budget hồi phục." }
     ]
   },
   "p11.m1.t1": {
@@ -562,7 +563,7 @@ sum(increase(http_request_duration_seconds_bucket{le="0.3", status!~"5.."}[30d])
         h: "SLO burn rate",
         p: [
           "Burn rate là tốc độ tiêu error budget so với tốc độ \"vừa đủ hết đúng lúc cuối cửa sổ\". Burn rate 1 nghĩa là tiêu hết budget sau đúng 30 ngày. Burn rate 14.4 nghĩa là tiêu 2% budget trong 1 giờ, cứ thế thì hết sau khoảng 2 ngày. Công thức: tỉ lệ lỗi hiện tại chia (1 − SLO).",
-          "Cách phổ biến (theo sách SRE Workbook của Google) là cảnh báo đa cửa sổ: page khi burn rate cao ở cả cửa sổ dài (1 giờ) và cửa sổ ngắn (5 phút). Cửa sổ dài tránh báo vì vài giây lỗi thoáng qua, cửa sổ ngắn giúp alert tự tắt nhanh khi sự cố đã hết. Burn rate thấp hơn trong cửa sổ dài hơn (ví dụ 6 giờ) thì tạo ticket thay vì page."
+          "Cách phổ biến (theo sách SRE Workbook của Google) là cảnh báo đa cửa sổ: page khi burn rate cao ở cả cửa sổ dài (1 giờ) và cửa sổ ngắn (5 phút). Cửa sổ dài tránh báo vì vài giây lỗi thoáng qua, cửa sổ ngắn (thường bằng 1/12 cửa sổ dài) giúp alert tự tắt nhanh khi sự cố đã hết. Bộ ngưỡng khởi điểm mà Workbook gợi ý cho SLO 30 ngày: page khi burn rate > 14.4 trên 1 giờ và 5 phút (tiêu 2% budget); page khi burn rate > 6 trên 6 giờ và 30 phút (tiêu 5% budget); tạo ticket khi burn rate > 1 trên 3 ngày và 6 giờ (tiêu 10% budget). Đây là điểm bắt đầu, bạn điều chỉnh theo lưu lượng và mức chịu đựng của đội."
         ],
         code: {
           lang: "yaml", file: "prometheus/slo-alerts.yml",
@@ -626,9 +627,9 @@ receivers:
       "Ngưỡng tỉ lệ lỗi cố định với lưu lượng rất thấp (ban đêm 1/2 request lỗi là 50%). Cân nhắc điều kiện số request tối thiểu."
     ],
     quiz: [
-      { q: "Cảnh báo nào phù hợp để page người trực?", options: ["CPU một node vượt 80%", "Tỉ lệ lỗi 5xx đang tiêu error budget nhanh gấp 14 lần", "Có bản cập nhật hệ điều hành", "Bộ nhớ tăng 5%"], answer: 1, explain: "Burn rate cao nghĩa là người dùng đang bị ảnh hưởng và SLO sắp vỡ, cần hành động ngay. Các lựa chọn khác không trực tiếp phản ánh trải nghiệm người dùng." },
+      { q: "Cảnh báo nào phù hợp để page người trực?", options: ["CPU của một node vượt 80% trong 5 phút", "Tỉ lệ 5xx tiêu error budget nhanh gấp 14 lần", "Hệ điều hành có bản cập nhật bảo mật mới", "Bộ nhớ của service tăng 5% so với hôm qua"], answer: 1, explain: "Burn rate cao nghĩa là người dùng đang bị ảnh hưởng và SLO sắp vỡ, cần hành động ngay. Các lựa chọn khác không trực tiếp phản ánh trải nghiệm người dùng." },
       { q: "Với SLO 99.9%, tỉ lệ lỗi 1.44% ứng với burn rate bao nhiêu?", options: ["1.44", "14.4", "144", "0.144"], answer: 1, explain: "Burn rate = 0.0144 / 0.001 = 14.4." },
-      { q: "Chức năng nào thuộc Alertmanager chứ không phải Prometheus?", options: ["Đánh giá biểu thức PromQL", "Scrape metric", "Gom nhóm và định tuyến thông báo tới Slack/PagerDuty", "Lưu time series"], answer: 2, explain: "Prometheus đánh giá rule và gửi alert. Alertmanager nhận alert rồi gom nhóm, khử trùng lặp, định tuyến và gửi thông báo." }
+      { q: "Chức năng nào thuộc Alertmanager chứ không phải Prometheus?", options: ["Đánh giá biểu thức PromQL của rule", "Scrape metric từ các target", "Gom nhóm, định tuyến thông báo", "Lưu trữ time series lâu dài"], answer: 2, explain: "Prometheus đánh giá rule và gửi alert. Alertmanager nhận alert rồi gom nhóm, khử trùng lặp, định tuyến và gửi thông báo." }
     ]
   },
   "p11.m1.t2": {
@@ -681,9 +682,9 @@ Cập nhật tiếp theo: 14:40`
       "Thảo luận sự cố rải rác trong nhiều kênh chat riêng, mất thông tin cho postmortem. Dùng một kênh sự cố duy nhất."
     ],
     quiz: [
-      { q: "Vai trò chính của Incident Commander là gì?", options: ["Viết code sửa lỗi", "Điều phối, ra quyết định và phân công trong sự cố", "Viết postmortem một mình", "Trả lời khách hàng qua điện thoại"], answer: 1, explain: "IC giữ bức tranh tổng thể và điều phối. Việc sửa lỗi giao cho người xử lý kỹ thuật để IC không bị cuốn vào chi tiết." },
-      { q: "Sự cố xảy ra 5 phút sau một lần deploy. Hành động đầu tiên hợp lý là gì?", options: ["Đọc hết code thay đổi để tìm nguyên nhân gốc", "Rollback bản deploy để giảm thiểu ảnh hưởng, điều tra sau", "Chờ xem có tự hết không", "Viết postmortem"], answer: 1, explain: "Mục tiêu đầu tiên là đưa người dùng về trạng thái ổn. Rollback nhanh và an toàn, nguyên nhân có thể điều tra khi hệ thống đã ổn định." },
-      { q: "Vì sao nên cập nhật status page đều đặn kể cả khi chưa có tin mới?", options: ["Để tăng SEO", "Để người dùng biết sự cố đang được xử lý và khi nào có thông tin tiếp", "Vì SLA bắt buộc mỗi 1 phút", "Để tắt cảnh báo"], answer: 1, explain: "Im lặng khiến người dùng nghĩ không ai xử lý. Cập nhật định kỳ với thời điểm cập nhật tiếp theo giữ được niềm tin." }
+      { q: "Vai trò chính của Incident Commander là gì?", options: ["Tự viết code sửa lỗi nhanh nhất", "Điều phối, ra quyết định, phân công", "Viết postmortem một mình sau sự cố", "Trả lời khách hàng qua điện thoại"], answer: 1, explain: "IC giữ bức tranh tổng thể và điều phối. Việc sửa lỗi giao cho người xử lý kỹ thuật để IC không bị cuốn vào chi tiết." },
+      { q: "Sự cố xảy ra 5 phút sau một lần deploy. Hành động đầu tiên hợp lý là gì?", options: ["Đọc hết code thay đổi tìm nguyên nhân gốc", "Rollback để giảm ảnh hưởng, điều tra sau", "Chờ thêm xem sự cố có tự hết không", "Viết postmortem ngay khi sự cố xảy ra"], answer: 1, explain: "Mục tiêu đầu tiên là đưa người dùng về trạng thái ổn. Rollback nhanh và an toàn, nguyên nhân có thể điều tra khi hệ thống đã ổn định." },
+      { q: "Vì sao nên cập nhật status page đều đặn kể cả khi chưa có tin mới?", options: ["Để trang status được xếp hạng SEO cao", "Để người dùng biết sự cố đang được xử lý", "Vì SLA luôn bắt buộc cập nhật mỗi phút", "Để hệ thống tự tắt các cảnh báo liên quan"], answer: 1, explain: "Im lặng khiến người dùng nghĩ không ai xử lý. Cập nhật định kỳ với thời điểm cập nhật tiếp theo giữ được niềm tin." }
     ]
   },
   "p11.m1.t3": {
@@ -719,7 +720,7 @@ Cập nhật tiếp theo: 14:40`
           src: `Triệu chứng: API trả 503 trong 22 phút (14:05 - 14:27).
 1. Vì sao 503? Mọi instance hết connection tới PostgreSQL.
 2. Vì sao hết connection? Query đều chờ khóa trên bảng orders.
-3. Vì sao có khóa? Migration thêm cột có DEFAULT chạy lúc cao điểm, giữ khóa lâu.
+3. Vì sao có khóa? Migration đổi kiểu cột (ALTER COLUMN ... TYPE) ghi lại cả bảng, giữ khóa ACCESS EXCLUSIVE lâu.
 4. Vì sao migration nguy hiểm lọt qua? CI không kiểm tra loại khóa của migration.
 5. Vì sao chạy lúc cao điểm? Pipeline tự chạy migration ngay khi merge.
 
@@ -742,9 +743,9 @@ Hành động:
       "Viết postmortem xong rồi cất đi, hành động không bao giờ được thực hiện. Theo dõi trong backlog và review định kỳ."
     ],
     quiz: [
-      { q: "Mục đích chính của postmortem không đổ lỗi là gì?", options: ["Tìm người chịu trách nhiệm để kỷ luật", "Học từ sự cố và cải thiện hệ thống để giảm khả năng lặp lại", "Báo cáo cho khách hàng", "Đóng ticket nhanh"], answer: 1, explain: "Blameless giúp mọi người chia sẻ thật thông tin, từ đó tìm ra điểm yếu của hệ thống. Kỷ luật cá nhân làm người ta giấu thông tin." },
-      { q: "Hành động khắc phục nào tốt nhất?", options: ["Mọi người cẩn thận hơn khi deploy", "Thêm kiểm tra tự động trong CI chặn migration khóa bảng lớn, giao cho một người, hạn 10/10", "Họp lại vào tuần sau", "Không làm gì vì đã sửa xong"], answer: 1, explain: "Hành động tốt cụ thể, kiểm chứng được, có chủ và hạn. Các lựa chọn khác mơ hồ hoặc không tạo thay đổi." },
-      { q: "Khi nào nên dừng hỏi \"tại sao\" trong 5 Whys?", options: ["Đúng sau câu thứ 5", "Khi tìm ra người gây lỗi", "Khi tới nguyên nhân có thể thay đổi ở mức hệ thống hoặc quy trình", "Sau câu đầu tiên"], answer: 2, explain: "Số 5 chỉ là gợi ý. Mục tiêu là tới điểm có thể hành động để ngăn tái diễn, không phải tìm người để trách." }
+      { q: "Mục đích chính của postmortem không đổ lỗi là gì?", options: ["Tìm người chịu trách nhiệm để kỷ luật", "Học từ sự cố để cải thiện hệ thống", "Soạn báo cáo gửi cho khách hàng", "Đóng ticket sự cố càng nhanh càng tốt"], answer: 1, explain: "Blameless giúp mọi người chia sẻ thật thông tin, từ đó tìm ra điểm yếu của hệ thống. Kỷ luật cá nhân làm người ta giấu thông tin." },
+      { q: "Hành động khắc phục nào tốt nhất?", options: ["Nhắc mọi người cẩn thận hơn khi deploy", "Thêm kiểm tra migration vào CI, có chủ và hạn", "Họp lại vào tuần sau để bàn tiếp", "Không làm gì thêm vì lỗi đã được sửa"], answer: 1, explain: "Hành động tốt cụ thể, kiểm chứng được, có chủ và hạn. Các lựa chọn khác mơ hồ hoặc không tạo thay đổi." },
+      { q: "Khi nào nên dừng hỏi \"tại sao\" trong 5 Whys?", options: ["Đúng sau câu hỏi thứ 5", "Khi đã tìm ra người gây lỗi", "Khi tới nguyên nhân sửa được ở mức hệ thống", "Ngay sau câu hỏi đầu tiên"], answer: 2, explain: "Số 5 chỉ là gợi ý. Mục tiêu là tới điểm có thể hành động để ngăn tái diễn, không phải tìm người để trách." }
     ]
   },
   "p11.m1.t4": {
@@ -808,9 +809,9 @@ Chủ sở hữu: team-backend | Cập nhật: 2026-09-20`
       "Lệnh trong runbook đã lỗi thời (tên deployment đổi), chạy sai lúc sự cố. Review runbook định kỳ, thử lệnh trong buổi diễn tập."
     ],
     quiz: [
-      { q: "Cách tốt nhất để người trực tìm được runbook là gì?", options: ["Hỏi đồng nghiệp trên chat", "Gắn link runbook trực tiếp trong annotation của alert", "Tìm trong email cũ", "In ra giấy"], answer: 1, explain: "Link trong alert đưa người trực tới đúng tài liệu ngay lập tức, không phụ thuộc vào việc ai đang thức." },
+      { q: "Cách tốt nhất để người trực tìm được runbook là gì?", options: ["Hỏi đồng nghiệp đang online trên chat", "Gắn link runbook trong annotation của alert", "Tìm lại trong các email cũ của đội", "In runbook ra giấy để cạnh bàn"], answer: 1, explain: "Link trong alert đưa người trực tới đúng tài liệu ngay lập tức, không phụ thuộc vào việc ai đang thức." },
       { q: "Nội dung nào không cần thiết trong runbook?", options: ["Cách xác nhận alert", "Lệnh rollback cụ thể", "Lịch sử phát triển toàn bộ sản phẩm", "Người cần leo thang"], answer: 2, explain: "Runbook phục vụ hành động nhanh. Lịch sử sản phẩm không giúp xử lý sự cố và làm tài liệu dài vô ích." },
-      { q: "Khi nào nên cập nhật runbook?", options: ["Không bao giờ", "Sau mỗi sự cố mà người trực phải làm điều chưa có hoặc sai trong runbook", "Mỗi 5 năm", "Chỉ khi đổi công ty"], answer: 1, explain: "Mỗi sự cố cho thấy chỗ runbook thiếu hoặc sai. Cập nhật ngay giúp lần sau xử lý nhanh hơn." }
+      { q: "Khi nào nên cập nhật runbook?", options: ["Không bao giờ, để tránh sai lệch", "Sau sự cố mà runbook còn thiếu hoặc sai", "Định kỳ mỗi 5 năm một lần", "Chỉ khi đổi công cụ giám sát"], answer: 1, explain: "Mỗi sự cố cho thấy chỗ runbook thiếu hoặc sai. Cập nhật ngay giúp lần sau xử lý nhanh hơn." }
     ]
   },
   "p11.m1.t5": {
@@ -867,8 +868,8 @@ pg_restore -h restore-test.internal -U postgres -d orders_restore --jobs=4 "orde
     ],
     quiz: [
       { q: "RPO 15 phút nghĩa là gì?", options: ["Hệ thống phải hoạt động lại trong 15 phút", "Chấp nhận mất tối đa 15 phút dữ liệu gần nhất", "Backup giữ trong 15 ngày", "Mỗi 15 phút restart server"], answer: 1, explain: "RPO đo lượng dữ liệu được phép mất theo thời gian. Thời gian phục hồi hoạt động là RTO." },
-      { q: "Vì sao replication không thay thế được backup?", options: ["Replica chậm hơn", "Lỗi logic như DELETE nhầm cũng được nhân bản sang replica", "Replica không lưu dữ liệu", "Replication tốn tiền hơn"], answer: 1, explain: "Replication sao chép mọi thay đổi, kể cả thay đổi sai. Backup cho phép quay về thời điểm trước lỗi." },
-      { q: "Cách duy nhất để chắc chắn backup dùng được là gì?", options: ["Kiểm tra dung lượng file", "Khôi phục thử định kỳ và kiểm tra dữ liệu", "Backup hai lần mỗi ngày", "Dùng dịch vụ cloud"], answer: 1, explain: "Chỉ khôi phục thật mới phát hiện file hỏng, thiếu quyền hay thời gian vượt RTO. Dung lượng file không nói lên tính toàn vẹn." }
+      { q: "Vì sao replication không thay thế được backup?", options: ["Replica luôn chậm hơn bản chính", "DELETE nhầm cũng được nhân bản sang replica", "Replica không lưu dữ liệu xuống đĩa", "Replication tốn tiền hơn backup"], answer: 1, explain: "Replication sao chép mọi thay đổi, kể cả thay đổi sai. Backup cho phép quay về thời điểm trước lỗi." },
+      { q: "Cách duy nhất để chắc chắn backup dùng được là gì?", options: ["Kiểm tra dung lượng file backup", "Khôi phục thử định kỳ, kiểm tra dữ liệu", "Chạy backup hai lần mỗi ngày", "Dùng dịch vụ backup của cloud"], answer: 1, explain: "Chỉ khôi phục thật mới phát hiện file hỏng, thiếu quyền hay thời gian vượt RTO. Dung lượng file không nói lên tính toàn vẹn." }
     ]
   },
   "p11.m1.t6": {
@@ -939,9 +940,121 @@ spec:
       "Tìm ra điểm yếu nhưng không tạo hành động khắc phục. Mỗi phát hiện cần ticket có người chịu trách nhiệm."
     ],
     quiz: [
-      { q: "Điều gì phân biệt chaos engineering với việc phá hệ thống ngẫu nhiên?", options: ["Dùng công cụ đắt tiền", "Có giả thuyết, phạm vi giới hạn và điều kiện dừng rõ ràng", "Chỉ chạy vào ban đêm", "Không cần thông báo cho ai"], answer: 1, explain: "Chaos engineering là thí nghiệm có kiểm soát: đo trạng thái ổn định, đặt giả thuyết, giới hạn blast radius và dừng khi vượt ngưỡng." },
-      { q: "Blast radius nghĩa là gì?", options: ["Tốc độ lỗi lan", "Phạm vi hệ thống và người dùng có thể bị ảnh hưởng bởi thí nghiệm", "Số server bị xóa", "Thời gian chạy thí nghiệm"], answer: 1, explain: "Giới hạn blast radius, ví dụ một pod hay 1% lưu lượng, giữ thiệt hại nhỏ nếu giả thuyết sai." },
-      { q: "Điều kiện tiên quyết quan trọng nhất trước khi làm chaos engineering là gì?", options: ["Có Kubernetes", "Có observability đo được trạng thái ổn định của hệ thống", "Có 100 server", "Không có bug nào"], answer: 1, explain: "Không đo được thì không biết thí nghiệm ảnh hưởng thế nào và khi nào phải dừng. Kubernetes chỉ là một môi trường có thể dùng." }
+      { q: "Điều gì phân biệt chaos engineering với việc phá hệ thống ngẫu nhiên?", options: ["Dùng công cụ thương mại đắt tiền", "Có giả thuyết, phạm vi và điều kiện dừng", "Chỉ chạy vào ban đêm ít người dùng", "Không cần thông báo trước cho ai"], answer: 1, explain: "Chaos engineering là thí nghiệm có kiểm soát: đo trạng thái ổn định, đặt giả thuyết, giới hạn blast radius và dừng khi vượt ngưỡng." },
+      { q: "Blast radius nghĩa là gì?", options: ["Tốc độ lỗi lan giữa các service", "Phạm vi có thể bị ảnh hưởng bởi thí nghiệm", "Số server bị xóa trong thí nghiệm", "Tổng thời gian chạy thí nghiệm"], answer: 1, explain: "Giới hạn blast radius, ví dụ một pod hay 1% lưu lượng, giữ thiệt hại nhỏ nếu giả thuyết sai." },
+      { q: "Điều kiện tiên quyết quan trọng nhất trước khi làm chaos engineering là gì?", options: ["Có cluster Kubernetes để chạy thí nghiệm", "Có observability đo được trạng thái ổn định", "Có ít nhất 100 server trong hệ thống", "Hệ thống không còn bug nào đã biết"], answer: 1, explain: "Không đo được thì không biết thí nghiệm ảnh hưởng thế nào và khi nào phải dừng. Kubernetes chỉ là một môi trường có thể dùng." }
+    ]
+  },
+  "p11.m0.t7": {
+    sections: [
+      {
+        h: "Server xanh nhưng người dùng vẫn kêu",
+        p: [
+          "Metric backend chỉ đo từ lúc request chạm server. Nó không thấy CDN lỗi ở một vùng, bundle JavaScript 3 MB trên điện thoại cũ, hay lỗi JS làm nút \"Thanh toán\" không bấm được. Grafana toàn màu xanh trong khi khách bỏ giỏ hàng.",
+          "SRE Workbook của Google so sánh các cách đo SLI: log của load balancer (có sẵn, gần người dùng hơn log server), instrumentation JavaScript trên trang gửi về dịch vụ thu thập (phản ánh đúng trải nghiệm nhất nhưng tốn công), và prober chạy trình duyệt trong máy ảo (bắt được lỗi khi request không tới được mạng của bạn, nhưng có thể sót lỗi chỉ ảnh hưởng một nhóm người dùng). Mỗi cách đánh đổi giữa chất lượng, độ phủ và công sức."
+        ]
+      },
+      {
+        h: "Real User Monitoring với web-vitals",
+        p: [
+          "RUM đo trên trình duyệt thật của người dùng. Ba Core Web Vitals và ngưỡng \"tốt\" theo web.dev: LCP (nội dung chính hiện ra) tối đa 2,5 giây, INP (độ phản hồi khi tương tác) tối đa 200 ms, CLS (bố cục nhảy) tối đa 0,1, xét ở phân vị 75 và tách riêng mobile với desktop.",
+          "Thư viện `web-vitals` của Google gọi callback với object có `name`, `value`, `rating`, `delta`, `id`, `navigationType`. Cách gửi được README khuyến nghị: gom vào hàng đợi, flush khi `visibilitychange` sang `hidden` bằng `navigator.sendBeacon()`, vì beacon vẫn gửi được khi trang đang đóng, còn sự kiện `unload` không đáng tin trên mobile. Một endpoint nhỏ ở backend nhận dữ liệu và ghi vào histogram Prometheus, ví dụ `rum_lcp_seconds` có bucket 2.5."
+        ],
+        code: {
+          lang: "typescript", file: "src/rum.ts",
+          src: `import { onCLS, onINP, onLCP, type Metric } from 'web-vitals';
+
+const queue: object[] = [];
+const release = import.meta.env.VITE_RELEASE; // biết bản deploy nào làm chậm
+
+function push(event: object) {
+  queue.push({ ...event, route: location.pathname, release });
+}
+
+function report(m: Metric) {
+  push({ type: 'vital', name: m.name, value: m.value, rating: m.rating, id: m.id });
+}
+
+onCLS(report);
+onINP(report);
+onLCP(report);
+
+// Lỗi JS không được bắt ở đâu khác
+addEventListener('error', (e) => push({ type: 'error', message: e.message }));
+addEventListener('unhandledrejection', (e) =>
+  push({ type: 'error', message: String(e.reason) }));
+
+addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && queue.length) {
+    navigator.sendBeacon('/rum', JSON.stringify(queue.splice(0)));
+  }
+});`
+        }
+      },
+      {
+        h: "Theo dõi lỗi frontend trong React",
+        p: [
+          "Lỗi khi render component làm cả cây React bị gỡ, người dùng thấy màn hình trắng. Error Boundary bắt lỗi này, hiện giao diện dự phòng và báo lỗi về. Nó không bắt lỗi trong event handler hay code bất đồng bộ, nên vẫn cần listener `error`/`unhandledrejection` ở trên. Công cụ như Sentry giải mã stack trace bằng source map (upload lúc build, không public) và gom lỗi trùng.",
+          "OpenTelemetry cho trình duyệt tạo được span cho lần tải trang và cho `fetch` để nối trace frontend với backend, nhưng opentelemetry.io ghi rõ phần này còn thử nghiệm."
+        ],
+        code: {
+          lang: "tsx", file: "src/ErrorBoundary.tsx",
+          src: `import { Component, type ErrorInfo, type ReactNode } from 'react';
+
+export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    navigator.sendBeacon('/rum', JSON.stringify([{
+      type: 'render-error', message: error.message, stack: info.componentStack,
+      route: location.pathname,
+    }]));
+  }
+
+  render() {
+    return this.state.failed ? <p>Có lỗi xảy ra, vui lòng tải lại trang.</p> : this.props.children;
+  }
+}`
+        }
+      },
+      {
+        h: "Synthetic monitoring và SLO phía người dùng",
+        p: [
+          "Synthetic monitoring chạy kịch bản cố định theo lịch từ nhiều vùng: đơn giản là probe HTTP bằng blackbox_exporter (metric `probe_success`), phức tạp hơn là trình duyệt headless đi luồng đăng nhập, thêm giỏ, thanh toán. Nó phát hiện sự cố cả lúc không có traffic, nhưng không đại diện cho thiết bị và mạng thật; RUM thì ngược lại.",
+          "Từ dữ liệu RUM, viết SLO bằng ngôn ngữ người dùng: \"90% lượt tải trang checkout có LCP không quá 2,5 giây trong 28 ngày\", \"99,5% phiên không gặp lỗi JS chặn thao tác\". Nhãn `route`, `release` giúp khoanh vùng."
+        ],
+        code: {
+          lang: "promql", file: "slo-frontend.promql",
+          src: `# Tỉ lệ lượt tải trang checkout có LCP <= 2.5s trong 28 ngày
+sum(rate(rum_lcp_seconds_bucket{route="/checkout", le="2.5"}[28d]))
+/
+sum(rate(rum_lcp_seconds_count{route="/checkout"}[28d]))
+
+# Tỉ lệ probe tổng hợp thành công trong 1 giờ qua
+avg_over_time(probe_success{job="blackbox-checkout"}[1h])`
+        }
+      }
+    ],
+    summary: [
+      "Metric backend không thấy mạng, CDN, JS nặng hay lỗi JS; cần đo từ phía người dùng.",
+      "RUM với `web-vitals`: LCP ≤ 2,5 s, INP ≤ 200 ms, CLS ≤ 0,1 ở phân vị 75; gom và gửi bằng `sendBeacon` khi trang chuyển sang `hidden`.",
+      "Error Boundary bắt lỗi render React; listener `error` và `unhandledrejection` bắt phần còn lại; source map giải mã stack trace.",
+      "Synthetic monitoring phát hiện sự cố khi chưa có traffic, RUM phản ánh thiết bị thật; nên dùng cả hai.",
+      "Viết SLO theo trải nghiệm người dùng và gắn nhãn `route`, `release` để khoanh vùng."
+    ],
+    pitfalls: [
+      "Chỉ xem giá trị trung bình của LCP; trung bình che mất nhóm người dùng mobile chậm, hãy xem phân vị 75 trở lên và tách theo thiết bị.",
+      "Gửi dữ liệu trong sự kiện `unload`, nhiều lượt trên mobile không bao giờ về tới server.",
+      "Gửi nguyên URL có query, email hay token vào hệ thống RUM, vô tình thu thập dữ liệu cá nhân; hãy chuẩn hoá thành route."
+    ],
+    quiz: [
+      { q: "Core Web Vital nào đo độ phản hồi khi người dùng tương tác với trang?", options: ["TTFB", "FCP", "INP", "CLS"], answer: 2, explain: "INP (Interaction to Next Paint) đo độ trễ tới lần vẽ tiếp theo sau tương tác, và đã thay FID. TTFB và FCP đo tải trang, CLS đo độ ổn định bố cục." },
+      { q: "Vì sao nên gửi số liệu RUM khi `visibilitychange` sang `hidden` bằng `sendBeacon`?", options: ["Beacon vẫn gửi được khi trang đang đóng", "Beacon tự nén dữ liệu thành định dạng nhị phân", "Beacon bỏ qua được chính sách CORS của trình duyệt", "Beacon đảm bảo server nhận đúng một lần"], answer: 0, explain: "`sendBeacon` được thiết kế để gửi dữ liệu nhỏ lúc trang bị ẩn hoặc đóng, còn `unload` không đáng tin trên mobile. Nó không nén, không vượt CORS và không đảm bảo giao đúng một lần." },
+      { q: "Synthetic monitoring làm tốt điều gì hơn RUM?", options: ["Phản ánh đúng thiết bị và mạng của khách", "Phát hiện sự cố khi chưa có người truy cập", "Đo chính xác INP của từng người dùng thật", "Thu được lỗi JS từ mọi trình duyệt khác nhau"], answer: 1, explain: "Kịch bản tổng hợp chạy theo lịch nên vẫn báo lỗi lúc không có traffic. Ba lựa chọn còn lại là thế mạnh của RUM vì dữ liệu đến từ người dùng thật." }
     ]
   },
 });

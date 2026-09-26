@@ -299,10 +299,10 @@ CREATE INDEX orders_user_id_idx ON orders (user_id);`
       {
         q: "Vì sao chỉ kiểm tra \"email đã tồn tại\" trong code là chưa đủ?",
         options: [
-          "Vì code không đọc được database",
-          "Vì Postgres không hỗ trợ so sánh chuỗi",
-          "Vì hai request đồng thời có thể cùng vượt qua bước kiểm tra rồi cùng INSERT",
-          "Vì UNIQUE constraint làm chậm SELECT"
+          "Vì SELECT trong code không thấy được email viết hoa",
+          "Vì Postgres không so sánh chuỗi chính xác được",
+          "Vì hai request đồng thời có thể cùng qua bước kiểm tra",
+          "Vì kiểm tra trong code chậm hơn UNIQUE constraint"
         ],
         answer: 2,
         explain: "Đây là race condition kiểu check-then-act: cả hai request thấy email chưa có rồi cùng ghi. UNIQUE constraint được DB kiểm tra nguyên tử nên chặn được. Các lựa chọn khác sai về bản chất."
@@ -316,10 +316,10 @@ CREATE INDEX orders_user_id_idx ON orders (user_id);`
       {
         q: "Khi tạo FOREIGN KEY, Postgres tự động làm gì?",
         options: [
-          "Không tự tạo index cho cột FK ở bảng con; cột được tham chiếu phải có PK/UNIQUE",
-          "Tạo index trên cả hai bảng",
-          "Tạo index trên cột FK ở bảng con",
-          "Tự chuyển cột thành NOT NULL"
+          "Chỉ kiểm tra ràng buộc, không tự tạo index cho cột FK",
+          "Tự tạo index trên cột FK ở cả hai bảng",
+          "Tự tạo index trên cột FK ở bảng con",
+          "Tự chuyển cột FK thành NOT NULL"
         ],
         answer: 0,
         explain: "Cột được tham chiếu phải có PK hoặc UNIQUE (nên đã có index), nhưng cột FK ở bảng con không tự có index. FK cũng không tự đặt NOT NULL, bạn phải khai báo riêng."
@@ -339,7 +339,7 @@ CREATE INDEX orders_user_id_idx ON orders (user_id);`
       {
         h: "Những lựa chọn quan trọng",
         list: [
-          "Khoá chính: `bigint GENERATED ALWAYS AS IDENTITY` gọn và nhanh. `uuid` hợp khi cần sinh ID ở client hoặc không muốn lộ số lượng bản ghi. PostgreSQL 18 có hàm `uuidv7()` sinh UUID có thứ tự thời gian, chèn vào B-tree tốt hơn UUID v4 ngẫu nhiên (`gen_random_uuid()`).",
+          "Khoá chính: `bigint GENERATED ALWAYS AS IDENTITY` gọn và nhanh. `uuid` hợp khi cần sinh ID ở client hoặc không muốn lộ số lượng bản ghi. PostgreSQL 18 có hàm `uuidv7()` sinh UUID có thứ tự thời gian, chèn vào B-tree tốt hơn UUID v4 ngẫu nhiên (`gen_random_uuid()`, hoặc alias mới `uuidv4()`). Đánh đổi: 48 bit đầu của UUID v7 là timestamp, nên ai thấy ID cũng biết bản ghi được tạo lúc nào; nếu điều đó nhạy cảm, dùng v4 cho ID công khai.",
           "Thời gian: dùng `timestamptz`. Postgres lưu nội bộ theo UTC và chuyển đổi theo `TimeZone` của session khi hiển thị. `timestamp` (không tz) chỉ lưu \"giờ đồng hồ\", dễ lệch khi server và người dùng khác múi giờ.",
           "Tiền: dùng `numeric(p, s)` hoặc lưu số nguyên đơn vị nhỏ nhất (đồng, cent) bằng `bigint`. Không dùng `real`/`double precision` vì số thực nhị phân không biểu diễn chính xác 0.1.",
           "Chuỗi: `text` và `varchar(n)` có hiệu năng như nhau trong Postgres. Dùng `text` kèm CHECK độ dài nếu cần giới hạn.",
@@ -412,8 +412,8 @@ SELECT 0.1::float8 + 0.2::float8 = 0.3::float8 AS float_ok,   -- false
         options: [
           "Nó lưu kèm tên múi giờ của từng giá trị",
           "Nó chỉ dùng được khi server đặt múi giờ UTC",
-          "Nó lưu thời điểm theo UTC và chuyển đổi theo TimeZone của session khi hiển thị",
-          "Nó tốn gấp đôi dung lượng so với timestamp"
+          "Nó lưu theo UTC và hiển thị theo TimeZone của session",
+          "Nó tốn gấp đôi dung lượng so với timestamp thường"
         ],
         answer: 2,
         explain: "timestamptz chuẩn hoá về UTC khi lưu và hiển thị theo TimeZone của session; nó không lưu tên múi giờ gốc. Cả timestamp và timestamptz đều dùng 8 byte."
@@ -421,10 +421,10 @@ SELECT 0.1::float8 + 0.2::float8 = 0.3::float8 AS float_ok,   -- false
       {
         q: "Vì sao UUID v7 thường tốt hơn UUID v4 làm khoá chính?",
         options: [
-          "UUID v7 ngắn hơn",
-          "UUID v4 không lưu được trong cột uuid",
-          "UUID v7 không bao giờ trùng còn v4 hay trùng",
-          "UUID v7 có tiền tố thời gian nên giá trị mới tăng dần, chèn vào B-tree ít phân mảnh hơn"
+          "UUID v7 chỉ dài 64 bit nên index nhỏ bằng một nửa",
+          "UUID v4 không lưu được trong kiểu uuid của Postgres",
+          "UUID v7 không bao giờ trùng, còn v4 thỉnh thoảng trùng",
+          "UUID v7 tăng dần theo thời gian nên chèn vào B-tree ít page split"
         ],
         answer: 3,
         explain: "UUID v7 chứa timestamp ở đầu nên các giá trị mới nằm cuối index, giảm page split. Cả hai đều 128 bit, xác suất trùng đều cực nhỏ, và đều lưu được trong kiểu uuid."
@@ -503,10 +503,10 @@ EXECUTE FUNCTION set_updated_at();`
       {
         q: "Khác biệt chính giữa view và materialized view?",
         options: [
-          "Materialized view lưu kết quả xuống đĩa và cần REFRESH; view chạy lại truy vấn mỗi lần đọc",
-          "View lưu dữ liệu, materialized view thì không",
-          "Materialized view luôn luôn cập nhật theo thời gian thực",
-          "View không thể JOIN nhiều bảng"
+          "Materialized view lưu kết quả và chỉ mới khi REFRESH",
+          "View lưu kết quả xuống đĩa, materialized view thì không",
+          "Materialized view tự cập nhật ngay khi bảng gốc đổi",
+          "View không thể JOIN nhiều bảng, materialized view thì được"
         ],
         answer: 0,
         explain: "Materialized view là ảnh chụp kết quả, chỉ mới khi REFRESH. View thường chỉ là truy vấn có tên, không lưu dữ liệu, và có thể JOIN tùy ý."
@@ -625,10 +625,10 @@ UPDATE users SET deleted_at = now() WHERE id = 42;`
       {
         q: "Khi dùng soft delete, vì sao nên đổi UNIQUE(email) thành partial unique index `WHERE deleted_at IS NULL`?",
         options: [
-          "Để user đã bị xoá mềm không chặn người khác đăng ký cùng email",
-          "Để tăng tốc INSERT",
-          "Vì Postgres không hỗ trợ UNIQUE trên text",
-          "Để email được phép NULL"
+          "Để user đã xoá mềm không chặn đăng ký lại email đó",
+          "Để INSERT không phải cập nhật index email",
+          "Vì Postgres không hỗ trợ UNIQUE trên cột text",
+          "Để cột email được phép chứa nhiều giá trị NULL"
         ],
         answer: 0,
         explain: "Dòng xoá mềm vẫn nằm trong bảng; UNIQUE thường sẽ coi email đó đã bị dùng. Partial index chỉ áp dụng cho dòng còn hoạt động."
@@ -708,28 +708,28 @@ WHERE sub.post_id = p.id AND p.comment_count <> sub.cnt;`
     quiz: [
       {
         q: "Bảng `employees(id, department_id, department_name)` vi phạm dạng chuẩn nào?",
-        options: ["1NF", "Không vi phạm", "3NF, vì có phụ thuộc bắc cầu id → department_id → department_name", "Chỉ vi phạm BCNF"],
+        options: ["1NF", "Không vi phạm dạng chuẩn nào", "3NF", "Chỉ vi phạm BCNF"],
         answer: 2,
         explain: "department_name phụ thuộc vào department_id, không trực tiếp vào khoá id, nên có phụ thuộc bắc cầu vi phạm 3NF. Mỗi ô vẫn nguyên tố nên không vi phạm 1NF."
       },
       {
         q: "Vì sao nên lưu `unit_price` trong `order_items` dù đã có `products.price`?",
         options: [
-          "Để JOIN nhanh hơn",
-          "Để tiết kiệm dung lượng",
-          "Vì Postgres không cho JOIN với bảng products",
-          "Vì giá sản phẩm thay đổi theo thời gian, đơn hàng phải giữ giá tại lúc mua"
+          "Để truy vấn đơn hàng khỏi phải JOIN bảng products",
+          "Để tiết kiệm dung lượng lưu trữ của bảng products",
+          "Vì Postgres không cho JOIN order_items với products",
+          "Vì đơn hàng phải giữ giá tại thời điểm mua"
         ],
         answer: 3,
-        explain: "Đơn hàng là bản ghi lịch sử; giá lúc mua là một sự thật khác với giá hiện tại. Lưu thêm cột này tốn dung lượng hơn, không tiết kiệm."
+        explain: "Đơn hàng là bản ghi lịch sử; giá lúc mua là một sự thật khác với giá hiện tại. Bớt một JOIN chỉ là tác dụng phụ, không phải lý do; lưu thêm cột tốn dung lượng hơn, và Postgres JOIN hai bảng này bình thường."
       },
       {
         q: "Delete anomaly là gì?",
         options: [
-          "Xoá một dòng làm mất luôn thông tin khác không liên quan vì chúng chỉ được lưu ở đó",
-          "Không xoá được dòng vì có FK",
-          "Xoá dòng làm index bị hỏng",
-          "Lệnh DELETE chạy chậm"
+          "Xoá một dòng làm mất luôn một sự thật khác chỉ lưu ở đó",
+          "Không xoá được dòng cha vì còn dòng con tham chiếu",
+          "Xoá nhiều dòng làm index bị hỏng, phải REINDEX",
+          "Lệnh DELETE chạy chậm vì phải quét cả bảng"
         ],
         answer: 0,
         explain: "Nếu thông tin sản phẩm chỉ nằm trong bảng đơn hàng, xoá đơn cuối cùng cũng xoá mất sản phẩm. Chuẩn hoá tách sản phẩm ra bảng riêng để tránh điều này."
@@ -826,10 +826,10 @@ CREATE INDEX products_attr_path_gin ON products USING gin (attributes jsonb_path
       {
         q: "Mệnh đề `INCLUDE` trong CREATE INDEX dùng để làm gì?",
         options: [
-          "Thêm cột vào khoá sắp xếp của index",
-          "Tạo index trên nhiều bảng",
-          "Bao gồm cả các dòng đã xoá",
-          "Thêm cột vào lá của index để truy vấn có thể là Index Only Scan"
+          "Thêm cột vào khoá sắp xếp và tìm kiếm của index",
+          "Cho phép một index bao phủ cột của nhiều bảng",
+          "Giữ lại cả các phiên bản dòng đã bị xoá",
+          "Lưu thêm cột ở lá index để có Index Only Scan"
         ],
         answer: 3,
         explain: "Cột INCLUDE không tham gia sắp xếp/tìm kiếm nhưng được lưu trong index, giúp truy vấn lấy dữ liệu mà không đọc bảng (khi visibility map cho phép)."
@@ -843,7 +843,7 @@ CREATE INDEX products_attr_path_gin ON products USING gin (attributes jsonb_path
         h: "Planner quyết định cách chạy truy vấn",
         p: [
           "SQL chỉ nói bạn muốn gì, không nói làm thế nào. Query planner của Postgres xem xét nhiều kế hoạch (dùng index nào, JOIN theo thứ tự nào, Nested Loop hay Hash Join) và chọn kế hoạch có cost ước tính thấp nhất. Ước tính dựa vào thống kê về dữ liệu: số dòng, phân bố giá trị, tỉ lệ NULL.",
-          "`EXPLAIN` in kế hoạch dự kiến mà không chạy. `EXPLAIN ANALYZE` chạy thật truy vấn và in thêm thời gian, số dòng thực tế. Thêm `BUFFERS` để thấy số trang đọc từ cache hay từ đĩa. Lưu ý: `EXPLAIN ANALYZE` một lệnh `UPDATE`/`DELETE` sẽ thực sự thay đổi dữ liệu, hãy bọc trong `BEGIN ... ROLLBACK`."
+          "`EXPLAIN` in kế hoạch dự kiến mà không chạy. `EXPLAIN ANALYZE` chạy thật truy vấn và in thêm thời gian, số dòng thực tế. `BUFFERS` cho thấy số trang (block 8 KB) đọc từ bộ nhớ đệm (`shared hit`) hay phải đọc từ đĩa/OS (`read`); từ PostgreSQL 18, `EXPLAIN ANALYZE` tự kèm BUFFERS, ở bản cũ hơn phải ghi rõ `EXPLAIN (ANALYZE, BUFFERS)`. Lưu ý: `EXPLAIN ANALYZE` một lệnh `UPDATE`/`DELETE` sẽ thực sự thay đổi dữ liệu, hãy bọc trong `BEGIN ... ROLLBACK`."
         ],
         code: {
           lang: "sql",
@@ -864,7 +864,8 @@ ROLLBACK;`
       {
         h: "Đọc kết quả EXPLAIN",
         p: [
-          "Kế hoạch là một cây; đọc từ nút trong cùng (thụt sâu nhất) ra ngoài. Mỗi nút có dạng `cost=khởi_động..tổng rows=ước_tính` và, với ANALYZE, `actual time=... rows=thực_tế loops=...`. Cost là đơn vị tương đối của planner, không phải mili giây."
+          "Kế hoạch là một cây; đọc từ nút trong cùng (thụt sâu nhất) ra ngoài. Mỗi nút có dạng `cost=khởi_động..tổng rows=ước_tính` và, với ANALYZE, `actual time=... rows=thực_tế loops=...`. Cost là đơn vị tương đối của planner, không phải mili giây. Khi `loops` lớn hơn 1, `actual time` và `rows` là giá trị trung bình cho MỖI vòng; nhân với loops để ra tổng.",
+          "PostgreSQL 18 thay đổi vài chi tiết hiển thị: `rows` thực tế in dạng số thập phân (ví dụ `rows=20.00`, hữu ích khi chia trung bình theo loops), và nút index scan có thêm dòng `Index Searches` cho biết số lần đi xuống index (quan trọng khi đọc skip scan)."
         ],
         list: [
           "`Seq Scan`: đọc cả bảng. Bình thường với bảng nhỏ hoặc khi lấy phần lớn dòng; đáng lo khi bảng lớn mà chỉ lấy vài dòng.",
@@ -876,13 +877,16 @@ ROLLBACK;`
         code: {
           lang: "text",
           file: "plan.txt",
-          src: `Limit  (cost=0.43..8.95 rows=20 width=18) (actual time=0.031..0.062 rows=20 loops=1)
+          src: `Limit  (cost=0.43..8.95 rows=20 width=18) (actual time=0.031..0.062 rows=20.00 loops=1)
+  Buffers: shared hit=24
   ->  Index Scan using orders_user_created_idx on orders
-        (cost=0.43..512.10 rows=1203 width=18) (actual time=0.030..0.058 rows=20 loops=1)
+        (cost=0.43..512.10 rows=1203 width=18) (actual time=0.030..0.058 rows=20.00 loops=1)
         Index Cond: (user_id = 42)
+        Index Searches: 1
+        Buffers: shared hit=24
 Planning Time: 0.180 ms
 Execution Time: 0.085 ms
--- (Ví dụ minh hoạ; số liệu thực tế tuỳ dữ liệu của bạn)`
+-- (Ví dụ minh hoạ theo định dạng PostgreSQL 18; số liệu thực tế tuỳ dữ liệu của bạn)`
         }
       },
       {
@@ -906,7 +910,7 @@ LIMIT 10;`
       }
     ],
     summary: [
-      "EXPLAIN in kế hoạch dự kiến; EXPLAIN ANALYZE chạy thật và in số liệu thực tế.",
+      "EXPLAIN in kế hoạch dự kiến; EXPLAIN ANALYZE chạy thật và in số liệu thực tế (PostgreSQL 18 tự kèm BUFFERS).",
       "Cost là đơn vị tương đối, không phải mili giây; đọc cây từ nút trong cùng ra.",
       "Rows ước tính lệch xa thực tế là dấu hiệu thống kê cũ hoặc thiếu thống kê; chạy ANALYZE.",
       "Dùng pg_stat_statements để tìm truy vấn cần tối ưu trước khi đoán."
@@ -920,10 +924,10 @@ LIMIT 10;`
       {
         q: "Khác biệt giữa EXPLAIN và EXPLAIN ANALYZE?",
         options: [
-          "EXPLAIN ANALYZE chạy thật truy vấn và báo thời gian, số dòng thực tế",
-          "Không khác biệt",
-          "EXPLAIN ANALYZE cập nhật thống kê bảng",
-          "EXPLAIN chỉ dùng được với SELECT"
+          "EXPLAIN ANALYZE thực thi truy vấn và báo số liệu thực tế",
+          "Chỉ khác cách định dạng, cả hai đều không chạy truy vấn",
+          "EXPLAIN ANALYZE cập nhật thống kê bảng rồi in kế hoạch",
+          "EXPLAIN chỉ dùng được với SELECT, ANALYZE thì mọi lệnh"
         ],
         answer: 0,
         explain: "ANALYZE trong EXPLAIN nghĩa là thực thi. Nó không cập nhật thống kê (đó là lệnh ANALYZE riêng). EXPLAIN dùng được cho cả INSERT/UPDATE/DELETE."
@@ -931,21 +935,21 @@ LIMIT 10;`
       {
         q: "Kế hoạch có `rows=5` ước tính nhưng `actual rows=800000`. Bước nên làm đầu tiên?",
         options: [
-          "Tăng max_connections",
-          "Chạy ANALYZE trên bảng liên quan để cập nhật thống kê rồi xem lại kế hoạch",
-          "Xoá toàn bộ index",
-          "Chuyển sang MongoDB"
+          "Tăng max_connections rồi chạy lại truy vấn",
+          "Chạy ANALYZE bảng liên quan rồi xem lại kế hoạch",
+          "Xoá các index của bảng để planner chọn lại",
+          "Tăng work_mem cho toàn bộ server"
         ],
         answer: 1,
-        explain: "Ước tính lệch lớn thường do thống kê cũ; planner dựa trên thống kê để chọn kế hoạch. max_connections không liên quan, xoá index làm tệ hơn."
+        explain: "Ước tính lệch lớn thường do thống kê cũ; planner dựa trên thống kê để chọn kế hoạch. max_connections và work_mem không sửa được ước lượng sai; xoá index chỉ làm tệ hơn."
       },
       {
         q: "Giá trị `cost` trong EXPLAIN là gì?",
         options: [
-          "Thời gian chạy tính bằng mili giây",
-          "Số byte đọc từ đĩa",
-          "Đơn vị ước tính tương đối của planner để so sánh các kế hoạch",
-          "Số dòng trả về"
+          "Thời gian chạy ước tính, tính bằng mili giây",
+          "Số byte ước tính phải đọc từ đĩa",
+          "Chi phí ước tính theo đơn vị tương đối của planner",
+          "Số dòng ước tính mà nút trả về"
         ],
         answer: 2,
         explain: "Cost là con số tương đối dựa trên các tham số như seq_page_cost, cpu_tuple_cost. Thời gian thực nằm ở actual time; số dòng nằm ở rows."
@@ -1037,10 +1041,10 @@ const userLoader = new DataLoader<number, User | undefined>(async (ids) => {
       {
         q: "DataLoader giải quyết N+1 bằng cách nào?",
         options: [
-          "Gom các lời gọi load(id) trong cùng một tick thành một truy vấn batch",
-          "Cache kết quả vĩnh viễn trong Redis",
-          "Tự tạo index cho bảng",
-          "Chạy các truy vấn song song trên nhiều kết nối"
+          "Gom các lời gọi load(id) cùng tick thành một truy vấn",
+          "Cache vĩnh viễn kết quả của mọi truy vấn trong Redis",
+          "Tự tạo index cho các cột khoá ngoại được truy vấn",
+          "Chạy N truy vấn song song trên nhiều kết nối pool"
         ],
         answer: 0,
         explain: "DataLoader trì hoãn đến cuối tick hiện tại rồi gọi hàm batch một lần với toàn bộ ID. Cache của nó chỉ trong bộ nhớ, thường theo request, không phải Redis."
@@ -1048,10 +1052,10 @@ const userLoader = new DataLoader<number, User | undefined>(async (ids) => {
       {
         q: "Vì sao N+1 thường không lộ ra ở môi trường local?",
         options: [
-          "Vì ORM tự tắt N+1 ở local",
-          "Vì dữ liệu ít và độ trễ tới DB local rất thấp nên tổng thời gian vẫn nhỏ",
-          "Vì Postgres local không ghi log",
-          "Vì local không dùng JOIN"
+          "Vì ORM tự gộp truy vấn khi chạy ở chế độ dev",
+          "Vì dữ liệu ít và mỗi round-trip tới DB local rất nhanh",
+          "Vì Postgres local không ghi log truy vấn",
+          "Vì Postgres local tự cache kết quả truy vấn lặp lại"
         ],
         answer: 1,
         explain: "Chi phí N+1 tỉ lệ với số bản ghi nhân độ trễ mỗi round-trip. Local có ít dữ liệu và DB ngay trên máy nên che giấu vấn đề."
@@ -1100,7 +1104,7 @@ export async function getUser(id: number) {
         ],
         list: [
           "Session mode: client giữ một kết nối server suốt phiên. An toàn nhất nhưng ít tiết kiệm.",
-          "Transaction mode: kết nối server chỉ gán cho client trong một transaction. Tiết kiệm nhất và phổ biến nhất, nhưng các tính năng gắn với session như `SET` (không phải `SET LOCAL`), `LISTEN/NOTIFY`, advisory lock mức session sẽ không hoạt động đúng.",
+          "Transaction mode: kết nối server chỉ gán cho client trong một transaction. Tiết kiệm nhất và phổ biến nhất, nhưng các tính năng gắn với session như `SET` (không phải `SET LOCAL`), `LISTEN/NOTIFY`, advisory lock mức session sẽ không hoạt động đúng. Prepared statement ở mức giao thức (driver hay dùng) được hỗ trợ từ PgBouncer 1.21 khi bật `max_prepared_statements`; bản cũ hơn cần tắt prepared statement ở driver.",
           "Statement mode: gán theo từng câu lệnh, không hỗ trợ transaction nhiều câu lệnh."
         ],
         code: {
@@ -1135,21 +1139,21 @@ default_pool_size = 20`
       {
         q: "Có 8 replica, mỗi replica pool 15 kết nối, max_connections = 100. Điều gì xảy ra?",
         options: [
-          "Không sao, Postgres tự tăng giới hạn",
-          "Postgres chia đều 100 kết nối cho các replica",
-          "Tổng 120 kết nối vượt giới hạn, một số kết nối sẽ bị từ chối khi tải cao",
-          "Pool tự động giảm xuống 12"
+          "Không sao, Postgres tự nâng max_connections khi cần",
+          "Postgres tự chia đều 100 kết nối cho 8 replica",
+          "Khi tải cao, kết nối vượt quá 100 sẽ bị từ chối",
+          "Pool của mỗi replica tự động giảm xuống 12"
         ],
         answer: 2,
-        explain: "Postgres không biết gì về pool của ứng dụng; khi tổng kết nối vượt max_connections thì kết nối mới bị lỗi. Cần giảm pool size, giảm replica hoặc dùng PgBouncer."
+        explain: "8 × 15 = 120 > 100. Postgres không biết gì về pool của ứng dụng; khi tổng kết nối vượt max_connections (trừ đi vài slot dành cho superuser) thì kết nối mới bị lỗi. Cần giảm pool size, giảm replica hoặc dùng PgBouncer."
       },
       {
         q: "Ở PgBouncer transaction mode, tính năng nào dễ gặp vấn đề?",
         options: [
-          "SELECT đơn giản",
-          "Transaction BEGIN ... COMMIT",
-          "INSERT có RETURNING",
-          "Advisory lock mức session và LISTEN/NOTIFY"
+          "SELECT đơn giản theo khoá chính",
+          "Transaction BEGIN ... COMMIT nhiều câu lệnh",
+          "INSERT ... RETURNING id",
+          "LISTEN và advisory lock mức session"
         ],
         answer: 3,
         explain: "Transaction mode trả kết nối server về pool sau mỗi transaction, nên trạng thái gắn với session (lock session, LISTEN, SET) không được giữ cho client. Truy vấn và transaction bình thường vẫn chạy tốt."
@@ -1157,10 +1161,10 @@ default_pool_size = 20`
       {
         q: "Vì sao tăng max_connections lên 5000 không phải cách tốt để phục vụ nhiều client?",
         options: [
-          "Vì mỗi kết nối là một tiến trình tốn tài nguyên, quá nhiều sẽ làm DB chậm đi",
-          "Vì Postgres không cho phép quá 100",
-          "Vì PgBouncer sẽ ngừng hoạt động",
-          "Vì kết nối sẽ tự đóng sau 1 giây"
+          "Vì mỗi kết nối là một tiến trình, quá nhiều làm DB chậm",
+          "Vì Postgres cấm đặt max_connections lớn hơn 100",
+          "Vì PgBouncer sẽ ngừng hoạt động khi vượt 1000",
+          "Vì kết nối vượt 100 sẽ tự đóng sau 1 giây"
         ],
         answer: 0,
         explain: "Có thể đặt max_connections cao, nhưng hàng nghìn tiến trình tranh CPU, bộ nhớ và khoá nội bộ làm hiệu năng giảm. Giải pháp đúng là pool và PgBouncer."
@@ -1241,10 +1245,10 @@ COMMIT;`
       {
         q: "Vì sao WAL giúp commit nhanh mà vẫn bền vững?",
         options: [
-          "Vì WAL lưu trong RAM, không ghi xuống đĩa",
-          "Vì WAL nén dữ liệu",
-          "Vì ghi tuần tự vào WAL rẻ hơn ghi ngẫu nhiên vào các trang dữ liệu; trang dữ liệu có thể ghi sau và khôi phục bằng cách phát lại WAL",
-          "Vì WAL bỏ qua các constraint"
+          "Vì WAL chỉ nằm trong RAM, không cần ghi xuống đĩa",
+          "Vì WAL nén dữ liệu nên commit ghi ít byte hơn",
+          "Vì commit chỉ cần ghi tuần tự WAL, trang dữ liệu ghi sau",
+          "Vì WAL bỏ qua kiểm tra constraint khi commit"
         ],
         answer: 2,
         explain: "WAL phải xuống đĩa khi commit (nên không chỉ trong RAM), nhưng là ghi tuần tự. Các trang dữ liệu được ghi sau qua checkpoint, và khi sập thì redo từ WAL."
@@ -1252,10 +1256,10 @@ COMMIT;`
       {
         q: "Trong transaction chuyển tiền, lệnh UPDATE thứ hai lỗi. Điều gì xảy ra với lệnh UPDATE thứ nhất?",
         options: [
-          "Vẫn được giữ lại",
-          "Chỉ bị huỷ nếu dùng Serializable",
-          "Được commit tự động",
-          "Bị huỷ cùng toàn bộ transaction khi rollback"
+          "Vẫn được giữ lại vì nó đã chạy thành công",
+          "Chỉ bị huỷ nếu transaction dùng Serializable",
+          "Được Postgres commit tự động ngay lúc lỗi",
+          "Bị huỷ cùng toàn bộ transaction"
         ],
         answer: 3,
         explain: "Atomicity: trong Postgres, lỗi làm transaction chuyển sang trạng thái aborted và phải rollback, huỷ mọi thay đổi. Điều này đúng ở mọi isolation level."
@@ -1333,10 +1337,10 @@ RETURNING stock;`
       {
         q: "Ở Repeatable Read, transaction T1 cập nhật dòng mà T2 đã sửa và commit sau khi T1 lấy snapshot. Postgres làm gì?",
         options: [
-          "Ghi đè thay đổi của T2",
-          "Báo lỗi could not serialize access (40001), T1 cần rollback và thử lại",
-          "Chờ mãi mãi",
-          "Tự động chuyển T1 sang Read Committed"
+          "Cho T1 ghi đè thay đổi của T2",
+          "Báo lỗi 40001, T1 phải rollback và thử lại",
+          "Để T1 chờ mãi cho đến khi T2 rollback",
+          "Tự hạ T1 xuống Read Committed rồi ghi tiếp"
         ],
         answer: 1,
         explain: "Snapshot isolation không cho T1 ghi đè lên phiên bản mà nó không nhìn thấy, nên báo lỗi serialization. T1 có thể phải chờ T2 kết thúc trước (nếu T2 chưa commit), nhưng khi T2 commit thì T1 nhận lỗi."
@@ -1344,13 +1348,13 @@ RETURNING stock;`
       {
         q: "Cách nào chống lost update khi trừ tồn kho ở Read Committed mà không cần đổi isolation level?",
         options: [
-          "SELECT stock rồi UPDATE giá trị tính trong code",
-          "Dùng UNION ALL",
-          "UPDATE products SET stock = stock - 1 WHERE id = ? AND stock > 0",
-          "Tạo thêm index trên stock"
+          "SELECT stock, tính stock - 1 trong code rồi UPDATE",
+          "Bọc SELECT và UPDATE trong BEGIN ... COMMIT thường",
+          "UPDATE ... SET stock = stock - 1 WHERE stock > 0",
+          "Tạo thêm index B-tree trên cột stock"
         ],
         answer: 2,
-        explain: "UPDATE với biểu thức stock - 1 được thực hiện nguyên tử; ở Read Committed, nếu dòng bị khoá bởi transaction khác, Postgres chờ rồi đánh giá lại điều kiện trên phiên bản mới nhất. Index không giải quyết vấn đề đồng thời."
+        explain: "UPDATE với biểu thức stock - 1 được thực hiện nguyên tử; ở Read Committed, nếu dòng bị khoá bởi transaction khác, Postgres chờ rồi đánh giá lại điều kiện trên phiên bản mới nhất. Chỉ bọc SELECT + UPDATE trong transaction ở Read Committed vẫn bị lost update vì SELECT thường không khoá dòng; index không giải quyết vấn đề đồng thời."
       }
     ]
   },
@@ -1444,10 +1448,10 @@ COMMIT; -- lock tự nhả`
       {
         q: "Vì sao `FOR UPDATE SKIP LOCKED` phù hợp làm job queue?",
         options: [
-          "Nó khoá toàn bộ bảng",
-          "Nó bỏ qua các constraint",
-          "Nó tự xoá job sau khi xử lý",
-          "Các worker bỏ qua job đang bị worker khác khoá và lấy job kế tiếp, không chờ nhau và không xử lý trùng"
+          "Nó khoá toàn bộ bảng jobs nên chỉ một worker chạy",
+          "Nó bỏ qua constraint để ghi trạng thái job nhanh hơn",
+          "Nó tự xoá job khỏi bảng sau khi worker xử lý xong",
+          "Worker bỏ qua dòng đang bị khoá và lấy dòng kế tiếp"
         ],
         answer: 3,
         explain: "SKIP LOCKED bỏ qua dòng đang bị khoá thay vì chờ, nên nhiều worker song song mỗi người nhận một nhóm job khác nhau. Nó chỉ khoá dòng được chọn, không khoá bảng."
@@ -1455,10 +1459,10 @@ COMMIT; -- lock tự nhả`
       {
         q: "Khác biệt giữa `pg_advisory_xact_lock` và `pg_advisory_lock`?",
         options: [
-          "xact tự nhả khi transaction kết thúc; loại không xact giữ đến khi unlock hoặc hết session",
-          "xact chỉ dùng được cho bảng",
-          "Loại không xact nhanh hơn 10 lần",
-          "Không có khác biệt"
+          "xact tự nhả khi transaction kết thúc, loại kia thì không",
+          "xact khoá cả bảng, loại kia chỉ khoá một dòng",
+          "Loại không xact nhanh hơn vì không cần transaction",
+          "Chỉ khác tên, hành vi giống hệt nhau"
         ],
         answer: 0,
         explain: "Advisory lock mức transaction gắn với transaction hiện tại và tự nhả khi commit/rollback; mức session tồn tại đến khi bạn unlock hoặc kết nối đóng. Cả hai không gắn với bảng nào."
@@ -1552,10 +1556,10 @@ UPDATE products SET stock = stock - 1 WHERE id = 7 AND stock > 0 RETURNING stock
       {
         q: "Với optimistic locking, câu `UPDATE ... WHERE id = 1 AND version = 3` trả về 0 dòng. Điều đó có nghĩa là gì?",
         options: [
-          "Lỗi cú pháp",
-          "Database bị khoá",
-          "Dòng đã bị transaction khác cập nhật (version đã đổi) hoặc không tồn tại",
-          "Cần chạy VACUUM"
+          "Câu UPDATE có lỗi cú pháp",
+          "Dòng đang bị khoá nên UPDATE bị bỏ qua",
+          "Version đã đổi hoặc dòng không còn tồn tại",
+          "Bảng có nhiều dead tuple, cần chạy VACUUM"
         ],
         answer: 2,
         explain: "Điều kiện version không khớp nghĩa là ai đó đã ghi trước. Ứng dụng phải báo xung đột hoặc đọc lại rồi thử lại."
@@ -1574,13 +1578,13 @@ UPDATE products SET stock = stock - 1 WHERE id = 7 AND stock > 0 RETURNING stock
       {
         q: "Nhược điểm chính của pessimistic locking khi tranh chấp cao là gì?",
         options: [
-          "Các request phải xếp hàng chờ lock, giảm throughput và có nguy cơ deadlock",
-          "Dữ liệu có thể sai",
-          "Không dùng được trong PostgreSQL",
-          "Không cần transaction"
+          "Request xếp hàng chờ lock, throughput giảm",
+          "Dữ liệu có thể bị ghi sai khi tranh chấp",
+          "PostgreSQL không hỗ trợ khoá dòng khi đọc",
+          "Lock tự nhả ngay sau câu SELECT"
         ],
         answer: 0,
-        explain: "Pessimistic locking đảm bảo đúng nhưng tuần tự hoá truy cập vào dòng nóng. Nó cần transaction và được Postgres hỗ trợ đầy đủ."
+        explain: "Pessimistic locking đảm bảo đúng nhưng tuần tự hoá truy cập vào dòng nóng, kèm nguy cơ deadlock khi khoá nhiều dòng. Postgres hỗ trợ đầy đủ (FOR UPDATE), và lock giữ đến hết transaction chứ không nhả sau SELECT."
       }
     ]
   },
@@ -1654,10 +1658,10 @@ COMMIT;`
       {
         q: "Khi bạn UPDATE một dòng trong PostgreSQL, điều gì xảy ra bên trong?",
         options: [
-          "Dòng được sửa trực tiếp tại chỗ",
-          "Phiên bản cũ được đánh dấu hết hiệu lực và một phiên bản mới được ghi",
-          "Cả bảng được viết lại",
-          "Dòng bị xoá khỏi index vĩnh viễn"
+          "Dòng được ghi đè trực tiếp tại chỗ trên trang",
+          "Phiên bản cũ được đặt xmax, một phiên bản mới được ghi",
+          "Cả bảng được viết lại sang file mới",
+          "Dòng bị xoá khỏi mọi index cho đến khi VACUUM"
         ],
         answer: 1,
         explain: "MVCC tạo phiên bản mới và đặt xmax cho phiên bản cũ. Phiên bản cũ sau đó được VACUUM dọn khi không còn ai cần."
@@ -1665,10 +1669,10 @@ COMMIT;`
       {
         q: "Điều gì ngăn VACUUM dọn các dead tuple?",
         options: [
-          "Có quá nhiều index",
-          "Bảng dùng kiểu jsonb",
-          "Một transaction đang mở rất lâu vẫn có thể cần nhìn thấy các phiên bản cũ",
-          "Bật pg_stat_statements"
+          "Bảng có quá nhiều index",
+          "Bảng có cột kiểu jsonb",
+          "Một transaction mở rất lâu",
+          "Extension pg_stat_statements đang bật"
         ],
         answer: 2,
         explain: "VACUUM chỉ dọn phiên bản mà không transaction nào còn có thể thấy. Một transaction cũ còn mở giữ mốc đó lại, khiến dead tuple tích tụ."
@@ -1677,9 +1681,9 @@ COMMIT;`
         q: "Cách hiệu quả nhất để tránh deadlock khi khoá nhiều dòng?",
         options: [
           "Tăng deadlock_timeout lên 1 giờ",
-          "Tắt autovacuum",
-          "Dùng SELECT không có FOR UPDATE",
-          "Khoá các dòng theo một thứ tự nhất quán (ví dụ id tăng dần) ở mọi nơi"
+          "Tắt autovacuum trong giờ cao điểm",
+          "Bỏ FOR UPDATE, chỉ dùng SELECT thường",
+          "Khoá dòng theo cùng thứ tự id ở mọi nơi"
         ],
         answer: 3,
         explain: "Deadlock cần chu trình chờ; nếu mọi transaction khoá theo cùng thứ tự thì không tạo được chu trình. Tăng timeout chỉ làm chậm việc phát hiện; bỏ lock thì mất tính đúng đắn."
@@ -1770,10 +1774,10 @@ const c = await prisma.$queryRaw\`
       {
         q: "Điểm khác biệt đặc trưng của Drizzle so với Prisma?",
         options: [
-          "Drizzle không hỗ trợ PostgreSQL",
-          "Drizzle định nghĩa schema bằng TypeScript và có API sát SQL",
-          "Drizzle không có type-safety",
-          "Drizzle chỉ chạy trên trình duyệt"
+          "Drizzle chỉ hỗ trợ SQLite, không hỗ trợ PostgreSQL",
+          "Drizzle khai báo schema bằng TypeScript, API sát SQL",
+          "Drizzle trả kết quả kiểu any, không có type-safety",
+          "Drizzle bắt buộc viết file schema.prisma riêng"
         ],
         answer: 1,
         explain: "Drizzle khai báo bảng bằng code TypeScript và cung cấp API kiểu select().from().where() gần SQL, có type-safety. Prisma dùng file schema.prisma riêng và API mức cao hơn."
@@ -1874,10 +1878,10 @@ const c = await prisma.$queryRaw\`
       {
         q: "Vì sao migration nên nằm trong git cùng với code?",
         options: [
-          "Để file nhỏ hơn",
-          "Để mọi môi trường dựng lại schema giống nhau và thay đổi schema được review cùng code dùng nó",
-          "Vì Postgres đọc migration từ git",
-          "Để không cần backup"
+          "Để file migration được nén nhỏ hơn",
+          "Để mọi môi trường dựng lại cùng schema và được review",
+          "Vì Postgres đọc migration trực tiếp từ git",
+          "Để có thể dùng git thay cho backup database"
         ],
         answer: 1,
         explain: "Git giữ lịch sử có thứ tự, giúp tái lập schema và review. Postgres không đọc git; migration cũng không thay thế backup."
@@ -1928,6 +1932,10 @@ ALTER TABLE users VALIDATE CONSTRAINT users_first_name_nn;
 ALTER TABLE users ALTER COLUMN first_name SET NOT NULL; -- dùng CHECK đã hợp lệ, bỏ qua quét
 ALTER TABLE users DROP CONSTRAINT users_first_name_nn;
 
+-- PostgreSQL 18 có cách gọn hơn: NOT NULL cũng khai báo được NOT VALID
+-- ALTER TABLE users ADD CONSTRAINT users_first_name_nn NOT NULL first_name NOT VALID;
+-- ALTER TABLE users VALIDATE CONSTRAINT users_first_name_nn;
+
 -- Bước 4: contract (ở lần deploy sau, khi không còn code nào dùng name)
 ALTER TABLE users DROP COLUMN name;`
         }
@@ -1935,7 +1943,7 @@ ALTER TABLE users DROP COLUMN name;`
       {
         h: "Danh sách thao tác an toàn và nguy hiểm",
         list: [
-          "An toàn: thêm cột nullable; thêm cột có DEFAULT hằng số (từ PostgreSQL 11 chỉ đổi metadata); `CREATE INDEX CONCURRENTLY`; thêm FK/CHECK với `NOT VALID` rồi `VALIDATE`.",
+          "An toàn: thêm cột nullable; thêm cột có DEFAULT hằng số (từ PostgreSQL 11 chỉ đổi metadata); `CREATE INDEX CONCURRENTLY`; thêm FK/CHECK (và NOT NULL từ PostgreSQL 18) với `NOT VALID` rồi `VALIDATE`.",
           "Nguy hiểm: đổi kiểu cột (thường viết lại cả bảng); `SET NOT NULL` trực tiếp trên bảng lớn (quét toàn bảng dưới khoá); đổi tên hoặc xoá cột mà code cũ còn dùng; `CREATE INDEX` thường trên bảng lớn."
         ],
         p: [
@@ -1958,10 +1966,10 @@ ALTER TABLE users DROP COLUMN name;`
       {
         q: "Vì sao không nên đổi tên cột trực tiếp khi deploy kiểu rolling?",
         options: [
-          "Vì Postgres không hỗ trợ RENAME COLUMN",
-          "Vì RENAME COLUMN xoá dữ liệu",
-          "Vì trong lúc deploy, code phiên bản cũ vẫn chạy và truy vấn tên cột cũ sẽ lỗi",
-          "Vì phải restart database"
+          "Vì Postgres không hỗ trợ lệnh RENAME COLUMN",
+          "Vì RENAME COLUMN xoá dữ liệu rồi tạo cột mới",
+          "Vì code cũ vẫn chạy song song và dùng tên cũ",
+          "Vì RENAME COLUMN buộc phải restart database"
         ],
         answer: 2,
         explain: "RENAME COLUMN nhanh và giữ dữ liệu, nhưng code cũ còn chạy song song sẽ tham chiếu tên cũ. Expand/contract giữ cả hai tên tồn tại trong giai đoạn chuyển tiếp."
@@ -1980,13 +1988,13 @@ ALTER TABLE users DROP COLUMN name;`
       {
         q: "Tác dụng của `lock_timeout` trong migration là gì?",
         options: [
-          "Nếu không lấy được khoá trong thời gian quy định thì lệnh DDL thất bại, tránh xếp hàng chặn mọi truy vấn khác",
-          "Làm migration chạy nhanh hơn",
-          "Tự động retry migration",
-          "Tắt khoá bảng"
+          "Cho DDL thất bại sớm nếu chờ khoá quá lâu",
+          "Giới hạn tổng thời gian chạy của migration",
+          "Tự động retry migration khi gặp lỗi khoá",
+          "Cho ALTER TABLE chạy mà không cần lấy khoá"
         ],
         answer: 0,
-        explain: "Lệnh ALTER chờ khoá sẽ chặn các truy vấn đến sau nó. lock_timeout làm lệnh thất bại sớm để bạn thử lại lúc ít tải, thay vì gây nghẽn toàn hệ thống. Nó không tự retry."
+        explain: "Lệnh ALTER chờ khoá sẽ chặn các truy vấn đến sau nó. lock_timeout chỉ giới hạn thời gian CHỜ khoá (giới hạn thời gian chạy là statement_timeout), làm lệnh thất bại sớm để bạn thử lại lúc ít tải thay vì gây nghẽn toàn hệ thống. Nó không tự retry và không bỏ được khoá."
       }
     ]
   },
@@ -2126,7 +2134,7 @@ export async function createUser(overrides: Partial<NewUser> = {}) {
         h: "Các loại backup",
         list: [
           "Logical backup (`pg_dump`): xuất schema và dữ liệu thành SQL hoặc định dạng nén. Linh hoạt: khôi phục một bảng, chuyển sang phiên bản Postgres mới. Chậm với DB lớn và chỉ là ảnh chụp tại một thời điểm.",
-          "Physical backup (`pg_basebackup`, pgBackRest, WAL-G): sao chép file dữ liệu của cả cluster. Nhanh hơn với DB lớn, khôi phục toàn bộ cluster.",
+          "Physical backup (`pg_basebackup`, pgBackRest, WAL-G): sao chép file dữ liệu của cả cluster. Nhanh hơn với DB lớn, khôi phục toàn bộ cluster. Từ PostgreSQL 17, `pg_basebackup --incremental` chỉ sao chép phần thay đổi so với bản trước, ghép lại bằng `pg_combinebackup` khi restore.",
           "Snapshot đĩa/dịch vụ managed (RDS, Cloud SQL): nhanh và tiện, nhưng phụ thuộc nhà cung cấp.",
           "PITR (Point-In-Time Recovery): physical backup + lưu trữ liên tục WAL. Cho phép khôi phục về đúng thời điểm, ví dụ 14:32:10, một giây trước khi ai đó chạy nhầm `DELETE` không có WHERE."
         ],
@@ -2182,20 +2190,20 @@ psql -h localhost -U postgres -d app_restore_test -c "SELECT COUNT(*), MAX(creat
         q: "Lúc 14:33 phát hiện ai đó đã xoá nhầm dữ liệu lúc 14:32. Cơ chế nào giúp khôi phục về 14:31 tốt nhất?",
         options: [
           "PITR: base backup + WAL archive",
-          "Replica đồng bộ",
-          "pg_dump chạy lúc 2 giờ sáng",
-          "Tạo lại index"
+          "Replica đồng bộ (synchronous)",
+          "Bản pg_dump chạy lúc 2 giờ sáng",
+          "Snapshot đĩa chụp lúc nửa đêm"
         ],
         answer: 0,
-        explain: "PITR phát lại WAL đến đúng thời điểm mong muốn. pg_dump đêm qua mất dữ liệu cả ngày; replica đã nhận lệnh xoá; index không liên quan."
+        explain: "PITR phát lại WAL đến đúng thời điểm mong muốn. pg_dump và snapshot đêm qua làm mất dữ liệu cả ngày; replica đã nhận lệnh xoá gần như ngay lập tức."
       },
       {
         q: "RPO là gì?",
         options: [
           "Thời gian tối đa để khôi phục hệ thống",
-          "Lượng dữ liệu tối đa được phép mất, tính theo thời gian",
-          "Số bản backup cần giữ",
-          "Tốc độ ghi của đĩa"
+          "Lượng dữ liệu tối đa được phép mất",
+          "Số bản backup tối thiểu cần giữ",
+          "Tỉ lệ phần trăm thời gian hệ thống hoạt động"
         ],
         answer: 1,
         explain: "RPO (Recovery Point Objective) là mốc dữ liệu có thể quay về, tức lượng dữ liệu chấp nhận mất. Thời gian khôi phục là RTO."
@@ -2203,10 +2211,10 @@ psql -h localhost -U postgres -d app_restore_test -c "SELECT COUNT(*), MAX(creat
       {
         q: "Vì sao cần restore thử backup định kỳ?",
         options: [
-          "Để backup nhỏ lại",
-          "Vì pg_dump yêu cầu",
-          "Để chắc chắn backup dùng được và biết thời gian khôi phục thực tế",
-          "Để xoá dữ liệu cũ"
+          "Để file backup được nén nhỏ lại",
+          "Vì pg_dump không chạy lại được nếu chưa restore",
+          "Để chứng minh backup dùng được và đo RTO thật",
+          "Để dọn dữ liệu cũ khỏi database production"
         ],
         answer: 2,
         explain: "Chỉ có restore mới chứng minh backup hợp lệ và đầy đủ, đồng thời cho bạn số đo thời gian để so với RTO."
@@ -2297,10 +2305,10 @@ XACK orders:events billing 1727330000000-0`
       {
         q: "Vì sao nhiều client cùng gọi `INCR` trên một key không bị mất lượt đếm?",
         options: [
-          "Vì Redis thực thi các lệnh tuần tự trên một luồng chính nên mỗi lệnh là nguyên tử",
-          "Vì Redis dùng transaction Serializable",
-          "Vì client tự khoá key",
-          "Vì INCR ghi xuống đĩa trước"
+          "Vì Redis chạy từng lệnh trọn vẹn trên một luồng chính",
+          "Vì Redis bọc mỗi lệnh trong transaction Serializable",
+          "Vì thư viện client tự khoá key trước khi gửi INCR",
+          "Vì INCR luôn ghi xuống AOF trước khi trả kết quả"
         ],
         answer: 0,
         explain: "Mô hình thực thi tuần tự khiến mỗi lệnh chạy trọn vẹn trước lệnh tiếp theo. Không cần khoá từ phía client."
@@ -2308,10 +2316,10 @@ XACK orders:events billing 1727330000000-0`
       {
         q: "Điểm khác biệt quan trọng của Stream so với Pub/Sub?",
         options: [
-          "Stream nhanh gấp đôi",
-          "Stream lưu message và hỗ trợ consumer group với ACK, consumer offline vẫn đọc lại được",
-          "Pub/Sub lưu message vĩnh viễn",
-          "Stream không có thứ tự"
+          "Stream nhanh gấp đôi vì không cần lưu message",
+          "Stream lưu message, consumer offline vẫn đọc lại được",
+          "Pub/Sub lưu message vĩnh viễn, Stream thì có TTL",
+          "Stream không giữ thứ tự, Pub/Sub thì có"
         ],
         answer: 1,
         explain: "Pub/Sub là fire-and-forget: subscriber không kết nối sẽ mất message. Stream là log lưu trữ có ID tăng dần, consumer group theo dõi message chưa ACK."
@@ -2396,10 +2404,10 @@ export async function updateProduct(id: number, data: { name: string }) {
       {
         q: "Trong cache-aside, khi cập nhật sản phẩm bạn nên làm gì với cache?",
         options: [
-          "Không làm gì, chờ TTL",
-          "Xoá toàn bộ Redis",
+          "Không làm gì, chờ key tự hết TTL",
+          "Chạy FLUSHALL để xoá toàn bộ Redis",
           "Cập nhật DB rồi xoá key cache tương ứng",
-          "Chỉ cập nhật cache, không cập nhật DB"
+          "Chỉ cập nhật cache, DB đồng bộ sau"
         ],
         answer: 2,
         explain: "Xoá key sau khi DB commit để lần đọc sau tải giá trị mới. Chờ TTL để lại dữ liệu cũ; xoá toàn bộ gây stampede; chỉ ghi cache là write-behind thiếu an toàn."
@@ -2407,10 +2415,10 @@ export async function updateProduct(id: number, data: { name: string }) {
       {
         q: "Cache stampede là gì?",
         options: [
-          "Redis hết bộ nhớ",
-          "Key không có TTL",
-          "Cache trả về dữ liệu của user khác",
-          "Một key nóng hết hạn khiến rất nhiều request cùng miss và cùng truy vấn DB"
+          "Redis đầy bộ nhớ và bắt đầu từ chối ghi",
+          "Key cache không có TTL nên tồn tại mãi",
+          "Cache trả nhầm dữ liệu của user khác",
+          "Key nóng hết hạn, rất nhiều request cùng dồn vào DB"
         ],
         answer: 3,
         explain: "Stampede là cơn bão request dồn xuống DB khi cache của key nóng biến mất. Giải pháp là lock, single-flight, jitter và làm mới sớm."
@@ -2418,10 +2426,10 @@ export async function updateProduct(id: number, data: { name: string }) {
       {
         q: "Rủi ro chính của write-behind là gì?",
         options: [
-          "Dữ liệu chưa kịp ghi xuống DB có thể mất nếu cache gặp sự cố",
-          "Đọc chậm",
-          "Không dùng được với Redis",
-          "Tỉ lệ cache hit thấp"
+          "Mất dữ liệu chưa kịp đẩy xuống DB khi cache sập",
+          "Mọi lần đọc đều phải đi xuống DB",
+          "Chỉ dùng được với Memcached, không với Redis",
+          "Tỉ lệ cache hit thấp hơn cache-aside"
         ],
         answer: 0,
         explain: "Write-behind coi cache là nơi ghi đầu tiên và đẩy xuống DB sau, nên sự cố cache trước khi flush sẽ làm mất dữ liệu."
@@ -2509,10 +2517,10 @@ new Worker('email', async (job) => {
       {
         q: "Vì sao cần token ngẫu nhiên khi dùng Redis lock?",
         options: [
-          "Để lock nhanh hơn",
-          "Để khi nhả lock chỉ xoá nếu lock vẫn thuộc về mình, tránh xoá lock của tiến trình khác",
-          "Để mã hoá dữ liệu",
-          "Redis bắt buộc giá trị phải ngẫu nhiên"
+          "Để lệnh SET NX chạy nhanh hơn",
+          "Để khi nhả chỉ xoá lock nếu nó còn là của mình",
+          "Để Redis mã hoá giá trị của key lock",
+          "Vì SET NX bắt buộc giá trị phải ngẫu nhiên"
         ],
         answer: 1,
         explain: "Nếu lock của bạn đã hết hạn và tiến trình khác vừa lấy lại, DEL thẳng sẽ xoá lock của họ. So token trước khi xoá (nguyên tử bằng Lua) tránh điều đó."
@@ -2520,10 +2528,10 @@ new Worker('email', async (job) => {
       {
         q: "Nhược điểm của rate limit fixed window là gì?",
         options: [
-          "Không dùng được với Redis",
-          "Tốn quá nhiều bộ nhớ",
-          "Người dùng có thể gửi gần gấp đôi giới hạn quanh ranh giới giữa hai cửa sổ",
-          "Không có TTL"
+          "Không cài được bằng Redis INCR",
+          "Tốn một phần tử Sorted Set cho mỗi request",
+          "Có thể lọt gần gấp đôi giới hạn quanh ranh giới cửa sổ",
+          "Key bộ đếm không thể đặt TTL"
         ],
         answer: 2,
         explain: "100 request cuối phút trước và 100 request đầu phút sau đều hợp lệ, tạo 200 request trong vài giây. Sliding window hoặc token bucket làm mượt điều này."
@@ -2617,9 +2625,9 @@ db.comments.find({ postId: ObjectId("66f5a1b2c3d4e5f601234568") })
         q: "Tình huống nào gợi ý nên dùng reference thay vì embed?",
         options: [
           "Dữ liệu con luôn đọc cùng cha và có ít phần tử",
-          "Dữ liệu con cần cập nhật nguyên tử cùng cha",
-          "Dữ liệu con tăng không giới hạn và thường được truy vấn độc lập",
-          "Dữ liệu con nhỏ và không bao giờ thay đổi"
+          "Dữ liệu con phải được cập nhật nguyên tử cùng cha",
+          "Dữ liệu con tăng không giới hạn, hay truy vấn riêng",
+          "Dữ liệu con nhỏ, cố định và không bao giờ thay đổi"
         ],
         answer: 2,
         explain: "Con tăng không giới hạn sẽ làm document phình to, và nếu được truy vấn độc lập thì collection riêng với index phù hợp hiệu quả hơn. Các trường hợp còn lại đều nghiêng về embed."
@@ -2698,10 +2706,10 @@ ORDER BY bucket;
       {
         q: "Đặc điểm của cách thiết kế dữ liệu trong DynamoDB/Cassandra?",
         options: [
-          "Liệt kê mẫu truy cập trước rồi thiết kế key/bảng phục vụ chúng",
-          "Chuẩn hoá tới 3NF rồi truy vấn tùy ý",
-          "Luôn dùng JOIN",
-          "Không cần khoá"
+          "Liệt kê mẫu truy cập trước, rồi thiết kế key",
+          "Chuẩn hoá tới 3NF trước, rồi truy vấn tùy ý",
+          "Tách nhiều bảng nhỏ rồi JOIN khi đọc",
+          "Không cần khoá, lọc bằng quét toàn bảng"
         ],
         answer: 0,
         explain: "Các hệ thống này truy cập hiệu quả chủ yếu qua key, không có JOIN, nên phải thiết kế từ truy vấn. Chuẩn hoá rồi truy vấn tùy ý là cách tiếp cận của SQL."
@@ -2709,10 +2717,10 @@ ORDER BY bucket;
       {
         q: "Ưu điểm của TimescaleDB so với một time-series DB riêng biệt là gì?",
         options: [
-          "Không cần lưu dữ liệu",
-          "Là extension của PostgreSQL nên dùng SQL, JOIN với bảng nghiệp vụ và công cụ Postgres sẵn có",
-          "Không hỗ trợ timestamp",
-          "Chỉ chạy trên MongoDB"
+          "Không cần lưu dữ liệu xuống đĩa",
+          "Dùng SQL và JOIN được với bảng nghiệp vụ trong Postgres",
+          "Không cần cột thời gian trong bảng",
+          "Chạy như một plugin của MongoDB"
         ],
         answer: 1,
         explain: "TimescaleDB chạy trong Postgres, bạn tận dụng SQL, backup và kinh nghiệm vận hành Postgres hiện có."
@@ -2788,21 +2796,21 @@ SELECT name FROM products WHERE name % 'tai ngh' ORDER BY similarity(name, 'tai 
       {
         q: "Vì sao thường dùng cấu hình `simple` cho tiếng Việt trong Postgres?",
         options: [
-          "Vì nó nhanh nhất",
-          "Vì simple hỗ trợ từ đồng nghĩa",
-          "Vì simple tự bỏ dấu",
-          "Vì Postgres không có sẵn cấu hình tiếng Việt, simple chỉ tách từ và chuyển chữ thường, không áp stemming sai ngôn ngữ"
+          "Vì simple là cấu hình duy nhất dùng được GIN",
+          "Vì simple có sẵn từ điển đồng nghĩa tiếng Việt",
+          "Vì simple tự bỏ dấu tiếng Việt khi tách từ",
+          "Vì simple không áp stemming của ngôn ngữ khác"
         ],
         answer: 3,
-        explain: "Cấu hình simple không có stemming hay từ dừng theo ngôn ngữ nên an toàn với tiếng Việt. Nó không tự bỏ dấu (cần unaccent) và không có từ đồng nghĩa."
+        explain: "Postgres không có sẵn cấu hình tiếng Việt; simple chỉ tách từ và chuyển chữ thường, không có stemming hay từ dừng theo ngôn ngữ nên an toàn với tiếng Việt. Mọi cấu hình đều dùng được GIN; simple không tự bỏ dấu (cần unaccent) và không có từ đồng nghĩa."
       },
       {
         q: "Đánh đổi chính khi thêm Elasticsearch cho tìm kiếm là gì?",
         options: [
-          "Phải vận hành thêm hệ thống và đồng bộ dữ liệu, index tìm kiếm có độ trễ so với DB chính",
-          "Không tìm được tiếng Việt",
-          "Không hỗ trợ xếp hạng",
-          "Phải bỏ PostgreSQL"
+          "Thêm hệ thống phải vận hành và dữ liệu bị trễ",
+          "Không tìm kiếm được nội dung tiếng Việt",
+          "Không hỗ trợ xếp hạng mức độ liên quan",
+          "Phải chuyển toàn bộ dữ liệu khỏi PostgreSQL"
         ],
         answer: 0,
         explain: "Elasticsearch mạnh về tìm kiếm nhưng là hệ thống riêng cần đồng bộ, dẫn tới eventual consistency và chi phí vận hành. Postgres vẫn là nguồn sự thật."
@@ -2897,6 +2905,119 @@ async function updateProfile(userId: number, data: { bio: string }) {
         ],
         answer: 3,
         explain: "Sai số dư có thể gây mất tiền, nên thà từ chối tạm thời còn hơn trả kết quả sai. Các dữ liệu còn lại chấp nhận sai lệch nhỏ trong thời gian ngắn."
+      }
+    ]
+  },
+
+  "p04.m1.t6": {
+    sections: [
+      {
+        h: "Streaming vs logical replication",
+        p: [
+          "Một máy chủ PostgreSQL duy nhất là điểm chết: ổ đĩa hỏng là cả hệ thống dừng. Replication giữ thêm bản sao dữ liệu trên máy khác, vừa để dự phòng (HA) vừa để chia tải đọc.",
+          "Streaming replication (physical) gửi luồng WAL, tức nhật ký ghi trước của primary, sang standby. Standby phát lại WAL nên là bản sao vật lý của cả cluster, chỉ cho đọc (hot standby). Cách dựng phổ biến: `pg_basebackup -R` để sao chép dữ liệu và tự tạo file `standby.signal` cùng `primary_conninfo`. Mặc định streaming replication là bất đồng bộ; muốn đồng bộ thì đặt `synchronous_standby_names`.",
+          "Logical replication gửi thay đổi ở mức dòng theo mô hình publish/subscribe (`CREATE PUBLICATION` ở nguồn, `CREATE SUBSCRIPTION` ở đích, nguồn cần `wal_level = logical`). Ưu điểm: chọn được từng bảng, chạy được giữa hai major version khác nhau nên hay dùng để nâng cấp gần như không downtime. Hạn chế: không sao chép DDL và giá trị sequence, bạn phải tự đồng bộ schema."
+        ]
+      },
+      {
+        h: "Replication lag và failover",
+        p: [
+          "Với replication bất đồng bộ, standby luôn chậm hơn primary một chút. Đó là replication lag: người dùng vừa lưu xong mà đọc từ replica có thể chưa thấy. Hãy theo dõi lag bằng view `pg_stat_replication` trên primary (cột `write_lag`, `flush_lag`, `replay_lag`) và đặt cảnh báo khi lag vượt ngưỡng.",
+          "PostgreSQL tự nó không có failover tự động: standby chỉ lên làm primary khi có người chạy `pg_ctl promote` hoặc `SELECT pg_promote()`. Trong thực tế có hai hướng:"
+        ],
+        list: [
+          "Dùng dịch vụ managed (Amazon RDS/Aurora, Cloud SQL, Azure Database for PostgreSQL): bật chế độ HA/Multi-AZ, nhà cung cấp lo phát hiện lỗi và chuyển endpoint.",
+          "Tự vận hành với Patroni: mỗi node chạy một agent, dùng etcd/Consul để bầu leader, tránh hai primary cùng nhận ghi (split-brain). Ứng dụng kết nối qua HAProxy trỏ đúng leader.",
+          "Dù chọn hướng nào, ứng dụng NestJS phải chịu được vài giây mất kết nối khi failover: bật retry và làm thao tác ghi idempotent."
+        ],
+        code: {
+          lang: "sql",
+          file: "replication-lag.sql",
+          src: `-- Chạy trên primary: mỗi standby một dòng
+SELECT application_name, state, sync_state,
+       write_lag, flush_lag, replay_lag
+FROM pg_stat_replication;
+
+-- Chạy trên standby: lần phát lại giao dịch gần nhất cách đây bao lâu
+SELECT now() - pg_last_xact_replay_timestamp() AS replay_delay;`
+        }
+      },
+      {
+        h: "Declarative partitioning và dọn dữ liệu cũ",
+        p: [
+          "Khi bảng đơn hàng lên hàng trăm triệu dòng, index phình to và `DELETE` dữ liệu cũ sinh rất nhiều dead tuple. Declarative partitioning chia bảng thành nhiều bảng con theo khoảng giá trị, thường theo tháng. Planner bỏ qua partition không liên quan (partition pruning), còn xoá dữ liệu cũ chỉ là tách rồi `DROP` cả partition.",
+          "Lưu ý: cận dưới `FROM` được tính vào partition, cận trên `TO` thì không. Primary key hay unique constraint trên bảng partition phải chứa cột partition key. `DETACH PARTITION ... CONCURRENTLY` chỉ giữ khoá nhẹ nên không chặn truy vấn đang chạy, nhưng không được chạy trong transaction block và không dùng được khi bảng có partition DEFAULT."
+        ],
+        code: {
+          lang: "sql",
+          file: "partition-orders.sql",
+          src: `CREATE TABLE orders (
+  id          bigint GENERATED ALWAYS AS IDENTITY,
+  customer_id bigint NOT NULL,
+  total       numeric(12,2) NOT NULL,
+  created_at  timestamptz NOT NULL,
+  PRIMARY KEY (id, created_at)          -- phải chứa partition key
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE orders_2026_09 PARTITION OF orders
+  FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
+CREATE TABLE orders_2026_10 PARTITION OF orders
+  FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
+
+-- Index tạo trên bảng cha sẽ tự có ở mọi partition
+CREATE INDEX ON orders (customer_id, created_at);
+
+-- Dọn dữ liệu cũ: chạy riêng từng lệnh, ngoài transaction
+ALTER TABLE orders DETACH PARTITION orders_2026_09 CONCURRENTLY;
+DROP TABLE orders_2026_09;   -- hoặc pg_dump ra kho lưu trữ trước khi xoá`
+        }
+      }
+    ],
+    summary: [
+      "Streaming replication sao chép cả cluster qua WAL, mặc định bất đồng bộ; logical replication chọn được từng bảng và chạy được giữa các major version.",
+      "Replication lag là bình thường với bất đồng bộ; theo dõi bằng `pg_stat_replication` và định tuyến read-your-writes về primary.",
+      "PostgreSQL không tự failover; dùng HA của dịch vụ managed hoặc Patroni kèm kho đồng thuận như etcd.",
+      "Declarative partitioning theo thời gian giúp pruning khi truy vấn và xoá dữ liệu cũ bằng cách bỏ cả partition.",
+      "`DETACH PARTITION ... CONCURRENTLY` không chặn truy vấn nhưng phải chạy ngoài transaction và không có partition DEFAULT."
+    ],
+    pitfalls: [
+      "Tự viết script \"thấy primary chết thì promote standby\" không có cơ chế đồng thuận, dẫn tới split-brain với hai primary cùng nhận ghi. Dùng Patroni hoặc HA của dịch vụ managed.",
+      "Dùng logical replication để nâng cấp rồi cutover mà quên đồng bộ sequence, bản ghi mới bị trùng khoá chính. Cập nhật sequence bằng `setval` trước khi chuyển ghi sang cluster mới.",
+      "Chỉ tạo partition cho vài tháng đầu, đến tháng mới thì `INSERT` lỗi vì không có partition nào khớp. Tạo trước partition cho các kỳ sắp tới bằng job định kỳ (hoặc pg_partman) và cảnh báo khi thiếu."
+    ],
+    quiz: [
+      {
+        q: "Tình huống nào nên chọn logical replication thay vì streaming replication?",
+        options: [
+          "Cần một bản sao đầy đủ của cả cluster để làm hot standby",
+          "Cần nâng cấp từ PostgreSQL 17 lên 18 với downtime rất ngắn",
+          "Cần standby tự động sao chép cả thay đổi schema (DDL)",
+          "Cần primary chờ standby xác nhận ghi xong mới trả commit"
+        ],
+        answer: 1,
+        explain: "Logical replication chạy được giữa các major version nên phù hợp để nâng cấp. Bản sao đầy đủ cả cluster là việc của streaming replication; logical replication không sao chép DDL; còn chờ xác nhận là synchronous replication, cấu hình bằng `synchronous_standby_names`."
+      },
+      {
+        q: "Primary PostgreSQL tự quản lý bị sập. Điều gì xảy ra nếu bạn chỉ có streaming replication mà không có công cụ nào khác?",
+        options: [
+          "Standby tự lên làm primary sau khoảng thời gian chờ mặc định",
+          "Ứng dụng tự chuyển kết nối sang standby nhờ driver pg",
+          "Standby vẫn chỉ đọc cho đến khi có người hoặc công cụ promote nó",
+          "Standby tự dừng hẳn để tránh xảy ra tình trạng split-brain"
+        ],
+        answer: 2,
+        explain: "PostgreSQL không có failover tự động; standby chỉ thoát chế độ standby khi chạy `pg_ctl promote` hoặc `pg_promote()`. Vì vậy cần Patroni hoặc HA của dịch vụ managed để tự phát hiện lỗi và promote."
+      },
+      {
+        q: "Vì sao partition theo tháng giúp xoá dữ liệu cũ hiệu quả hơn `DELETE ... WHERE created_at < ...`?",
+        options: [
+          "Tách và bỏ cả partition, không để lại dead tuple cho VACUUM",
+          "DELETE trên bảng partition sẽ tự động bị PostgreSQL chặn lại",
+          "Partition tự xoá dữ liệu cũ khi hết khoảng thời gian đã khai báo",
+          "Partition nén dữ liệu cũ lại nên không cần phải xoá đi nữa"
+        ],
+        answer: 0,
+        explain: "DETACH rồi DROP một partition là thao tác trên metadata và file, nhanh và không sinh dead tuple như DELETE hàng triệu dòng. PostgreSQL không tự xoá hay tự nén partition, và DELETE vẫn chạy bình thường trên bảng partition."
       }
     ]
   },

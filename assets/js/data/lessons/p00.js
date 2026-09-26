@@ -66,7 +66,7 @@ iostat -x 1 3        # chi tiết I/O từng disk (gói sysstat)`
     pitfalls: [
       "Tối ưu code tính toán trong khi nút thắt thật là 50 query DB trong một request. Hãy đo trước khi tối ưu.",
       "Gọi DB hoặc API ngoài bên trong vòng lặp (N+1). Hãy gộp lại thành một query hoặc một batch.",
-      "Nghĩ rằng RAM đầy là xấu: Linux dùng RAM trống làm page cache. Xem cột `available` trong `free -h` thay vì `free`."
+      "Nghĩ rằng RAM đầy là xấu: Linux dùng RAM trống làm page cache. Hãy nhìn cột `available` trong `free -h` (RAM còn dùng được, gồm cả cache có thể giải phóng) thay vì cột `free`."
     ],
     quiz: [
       {
@@ -164,7 +164,7 @@ if (isMainThread) {
       },
       {
         q: "Hai request cùng trừ tiền từ một tài khoản trong API Node.js. Cách an toàn là gì?",
-        options: ["Không cần làm gì vì Node.js đơn luồng", "Đọc số dư, trừ trong JS, rồi ghi lại", "Dùng `UPDATE accounts SET balance = balance - $1 WHERE id = $2 AND balance >= $1`", "Thêm `setTimeout` giữa hai lần đọc"],
+        options: ["Không cần làm gì, vì Node.js chạy JavaScript trên một thread", "`SELECT` số dư, trừ trong JS, rồi `UPDATE` giá trị mới", "Một câu `UPDATE ... SET balance = balance - $1 WHERE ... AND balance >= $1`", "Thêm `setTimeout` ngẫu nhiên giữa lúc đọc và lúc ghi"],
         answer: 2,
         explain: "Câu UPDATE nguyên tử để database xử lý đồng thời và kiểm tra điều kiện trong cùng một thao tác. Đọc rồi ghi trong JS vẫn bị race giữa các request, còn setTimeout không đảm bảo gì."
       }
@@ -495,7 +495,7 @@ node -e "console.log(Buffer.from('hi').toString('base64url'))"`
       },
       {
         q: "Phát biểu nào đúng về Base64?",
-        options: ["Cần khoá bí mật để giải mã", "Làm dữ liệu nhỏ lại", "Biến dữ liệu nhị phân thành văn bản, tăng khoảng 33% kích thước, ai cũng giải mã được", "Là thuật toán băm một chiều"],
+        options: ["Cần khoá bí mật mới giải mã được, nên dùng để giấu token", "Nén dữ liệu, kết quả nhỏ hơn bản gốc khoảng 33%", "Biểu diễn byte thành văn bản, lớn hơn khoảng 33%, ai cũng giải mã được", "Là hàm băm một chiều, không thể lấy lại dữ liệu gốc"],
         answer: 2,
         explain: "Base64 là mã hoá biểu diễn có thể đảo ngược mà không cần khoá. Nó làm dữ liệu lớn hơn chứ không nhỏ hơn và không phải hàm băm."
       },
@@ -855,9 +855,9 @@ curl -X POST https://api.example.com/api/tasks \\
       },
       {
         q: "Ưu điểm chính của HTTP/2 so với HTTP/1.1 là gì?",
-        options: ["Chạy trên UDP", "Multiplexing nhiều request trên một kết nối TCP và nén header", "Không cần TLS", "Bỏ status code"],
+        options: ["Chạy trên UDP để tránh bắt tay TCP", "Nhiều request song song trên một kết nối TCP", "Bỏ hẳn yêu cầu TLS cho mọi kết nối", "Thay status code bằng mã lỗi nhị phân"],
         answer: 1,
-        explain: "HTTP/2 cho phép nhiều stream song song trên một kết nối và nén header. Chạy trên UDP là đặc điểm của HTTP/3."
+        explain: "HTTP/2 cho phép nhiều stream song song (multiplexing) trên một kết nối và nén header bằng HPACK. Chạy trên UDP là đặc điểm của HTTP/3; HTTP/2 vẫn giữ nguyên method và status code."
       }
     ]
   },
@@ -875,7 +875,7 @@ curl -X POST https://api.example.com/api/tasks \\
         h: "Chứng chỉ và CA",
         p: [
           "Server có một cặp khoá: private key giữ bí mật, public key nằm trong chứng chỉ (certificate). Chứng chỉ gắn public key với tên miền và được ký bởi một Certificate Authority (CA). Trình duyệt và hệ điều hành có sẵn danh sách root CA tin cậy, nên kiểm tra được chuỗi: chứng chỉ server, được ký bởi intermediate CA, được ký bởi root CA.",
-          "Let's Encrypt cấp chứng chỉ miễn phí, tự động gia hạn qua giao thức ACME (certbot, cert-manager trong Kubernetes, hoặc Caddy/Traefik tích hợp sẵn)."
+          "Let's Encrypt cấp chứng chỉ miễn phí, tự động gia hạn qua giao thức ACME (certbot, cert-manager trong Kubernetes, hoặc Caddy/Traefik tích hợp sẵn). Thời hạn chứng chỉ công khai đang bị rút ngắn theo lộ trình của CA/Browser Forum (tối đa 200 ngày từ 15/3/2026, 100 ngày từ 15/3/2027, 47 ngày từ 15/3/2029); Let's Encrypt dự kiến giảm mặc định từ 90 xuống 64 ngày (2/2027) rồi 45 ngày (2/2028). Vì vậy gia hạn thủ công không còn khả thi: bắt buộc phải tự động hoá."
         ]
       },
       {
@@ -934,7 +934,7 @@ echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/
       },
       {
         q: "Vì sao không nên đặt `rejectUnauthorized: false` khi kết nối DB ở production?",
-        options: ["Làm chậm truy vấn", "Kết nối vẫn mã hoá nhưng không xác thực server, kẻ tấn công có thể giả mạo", "PostgreSQL không hỗ trợ TLS", "Sẽ tắt hoàn toàn mã hoá"],
+        options: ["Vì mỗi truy vấn sẽ chậm đi đáng kể do phải kiểm tra thêm", "Vì vẫn mã hoá nhưng không xác thực server, dễ bị giả mạo", "Vì PostgreSQL không hỗ trợ TLS nên tuỳ chọn này vô nghĩa", "Vì nó tắt hoàn toàn mã hoá, dữ liệu đi dạng văn bản thuần"],
         answer: 1,
         explain: "Tắt kiểm tra chứng chỉ thì bạn không biết đầu bên kia là ai, nên man-in-the-middle có thể chen vào. Mã hoá mà không xác thực thì mất phần lớn giá trị."
       }
@@ -1007,13 +1007,13 @@ bootstrap();`
       },
       {
         q: "CORS bảo vệ chống lại điều gì?",
-        options: ["Mọi request trái phép tới API", "JavaScript trên trang khác đọc response từ API trong trình duyệt người dùng", "SQL injection", "DDoS"],
+        options: ["Mọi request trái phép tới API, kể cả từ curl", "JS của trang khác origin đọc response trong trình duyệt", "Kẻ tấn công chèn câu lệnh SQL qua tham số", "Lượng request khổng lồ làm sập server (DDoS)"],
         answer: 1,
         explain: "CORS và same-origin policy là cơ chế của trình duyệt. Chúng không chặn request từ curl, server hay công cụ tấn công, nên API vẫn cần xác thực và phân quyền."
       },
       {
         q: "Vì sao nên đặt `defer` cho thẻ script?",
-        options: ["Để script chạy trước HTML", "Để trình duyệt tiếp tục parse HTML trong khi tải script, và chạy script sau khi parse xong", "Để tắt cache", "Để bỏ qua CORS"],
+        options: ["Để script chạy ngay, trước khi HTML được parse", "Để tải script song song và chạy sau khi parse HTML xong", "Để trình duyệt không cache file script này", "Để script được gọi API khác origin mà không cần CORS"],
         answer: 1,
         explain: "Script thường chặn parser. `defer` cho phép tải song song và chạy theo thứ tự sau khi DOM đã parse xong, giúp trang hiển thị sớm hơn."
       }
@@ -1053,7 +1053,7 @@ example.com.        300  IN  TXT    "v=spf1 include:_spf.provider.com ~all"`
           "Shared hosting: nhiều website chung một server, rẻ, quản lý qua control panel. Phù hợp PHP/WordPress, thường không hợp cho Node.js chạy lâu dài hay Docker.",
           "VPS: máy ảo riêng, có quyền root. Bạn tự cài Node, Docker, Nginx, tự lo bảo mật, backup, cập nhật. Chi phí thấp, học được nhiều.",
           "Cloud IaaS (AWS, GCP, Azure): tài nguyên linh hoạt, dịch vụ managed (RDS, ElastiCache, load balancer), tính tiền theo sử dụng, cấu hình phức tạp hơn.",
-          "PaaS (Render, Fly.io, Railway, Heroku...): đẩy code hoặc image lên là chạy, TLS sẵn, scale dễ. Nhanh nhất để ra mắt, nhưng chi phí cao hơn khi lớn và ít quyền kiểm soát."
+          "PaaS (Render, Fly.io, Railway, Google Cloud Run...): đẩy code hoặc image lên là chạy, TLS sẵn, scale dễ. Nhanh nhất để ra mắt, nhưng chi phí cao hơn khi lớn và ít quyền kiểm soát. Hãy xét cả tương lai của nền tảng: ví dụ từ 2/2026 Heroku chuyển sang chế độ sustaining engineering (chỉ vá lỗi, không phát triển tính năng mới)."
         ]
       },
       {
@@ -1090,7 +1090,7 @@ example.com.        300  IN  TXT    "v=spf1 include:_spf.provider.com ~all"`
       },
       {
         q: "Ưu điểm chính của PaaS là gì?",
-        options: ["Luôn rẻ nhất khi quy mô lớn", "Triển khai nhanh, nền tảng lo hạ tầng, TLS và scale", "Có quyền truy cập kernel", "Không cần domain"],
+        options: ["Luôn rẻ nhất khi hệ thống lên quy mô lớn", "Triển khai nhanh, nền tảng lo hạ tầng và TLS", "Được quyền root và tuỳ chỉnh kernel của máy", "Không cần domain hay DNS cho ứng dụng"],
         answer: 1,
         explain: "PaaS giảm công vận hành để bạn tập trung vào code. Đổi lại chi phí thường cao hơn khi lớn và bạn ít quyền kiểm soát hạ tầng."
       }
@@ -1135,7 +1135,7 @@ tree -L 2                   # xem cây thư mục 2 cấp (cần cài gói tree)
         h: "Tìm file và kiểm tra dung lượng",
         p: [
           "Sự cố kinh điển ở production: disk đầy vì log hoặc Docker image cũ, khiến database không ghi được và ứng dụng lỗi hàng loạt. `df` cho biết filesystem nào đầy, `du` cho biết thư mục nào chiếm chỗ, `find` giúp tìm file theo tên, kích thước, thời gian.",
-          "Khi disk đầy, hãy dọn có chủ đích: cấu hình logrotate cho log ứng dụng, chạy `docker image prune` để xoá image không dùng, và đặt cảnh báo khi disk vượt khoảng 80% để xử lý trước khi sự cố xảy ra. Đừng xoá bừa trong `/var/lib`, vì đó là dữ liệu của database và Docker."
+          "Khi disk đầy, hãy dọn có chủ đích: cấu hình logrotate cho log ứng dụng, chạy `docker image prune` để xoá image lơ lửng (dangling, không còn tag) hoặc `docker image prune -a` để xoá mọi image không có container nào dùng, và đặt cảnh báo khi disk vượt khoảng 80% để xử lý trước khi sự cố xảy ra. Đừng xoá bừa trong `/var/lib`, vì đó là dữ liệu của database và Docker."
         ],
         code: {
           lang: "bash",
@@ -1175,7 +1175,7 @@ docker system df                        # dung lượng Docker dùng`
       },
       {
         q: "Bạn xoá file log 5GB bằng `rm` nhưng `df` vẫn báo đầy. Vì sao?",
-        options: ["Linux có thùng rác", "Process vẫn đang giữ file mở, dung lượng chỉ giải phóng khi file được đóng", "`df` bị cache", "Phải reboot mới thấy"],
+        options: ["Linux chuyển file đã xoá vào thùng rác", "Process vẫn giữ file mở nên dữ liệu chưa được giải phóng", "`df` lưu cache kết quả, vài giờ sau mới cập nhật", "Phải reboot thì filesystem mới tính lại dung lượng"],
         answer: 1,
         explain: "Xoá chỉ gỡ tên file; inode và dữ liệu còn đó khi process còn giữ file descriptor. Restart process hoặc truncate file thay vì xoá. `lsof | grep deleted` giúp tìm ra."
       }
@@ -1255,7 +1255,7 @@ umask                                    # xem umask hiện tại, thường 002
       },
       {
         q: "Vì sao thêm user vào nhóm `docker` cần cân nhắc như cấp quyền root?",
-        options: ["Vì Docker chậm", "Vì user đó có thể chạy container mount thư mục gốc của host và thao tác với quyền root", "Vì Docker xoá file của user", "Vì nhóm docker không có mật khẩu"],
+        options: ["Vì container chạy chậm hơn khi user không phải root", "Vì user đó có thể mount `/` của host vào container và sửa như root", "Vì Docker sẽ xoá file trong home của user đó", "Vì nhóm docker bỏ qua mật khẩu khi đăng nhập SSH"],
         answer: 1,
         explain: "Docker daemon chạy bằng root. Ai điều khiển được nó có thể chạy container với volume `/:/host` và sửa mọi file trên máy."
       },
@@ -1361,13 +1361,13 @@ journalctl -u task-api --since '1 hour ago' -p err   # chỉ lỗi trong 1 giờ
     quiz: [
       {
         q: "Khác biệt quan trọng giữa SIGTERM và SIGKILL?",
-        options: ["SIGTERM nhanh hơn", "Process có thể bắt SIGTERM để dọn dẹp, SIGKILL thì không bắt được", "SIGKILL chỉ dùng cho root", "Không có khác biệt"],
+        options: ["SIGTERM dừng process nhanh hơn SIGKILL", "Process bắt được SIGTERM để dọn dẹp, SIGKILL thì không", "Chỉ root mới gửi được SIGKILL tới process", "Hai signal giống nhau, chỉ khác số hiệu"],
         answer: 1,
         explain: "SIGTERM là yêu cầu dừng, ứng dụng có thể xử lý để thoát an toàn. SIGKILL do kernel thực thi ngay lập tức."
       },
       {
         q: "Kubernetes dừng một pod như thế nào?",
-        options: ["Gửi SIGKILL ngay", "Gửi SIGTERM, chờ grace period (mặc định 30 giây), rồi mới SIGKILL nếu process chưa thoát", "Tắt nguồn node", "Gửi SIGHUP"],
+        options: ["Gửi SIGKILL ngay để giải phóng tài nguyên", "Gửi SIGTERM, chờ grace period (30 giây), rồi mới SIGKILL", "Gửi SIGHUP để process tự nạp lại cấu hình", "Gửi SIGSTOP rồi xoá container khỏi node"],
         answer: 1,
         explain: "Kubernetes cho ứng dụng thời gian graceful shutdown qua `terminationGracePeriodSeconds`, mặc định 30 giây, rồi mới buộc dừng."
       },
@@ -1531,13 +1531,14 @@ psql -h localhost -p 5433 -U app taskdb`
         ],
         code: {
           lang: "text",
-          file: "/etc/ssh/sshd_config.d/99-hardening.conf",
+          file: "/etc/ssh/sshd_config.d/00-hardening.conf",
           src: `PermitRootLogin no
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 PubkeyAuthentication yes`
         },
         list: [
+          "Với sshd, giá trị ĐẦU TIÊN đọc được của mỗi tuỳ chọn sẽ thắng, và file trong `sshd_config.d/` được nạp theo thứ tự tên. Vì vậy đặt tên bắt đầu bằng `00-` để không bị file khác (ví dụ `50-cloud-init.conf` trên image cloud có thể chứa `PasswordAuthentication yes`) lấn át. Xem cấu hình thực sự đang áp dụng bằng `sudo sshd -T | grep -Ei 'passwordauth|permitroot'`.",
           "Kiểm tra cú pháp bằng `sudo sshd -t` rồi reload dịch vụ SSH (tên unit là `ssh` trên Ubuntu/Debian, `sshd` trên nhiều bản khác).",
           "Chỉ mở cổng 22 cho IP cần thiết bằng firewall (ufw, security group), cân nhắc thêm fail2ban."
         ]
@@ -1782,7 +1783,7 @@ brew install jq                    # macOS`
         h: "Cài Node.js và công cụ phát triển",
         p: [
           "Gói Node.js trong kho mặc định của bản phân phối thường cũ. Với môi trường dev, hãy dùng version manager như `nvm`, `fnm` hoặc `mise` để cài và chuyển giữa các phiên bản. Với server, dùng repo chính thức NodeSource hoặc tốt hơn là chạy ứng dụng trong Docker image `node:24`.",
-          "Ghi phiên bản Node vào file `.nvmrc` hoặc trường `engines` trong `package.json` để cả đội và CI dùng cùng phiên bản (Node.js 24 là Active LTS)."
+          "Ghi phiên bản Node vào file `.nvmrc` hoặc trường `engines` trong `package.json` để cả đội và CI dùng cùng phiên bản (tại thời điểm 9/2026, Node.js 24 là Active LTS tới 20/10/2026, còn Node.js 26 dự kiến lên LTS ngày 28/10/2026; xem lịch ở github.com/nodejs/Release)."
         ],
         code: {
           lang: "bash",
@@ -1847,7 +1848,7 @@ node -v`
         h: "Git lưu snapshot, không lưu diff",
         p: [
           "Nhiều người nghĩ Git lưu các thay đổi giữa các phiên bản. Thực ra mỗi commit là một snapshot toàn bộ cây thư mục tại thời điểm đó. Git tiết kiệm dung lượng vì file không đổi thì commit mới chỉ trỏ lại đúng object cũ, và các object được nén, đóng gói (packfile).",
-          "Mọi thứ trong Git là object, được định danh bằng hash nội dung (mặc định SHA-1, Git cũng hỗ trợ SHA-256 cho repo mới). Cùng nội dung thì cùng hash, sửa một byte thì hash đổi. Đây là lý do lịch sử Git rất khó bị sửa lén."
+          "Mọi thứ trong Git là object, được định danh bằng hash nội dung (Git 2.x mặc định SHA-1 và hỗ trợ SHA-256 khi tạo repo bằng `git init --object-format=sha256`; Git 3.0 đang được chuẩn bị sẽ chuyển mặc định sang SHA-256 cho repo mới). Cùng nội dung thì cùng hash, sửa một byte thì hash đổi. Đây là lý do lịch sử Git rất khó bị sửa lén."
         ]
       },
       {
@@ -1869,7 +1870,8 @@ node -v`
         code: {
           lang: "bash",
           file: "terminal",
-          src: `git init demo && cd demo
+          src: `git config --global init.defaultBranch main   # Git 2.x mặc định tên nhánh đầu là master
+git init demo && cd demo
 echo "hello" > a.txt && git add a.txt && git commit -m "feat: add a"
 
 cat .git/HEAD                    # ref: refs/heads/main
@@ -2473,4 +2475,202 @@ git log --all -p -S 'AKIA' # tìm chuỗi nghi là AWS access key trong lịch s
       }
     ]
   },
+
+  "p00.m0.t6": {
+    "sections": [
+      {
+        "h": "Vì sao cần chuẩn bị môi trường ngay từ đầu",
+        "p": [
+          "Môi trường lập trình là bộ công cụ bạn dùng mỗi ngày: trình soạn thảo code, terminal, Git và runtime của ngôn ngữ (ở khóa này là Node.js). Cài đúng một lần giúp bạn tránh hàng loạt lỗi vặt kiểu `node: command not found`, lệch phiên bản giữa máy bạn và máy đồng đội, hay file bị đổi ký tự xuống dòng khi commit.",
+          "Nguyên tắc chung: mọi thứ phải lặp lại được. Phiên bản Node của dự án được ghi vào file, cấu hình editor được ghi vào repo, để người mới clone về là chạy được như bạn."
+        ]
+      },
+      {
+        "h": "Bộ công cụ tối thiểu",
+        "p": [
+          "Trình soạn thảo phổ biến nhất hiện nay là VS Code. Hãy cài thêm vài extension cơ bản rồi học phím tắt mở file nhanh (Ctrl+P), tìm trong toàn dự án (Ctrl+Shift+F) và đổi tên biến an toàn (F2).",
+          "Không cài Node trực tiếp từ file cài đặt nếu bạn làm nhiều dự án. Hãy dùng trình quản lý phiên bản như `fnm` hoặc `nvm` (trên Windows có dự án riêng là nvm-windows), để mỗi dự án dùng đúng phiên bản của nó. Phiên bản LTS hiện hành cho production là Node.js 24."
+        ],
+        "list": [
+          "VS Code + extension: ESLint, Prettier, EditorConfig, GitLens, Docker",
+          "Git: cấu hình `user.name`, `user.email` trước lần commit đầu tiên",
+          "Terminal: trên Windows nên dùng WSL 2 (Ubuntu) để có môi trường giống server Linux",
+          "Node.js qua fnm/nvm, kèm file `.nvmrc` hoặc `.node-version` trong repo"
+        ],
+        "code": {
+          "lang": "bash",
+          "file": "terminal",
+          "src": "# Cài fnm (macOS/Linux/WSL), sau đó mở terminal mới\ncurl -fsSL https://fnm.vercel.app/install | bash\n\nfnm install 24          # cài Node 24 LTS\nfnm use 24\nnode -v && npm -v\n\n# Ghi phiên bản vào repo để cả nhóm dùng giống nhau\necho \"24\" > .node-version\n\n# Git: danh tính và nhánh mặc định\ngit config --global user.name \"Nguyen Van A\"\ngit config --global user.email \"a@example.com\"\ngit config --global init.defaultBranch main"
+        }
+      },
+      {
+        "h": "Chuẩn hoá cấu hình trong repo",
+        "p": [
+          "File `.editorconfig` thống nhất cách thụt lề và ký tự xuống dòng cho mọi editor. File `.gitattributes` với dòng `* text=auto eol=lf` giúp repo luôn lưu kiểu xuống dòng LF, tránh lỗi script bash chạy hỏng trên Linux vì ký tự CRLF từ Windows.",
+          "Thư mục `.vscode/extensions.json` có thể gợi ý extension cho cả nhóm. Khi người mới mở dự án, VS Code tự hỏi có muốn cài các extension đó không."
+        ],
+        "code": {
+          "lang": "ini",
+          "file": ".editorconfig",
+          "src": "root = true\n\n[*]\ncharset = utf-8\nend_of_line = lf\nindent_style = space\nindent_size = 2\ninsert_final_newline = true\ntrim_trailing_whitespace = true"
+        }
+      }
+    ],
+    "summary": [
+      "Cài Node bằng trình quản lý phiên bản (fnm/nvm) và ghi phiên bản vào repo",
+      "Trên Windows, dùng WSL 2 để có môi trường giống server Linux",
+      "Cấu hình Git danh tính trước lần commit đầu tiên",
+      "Dùng .editorconfig và .gitattributes để cả nhóm có cùng định dạng file"
+    ],
+    "pitfalls": [
+      "Cài Node bằng file cài đặt rồi không đổi được phiên bản khi dự án yêu cầu bản khác",
+      "Code trên thư mục Windows (/mnt/c) trong WSL làm Git và npm chạy rất chậm, nên để code trong thư mục home của Linux",
+      "Commit file có ký tự xuống dòng CRLF khiến script bash lỗi `bad interpreter` trên server"
+    ],
+    "quiz": [
+      {
+        "q": "Vì sao nên cài Node bằng fnm hoặc nvm thay vì file cài đặt?",
+        "options": [
+          "Để chuyển nhanh giữa các phiên bản Node theo từng dự án",
+          "Vì file cài đặt không có npm đi kèm",
+          "Vì fnm chạy JavaScript nhanh hơn Node gốc",
+          "Vì file cài đặt chỉ hỗ trợ phiên bản cũ"
+        ],
+        "answer": 0,
+        "explain": "Trình quản lý phiên bản cho phép mỗi dự án dùng đúng phiên bản Node của nó. Node cài từ file cài đặt vẫn có npm và chạy nhanh như nhau."
+      },
+      {
+        "q": "Dòng `* text=auto eol=lf` trong .gitattributes giải quyết vấn đề gì?",
+        "options": [
+          "Chặn commit file lớn hơn giới hạn cho phép",
+          "Lưu file văn bản với ký tự xuống dòng LF thống nhất",
+          "Tự động format code trước mỗi lần commit",
+          "Mã hoá nội dung file trước khi đẩy lên remote"
+        ],
+        "answer": 1,
+        "explain": "Thuộc tính eol=lf chuẩn hoá ký tự xuống dòng, tránh CRLF từ Windows làm hỏng script trên Linux. Nó không format code hay mã hoá file."
+      },
+      {
+        "q": "Trên Windows, lựa chọn nào giúp môi trường dev giống server Linux nhất?",
+        "options": [
+          "Dùng PowerShell với các alias giống lệnh Linux",
+          "Dùng Git Bash cho mọi tác vụ phát triển",
+          "Dùng WSL 2 và để code trong thư mục home của Linux",
+          "Cài Docker Desktop và không cần gì thêm"
+        ],
+        "answer": 2,
+        "explain": "WSL 2 chạy kernel Linux thật. Để code trong filesystem của Linux giúp Git, npm và file watcher chạy nhanh và đúng như trên server."
+      }
+    ]
+  },
+  "p00.m1.t7": {
+    sections: [
+      {
+        h: "Địa chỉ IP và các vùng private",
+        p: [
+          "Mỗi máy trong mạng cần một địa chỉ IP để gói tin biết đi tới đâu. IPv4 dài 32 bit, viết thành 4 số 0–255 như `192.168.1.10`, chỉ có khoảng 4,3 tỷ địa chỉ. IPv6 dài 128 bit, viết dạng hex như `2001:db8::1`.",
+          "Để tiết kiệm IPv4, RFC 1918 dành ba vùng private chỉ dùng trong mạng nội bộ, không được định tuyến trên Internet:"
+        ],
+        list: [
+          "`10.0.0.0/8` (10.0.0.0 – 10.255.255.255): hay dùng cho VPC.",
+          "`172.16.0.0/12` (172.16.0.0 – 172.31.255.255): chứa mạng bridge mặc định `172.17.0.0/16` của Docker.",
+          "`192.168.0.0/16`: mạng gia đình, văn phòng nhỏ.",
+          "`127.0.0.1` là loopback (chính máy mình)."
+        ]
+      },
+      {
+        h: "Subnet và ký hiệu CIDR",
+        p: [
+          "CIDR (RFC 4632) viết dải địa chỉ dạng `địa_chỉ/prefix`. Số sau `/` là số bit đầu dành cho phần mạng, phần còn lại cho máy. `/24` còn 8 bit nên có 2^8 = 256 địa chỉ; `/16` có 65.536 địa chỉ. Prefix càng lớn mạng càng nhỏ: `/32` là một địa chỉ, `/0` là tất cả.",
+          "Ví dụ: VPC `10.0.0.0/16` chia subnet public `10.0.1.0/24` cho load balancer và subnet private `10.0.2.0/24` cho NestJS và PostgreSQL. AWS giữ lại 5 địa chỉ mỗi subnet. Trong security group, `0.0.0.0/0` là mọi nơi, còn `10.0.0.0/16` chỉ là máy trong VPC.",
+          "`net.BlockList` của Node kiểm tra IP thuộc dải nào, hữu ích để chặn SSRF khi server tải URL do người dùng gửi."
+        ],
+        code: {
+          lang: "typescript",
+          file: "src/common/private-ip.ts",
+          src: `import { BlockList, isIPv4 } from 'node:net';
+
+const privateRanges = new BlockList();
+privateRanges.addSubnet('10.0.0.0', 8);
+privateRanges.addSubnet('172.16.0.0', 12);
+privateRanges.addSubnet('192.168.0.0', 16);
+privateRanges.addSubnet('127.0.0.0', 8); // loopback
+
+export function isPrivateIPv4(ip: string): boolean {
+  return isIPv4(ip) && privateRanges.check(ip, 'ipv4');
+}
+
+console.log(isPrivateIPv4('172.31.255.1')); // true
+console.log(isPrivateIPv4('172.32.0.1'));   // false, ngoài /12
+console.log(isPrivateIPv4('8.8.8.8'));      // false`
+        }
+      },
+      {
+        h: "NAT: nhiều máy dùng chung một IP public",
+        p: [
+          "NAT (Network Address Translation) cho cả nhà dùng chung một IP public. Khi laptop `192.168.1.10` gọi ra Internet, router thay địa chỉ nguồn bằng IP public của nó và ghi ánh xạ vào bảng NAT để dịch ngược gói trả về. Kết nối từ ngoài không tự vào được máy nội bộ, trừ khi cấu hình port forwarding.",
+          "Trên cloud, server ở subnet private gọi API bên ngoài qua NAT gateway. Docker dùng NAT khi chạy `-p 8080:3000`: cổng 8080 của host chuyển vào cổng 3000 của container. Khi đối tác cần whitelist IP, hãy đưa IP public của NAT gateway, không phải IP private của server."
+        ]
+      },
+      {
+        h: "Port và socket",
+        p: [
+          "IP đưa gói tin tới đúng máy; port (0–65535) chọn đúng tiến trình. Theo RFC 6335: 0–1023 là System Ports (22 SSH, 443 HTTPS), 1024–49151 là User Ports (5432 PostgreSQL, 6379 Redis), 49152–65535 là Dynamic Ports. Trên Linux, mở cổng dưới 1024 cần quyền đặc biệt, nên app Node thường chạy cổng 3000 sau Nginx.",
+          "Kết nối TCP được xác định bởi bộ bốn: IP và port nguồn, IP và port đích; port phía client do hệ điều hành cấp tạm. Socket là đầu mút gắn với IP và port đó. Server lắng nghe `127.0.0.1:3000` chỉ nhận kết nối từ chính máy, phải lắng nghe `0.0.0.0:3000` mới nhận từ mạng. Đây là lỗi kinh điển khi app trong container chạy nhưng host gọi không được."
+        ],
+        code: {
+          lang: "bash",
+          file: "terminal",
+          src: `# IP của các interface trên máy (Linux)
+ip -4 addr show
+
+# Tiến trình nào đang lắng nghe cổng nào, trên địa chỉ nào
+ss -tlnp
+
+# IP public mà Internet nhìn thấy (sau NAT)
+curl -s https://ifconfig.me
+
+# Dải CIDR của mạng bridge mặc định trong Docker
+docker network inspect bridge --format '{{(index .IPAM.Config 0).Subnet}}'`
+        }
+      }
+    ],
+    summary: [
+      "IPv4 dài 32 bit, IPv6 dài 128 bit; RFC 1918 dành 10/8, 172.16/12 và 192.168/16 cho mạng private",
+      "Trong CIDR, prefix /n giữ n bit cho phần mạng; /24 có 256 địa chỉ, /16 có 65.536 địa chỉ",
+      "NAT cho nhiều máy private đi ra Internet qua một IP public nhưng chặn kết nối tự đi vào",
+      "Port chọn tiến trình trên máy; kết nối TCP xác định bởi IP và port của hai đầu",
+      "Server phải lắng nghe 0.0.0.0 thay vì 127.0.0.1 để nhận kết nối từ ngoài container hoặc máy"
+    ],
+    pitfalls: [
+      "Đặt dải VPC hoặc mạng Docker trùng dải mạng văn phòng/VPN khiến gói tin đi nhầm đường, rất khó debug",
+      "Mở security group `0.0.0.0/0` cho cổng database 5432 thay vì chỉ cho dải CIDR của subnet app",
+      "Đưa IP private của server cho đối tác whitelist, trong khi request thực tế đi ra bằng IP của NAT gateway"
+    ],
+    quiz: [
+      {
+        q: "Subnet `10.0.2.0/24` có tổng cộng bao nhiêu địa chỉ IPv4?",
+        options: ["24 địa chỉ", "65.536 địa chỉ", "256 địa chỉ", "16.777.216 địa chỉ"],
+        answer: 2,
+        explain: "/24 giữ 24 bit cho phần mạng, còn 32 − 24 = 8 bit cho máy, tức 2^8 = 256 địa chỉ. 65.536 là của /16, 16.777.216 là của /8."
+      },
+      {
+        q: "Địa chỉ nào nằm trong vùng private theo RFC 1918?",
+        options: ["172.20.5.9", "172.32.0.1", "192.169.1.1", "11.0.0.1"],
+        answer: 0,
+        explain: "Vùng 172.16.0.0/12 kéo dài từ 172.16.0.0 đến 172.31.255.255 nên 172.20.5.9 là private. 172.32.0.1 và 192.169.1.1 nằm ngay ngoài biên các vùng private."
+      },
+      {
+        q: "App Node trong container chạy bình thường, đã `-p 8080:3000`, nhưng từ host gọi `localhost:8080` không được. Nguyên nhân thường gặp là gì?",
+        options: [
+          "Cổng 8080 thuộc nhóm Dynamic Ports",
+          "Docker không dùng NAT khi chạy trên Linux",
+          "Container chưa được cấp địa chỉ IPv6",
+          "App chỉ lắng nghe 127.0.0.1 trong container"
+        ],
+        answer: 3,
+        explain: "127.0.0.1 trong container là loopback của riêng container, nên kết nối được chuyển từ host vào không tới được app. Cần lắng nghe 0.0.0.0. Cổng 8080 là User Port và Docker vẫn dùng NAT cho port mapping."
+      }
+    ]
+  }
 });

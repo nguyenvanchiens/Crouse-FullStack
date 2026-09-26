@@ -71,7 +71,7 @@ kubectl get events --sort-by=.lastTimestamp`
         h: "Init container và sidecar",
         p: [
           "Init container chạy tuần tự trước container chính và phải kết thúc thành công, dùng để chờ phụ thuộc hoặc chuẩn bị dữ liệu. Sidecar là container phụ chạy song song với container chính suốt vòng đời Pod: đẩy log, proxy của service mesh, đồng bộ cấu hình.",
-          "Từ Kubernetes 1.29 (bật mặc định), sidecar được khai báo \"chính thức\" là init container có `restartPolicy: Always`: nó khởi động trước container chính, chạy suốt vòng đời, và được dừng sau container chính. Điều này giải quyết vấn đề cũ là Job không kết thúc vì sidecar vẫn chạy."
+          "Sidecar \"gốc\" (native sidecar) được khai báo là init container có `restartPolicy: Always`: nó khởi động trước container chính, chạy suốt vòng đời, và được dừng sau container chính. Tính năng này ra mắt dạng alpha ở Kubernetes 1.28, bật mặc định (beta) từ 1.29 và chính thức stable từ 1.33. Điều này giải quyết vấn đề cũ là Job không kết thúc vì sidecar vẫn chạy."
         ],
         code: {
           lang: "yaml", file: "pod-demo.yaml",
@@ -85,7 +85,7 @@ spec:
     - name: wait-db
       image: busybox:1.36
       command: ["sh", "-c", "until nc -z postgres 5432; do echo chờ DB; sleep 2; done"]
-    - name: log-shipper          # sidecar gốc (K8s >= 1.29)
+    - name: log-shipper          # sidecar gốc (bật mặc định từ 1.29, stable từ 1.33)
       image: busybox:1.36
       restartPolicy: Always
       command: ["sh", "-c", "tail -F /var/log/app/app.log"]
@@ -130,8 +130,8 @@ kubectl delete pod api-demo`
     ],
     quiz: [
       { q: "Hai container trong cùng một Pod giao tiếp với nhau thế nào là đơn giản nhất?", options: ["Qua Service", "Qua `localhost` vì chung network namespace", "Qua IP của node", "Không thể giao tiếp"], answer: 1, explain: "Container trong một Pod chung IP và network namespace nên gọi nhau bằng `localhost:<port>`. Service dùng để gọi giữa các Pod khác nhau." },
-      { q: "Vì sao không nên sửa file trực tiếp trong Pod bằng `kubectl exec`?", options: ["Vì exec bị cấm", "Vì Pod có thể bị thay bất cứ lúc nào và thay đổi sẽ mất, các replica khác cũng không có", "Vì làm chậm Pod", "Vì Pod không có filesystem"], answer: 1, explain: "Pod là tạm thời; thay đổi phải đi qua image hoặc manifest. exec không bị cấm mặc định và vẫn hữu ích để debug." },
-      { q: "Init container khác sidecar ở điểm nào?", options: ["Init container chạy song song suốt vòng đời", "Init container chạy tuần tự và phải kết thúc thành công trước khi container chính chạy", "Sidecar chạy sau khi container chính kết thúc", "Không khác nhau"], answer: 1, explain: "Init container thường chạy xong rồi thoát trước container chính. Sidecar chạy song song với container chính (từ 1.29 khai báo bằng init container `restartPolicy: Always`)." }
+      { q: "Vì sao không nên sửa file trực tiếp trong Pod bằng `kubectl exec`?", options: ["Vì `kubectl exec` bị cấm mặc định", "Vì thay đổi mất khi Pod bị thay", "Vì exec làm Pod chạy chậm hẳn đi", "Vì Pod không có filesystem để ghi"], answer: 1, explain: "Pod là tạm thời; thay đổi mất khi Pod bị thay và các replica khác cũng không có, nên phải đi qua image hoặc manifest. exec không bị cấm mặc định và vẫn hữu ích để debug." },
+      { q: "Init container khác sidecar ở điểm nào?", options: ["Init container chạy song song suốt vòng đời Pod", "Init container phải chạy xong trước container chính", "Sidecar chỉ chạy sau khi container chính kết thúc", "Hai loại giống nhau, chỉ khác tên trường"], answer: 1, explain: "Init container thường chạy xong rồi thoát trước container chính. Sidecar chạy song song với container chính (native sidecar khai báo bằng init container `restartPolicy: Always`, stable từ 1.33)." }
     ]
   },
   "p10.m0.t2": {
@@ -207,9 +207,9 @@ kubectl rollout restart deploy/task-api              # tạo lại Pod, cùng im
       "Dùng `kubectl rollout undo` trong hệ thống GitOps rồi thấy phiên bản lỗi quay lại sau vài phút."
     ],
     quiz: [
-      { q: "Với `maxUnavailable: 0` và `maxSurge: 1`, rolling update diễn ra thế nào?", options: ["Xoá hết Pod cũ rồi tạo mới", "Tạo một Pod mới, chờ ready, rồi xoá một Pod cũ, lặp lại", "Tạo gấp đôi số Pod cùng lúc", "Không cập nhật"], answer: 1, explain: "Không được thiếu Pod nào và chỉ được dư một Pod, nên cập nhật từng Pod một. Xoá hết là strategy `Recreate`." },
+      { q: "Với `maxUnavailable: 0` và `maxSurge: 1`, rolling update diễn ra thế nào?", options: ["Xoá hết Pod cũ rồi mới tạo Pod mới", "Thêm một Pod mới, chờ ready, rồi bớt một Pod cũ", "Tạo gấp đôi số Pod cùng một lúc", "Không cập nhật được vì không được thiếu Pod"], answer: 1, explain: "Không được thiếu Pod nào và chỉ được dư một Pod, nên cập nhật từng Pod một. Xoá hết là strategy `Recreate`." },
       { q: "Thay đổi nào tạo ra revision mới cho Deployment?", options: ["Đổi `replicas` từ 3 lên 5", "Đổi image trong `spec.template`", "Thêm annotation vào metadata của Deployment", "HPA scale"], answer: 1, explain: "Chỉ thay đổi trong template Pod mới tạo ReplicaSet mới. Scale (tay hay HPA) và metadata của Deployment không tạo revision." },
-      { q: "Vì sao Deployment cần readiness probe để rolling update an toàn?", options: ["Để Pod dùng ít memory", "Để Kubernetes chỉ xoá Pod cũ khi Pod mới thật sự sẵn sàng phục vụ", "Để image kéo nhanh hơn", "Để tự rollback"], answer: 1, explain: "Không có readiness, Pod được coi là ready ngay khi container chạy, traffic đến trước khi app khởi động xong. Probe không ảnh hưởng memory, tốc độ kéo image, và Deployment không tự rollback." }
+      { q: "Vì sao Deployment cần readiness probe để rolling update an toàn?", options: ["Để Pod mới dùng ít memory hơn", "Để Pod cũ chỉ bị xoá khi Pod mới sẵn sàng", "Để image được kéo về nhanh hơn", "Để Deployment tự rollback khi lỗi"], answer: 1, explain: "Không có readiness, Pod được coi là ready ngay khi container chạy, traffic đến trước khi app khởi động xong. Probe không ảnh hưởng memory, tốc độ kéo image, và Deployment không tự rollback." }
     ]
   },
   "p10.m0.t3": {
@@ -277,7 +277,7 @@ kubectl run tmp --rm -it --image=busybox:1.36 --restart=Never -n prod -- \\
       "Tạo `type: LoadBalancer` cho mọi service nội bộ, mỗi cái sinh một load balancer tính phí riêng."
     ],
     quiz: [
-      { q: "Service biết gửi traffic tới Pod nào bằng cách nào?", options: ["Theo tên Deployment", "Theo label selector, chỉ gồm Pod đang ready", "Theo IP cố định", "Theo thứ tự tạo Pod"], answer: 1, explain: "Service chọn Pod theo label và chỉ đưa Pod ready vào endpoint. Nó không tham chiếu Deployment hay IP cố định." },
+      { q: "Service biết gửi traffic tới Pod nào bằng cách nào?", options: ["Theo tên Deployment trong spec", "Theo label selector trên Pod", "Theo danh sách IP cố định", "Theo thứ tự tạo Pod"], answer: 1, explain: "Service chọn Pod theo label và chỉ đưa Pod ready vào endpoint. Nó không tham chiếu Deployment hay IP cố định." },
       { q: "Pod ở namespace `staging` muốn gọi Service `task-api` ở namespace `prod`. Dùng tên nào?", options: ["`task-api`", "`task-api.prod`", "`prod.task-api`", "Không gọi được giữa namespace"], answer: 1, explain: "Tên ngắn `task-api` chỉ phân giải trong cùng namespace. Khác namespace dùng `task-api.prod` hoặc tên đầy đủ `task-api.prod.svc.cluster.local`. Giữa namespace vẫn gọi được trừ khi NetworkPolicy chặn." },
       { q: "Loại Service nào phù hợp nhất cho giao tiếp giữa các microservice bên trong cluster?", options: ["NodePort", "LoadBalancer", "ClusterIP", "ExternalName"], answer: 2, explain: "ClusterIP chỉ truy cập nội bộ, không phơi ra ngoài và không tốn load balancer. ExternalName chỉ là bí danh DNS tới tên bên ngoài." }
     ]
@@ -287,7 +287,7 @@ kubectl run tmp --rm -it --image=busybox:1.36 --restart=Never -n prod -- \\
       {
         h: "Vì sao chuyển từ Ingress sang Gateway API",
         p: [
-          "Ingress là API cũ để đưa HTTP từ bên ngoài vào Service. Nó quá đơn giản nên mỗi controller thêm tính năng qua annotation riêng, cấu hình không mang sang controller khác được. Dự án Ingress NGINX (`ingress-nginx`) đã ngừng bảo trì từ tháng 3/2026, không còn bản vá bảo mật. Dự án mới nên dùng Gateway API.",
+          "Ingress là API cũ để đưa HTTP từ bên ngoài vào Service. Nó quá đơn giản nên mỗi controller thêm tính năng qua annotation riêng, cấu hình không mang sang controller khác được. Dự án Ingress NGINX (`ingress-nginx`) đã ngừng bảo trì từ tháng 3/2026, không còn bản vá bảo mật. Lưu ý: bản thân API Ingress vẫn còn trong Kubernetes (được giữ ổn định, không phát triển thêm) và vẫn có các controller khác hỗ trợ; thứ bị ngừng là dự án controller ingress-nginx. Dự án mới nên dùng Gateway API.",
           "Gateway API tách vai trò rõ ràng: đội hạ tầng quản lý GatewayClass và Gateway, đội ứng dụng tự quản HTTPRoute của mình. Các tính năng như routing theo header, chia traffic theo trọng số là một phần của spec chuẩn, không cần annotation. Có nhiều bản cài đặt: Envoy Gateway, NGINX Gateway Fabric, Istio, Cilium, Traefik."
         ],
         list: [
@@ -316,15 +316,34 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
+    - name: http                 # cổng 80: redirect và ACME HTTP-01
+      protocol: HTTP
+      port: 80
+      hostname: api.example.com
+      allowedRoutes:
+        namespaces: { from: Same }
     - name: https
       protocol: HTTPS
       port: 443
       hostname: api.example.com
       tls:
         mode: Terminate
-        certificateRefs: [{ name: api-example-com-tls }]
+        certificateRefs: [{ name: api-example-com-tls }]   # Secret cùng namespace với Gateway
       allowedRoutes:
         namespaces: { from: All }
+---
+# Redirect mọi request HTTP sang HTTPS
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: http-to-https
+  namespace: infra
+spec:
+  parentRefs: [{ name: web, sectionName: http }]
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect: { scheme: https, statusCode: 301 }
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -332,22 +351,37 @@ metadata:
   name: task-api
   namespace: prod
 spec:
-  parentRefs: [{ name: web, namespace: infra }]
+  parentRefs: [{ name: web, namespace: infra, sectionName: https }]
   hostnames: ["api.example.com"]
   rules:
     - matches: [{ path: { type: PathPrefix, value: /v1 } }]
       backendRefs:
         - { name: task-api, port: 80, weight: 90 }
-        - { name: task-api-canary, port: 80, weight: 10 }`
+        - { name: task-api-canary, port: 80, weight: 10 }
+---
+# Issuer của cert-manager giải HTTP-01 qua chính Gateway
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata: { name: letsencrypt }
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef: { name: letsencrypt-account-key }
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - { name: web, namespace: infra, kind: Gateway }`
         },
         p: [
-          "Route ở namespace `prod` gắn được vào Gateway ở `infra` nhờ `allowedRoutes`. Trong production, nên giới hạn bằng `from: Selector` thay vì `All`. Nếu `backendRefs` trỏ tới Service ở namespace khác thì cần thêm ReferenceGrant."
+          "`sectionName` chọn listener cụ thể của Gateway mà route gắn vào: route redirect chỉ gắn vào listener `http`, route ứng dụng chỉ gắn vào `https`. Route ở namespace `prod` gắn được vào Gateway ở `infra` nhờ `allowedRoutes`. Trong production, nên giới hạn bằng `from: Selector` thay vì `All`. Nếu `backendRefs` trỏ tới Service ở namespace khác thì cần thêm ReferenceGrant."
         ]
       },
       {
         h: "TLS tự động với cert-manager",
         p: [
-          "cert-manager hỗ trợ Gateway API: khi Gateway có annotation `cert-manager.io/cluster-issuer`, nó tự tạo Certificate cho các listener HTTPS có hostname, lưu vào Secret được tham chiếu trong `certificateRefs`, và tự gia hạn. Hỗ trợ này cần được bật trong cấu hình cert-manager tùy phiên bản; hãy kiểm tra tài liệu của phiên bản bạn cài. Trạng thái Gateway có điều kiện `Programmed`; `kubectl get gateway` phải báo `True`."
+          "cert-manager hỗ trợ Gateway API: khi Gateway có annotation `cert-manager.io/cluster-issuer`, nó tự tạo Certificate cho các listener HTTPS có hostname và `tls.mode: Terminate`, lưu vào Secret được tham chiếu trong `certificateRefs`, và tự gia hạn. Secret này phải nằm cùng namespace với Gateway. Từ cert-manager 1.15, hỗ trợ này không còn là feature gate nhưng vẫn phải bật bằng Helm value `config.gatewayAPI.enabled=true`, và CRD của Gateway API phải được cài trước khi cert-manager khởi động (nếu cài sau thì restart cert-manager).",
+          "Với HTTP-01, cert-manager tạm tạo một HTTPRoute cho đường dẫn `/.well-known/acme-challenge/<token>` gắn vào Gateway (theo `gatewayHTTPRoute.parentRefs` của issuer), nên Gateway cần listener HTTP cổng 80. Route challenge dùng path khớp chính xác nên được ưu tiên hơn route redirect bắt mọi path. Trạng thái Gateway có điều kiện `Programmed`; `kubectl get gateway` phải báo `True`."
         ],
         code: {
           lang: "bash", file: "terminal",
@@ -371,8 +405,8 @@ kubectl get certificate -n infra`
     ],
     quiz: [
       { q: "Thứ tự các resource trong Gateway API là gì?", options: ["Ingress → Service → Pod", "GatewayClass → Gateway → HTTPRoute", "HTTPRoute → GatewayClass → Gateway", "Gateway → Ingress → HTTPRoute"], answer: 1, explain: "GatewayClass chọn controller, Gateway là điểm vào cụ thể, HTTPRoute định nghĩa routing và gắn vào Gateway qua `parentRefs`." },
-      { q: "Muốn gửi 10% traffic tới bản canary với Gateway API, bạn làm gì?", options: ["Thêm annotation của controller", "Dùng `weight` trong `backendRefs` của HTTPRoute", "Tạo hai Gateway", "Scale canary lên 10 Pod"], answer: 1, explain: "Chia traffic theo trọng số là tính năng chuẩn trong `backendRefs`. Annotation là cách của Ingress cũ; tạo hai Gateway hay chỉnh số Pod không chia traffic chính xác." },
-      { q: "Vì sao dự án mới không nên dùng ingress-nginx?", options: ["Vì nó không hỗ trợ HTTP", "Vì dự án đã ngừng bảo trì từ 3/2026, không còn bản vá bảo mật", "Vì nó chỉ chạy trên AWS", "Vì Kubernetes đã xoá Service"], answer: 1, explain: "Thành phần đứng ở cửa ngõ Internet mà không có bản vá bảo mật là rủi ro lớn. Kubernetes khuyến nghị Gateway API cho dự án mới." }
+      { q: "Muốn gửi 10% traffic tới bản canary với Gateway API, bạn làm gì?", options: ["Thêm annotation canary của controller", "Đặt `weight` trong `backendRefs` của route", "Tạo hai Gateway với hai địa chỉ riêng", "Scale bản canary lên đúng 10 Pod"], answer: 1, explain: "Chia traffic theo trọng số là tính năng chuẩn trong `backendRefs`. Annotation là cách của Ingress cũ; tạo hai Gateway hay chỉnh số Pod không chia traffic chính xác." },
+      { q: "Vì sao dự án mới không nên dùng ingress-nginx?", options: ["Vì nó không hỗ trợ HTTP/1.1", "Vì dự án đã ngừng nhận bản vá bảo mật", "Vì nó chỉ chạy được trên AWS", "Vì Kubernetes đã xoá API Service"], answer: 1, explain: "ingress-nginx ngừng bảo trì từ 3/2026. Thành phần đứng ở cửa ngõ Internet mà không có bản vá bảo mật là rủi ro lớn. Kubernetes khuyến nghị Gateway API cho dự án mới." }
     ]
   },
   "p10.m0.t5": {
@@ -494,14 +528,14 @@ spec:
       {
         h: "Secret chỉ là base64",
         p: [
-          "Base64 là mã hoá để truyền dữ liệu nhị phân, không phải mã hoá bảo mật. Ai có quyền `get secret` trong namespace đều đọc được, và theo mặc định Secret được lưu trong etcd không mã hoá. Vì vậy manifest Secret thật không bao giờ được commit vào Git."
+          "Base64 là mã hoá để truyền dữ liệu nhị phân, không phải mã hoá bảo mật. Ai có quyền `get secret` trong namespace đều đọc được, và với cluster tự dựng (kubeadm, k3s...) Secret mặc định được lưu trong etcd không mã hoá. Managed Kubernetes thường mã hoá sẵn ở tầng lưu trữ, nhưng điều đó không giúp gì nếu ai đó có quyền đọc Secret qua API. Vì vậy manifest Secret thật không bao giờ được commit vào Git."
         ],
         code: {
           lang: "bash", file: "terminal",
           src: `kubectl get secret task-api-secret -o jsonpath='{.data.DATABASE_URL}' | base64 -d`
         },
         list: [
-          "Bật encryption at rest cho etcd (`EncryptionConfiguration`); trên EKS dùng mã hoá envelope với KMS.",
+          "Với cluster tự dựng, bật encryption at rest cho etcd (`EncryptionConfiguration`). EKS (Kubernetes 1.28 trở lên) đã mặc định mã hoá envelope mọi dữ liệu API bằng KMS; bạn có thể chỉ định khoá KMS của mình (customer managed key) nếu cần kiểm soát khoá.",
           "Giới hạn RBAC: chỉ ServiceAccount cần mới được đọc Secret.",
           "Không in biến môi trường ra log, không đưa Secret vào ConfigMap."
         ]
@@ -538,9 +572,9 @@ spec:
       "Cấp quyền `get secrets` trên toàn namespace cho ServiceAccount của ứng dụng không cần đến."
     ],
     quiz: [
-      { q: "Phát biểu nào về Kubernetes Secret là đúng?", options: ["Secret được mã hoá mạnh mặc định", "Secret chỉ encode base64; cần mã hoá etcd và giới hạn RBAC", "Secret không đọc được bằng kubectl", "Secret tự đồng bộ từ AWS"], answer: 1, explain: "Base64 giải mã được ngay. Ai có quyền đọc Secret đều xem được; đồng bộ từ AWS cần công cụ như External Secrets Operator." },
-      { q: "Ứng dụng đọc `LOG_LEVEL` qua `envFrom`. Bạn sửa ConfigMap, cần làm gì để áp dụng?", options: ["Không cần làm gì", "Tạo lại Pod, ví dụ `kubectl rollout restart deploy/task-api`", "Xoá ConfigMap", "Restart node"], answer: 1, explain: "Biến môi trường được nạp khi container khởi động. Chỉ file mount (không dùng subPath) mới được kubelet cập nhật dần." },
-      { q: "External Secrets Operator giải quyết vấn đề gì?", options: ["Tăng tốc Pod", "Giữ giá trị secret trong kho chuyên dụng, Git chỉ chứa tham chiếu", "Thay thế ConfigMap", "Mã hoá traffic mạng"], answer: 1, explain: "Operator đồng bộ từ Secrets Manager/Vault vào Kubernetes Secret, nên không có giá trị nhạy cảm trong repo. Nó không liên quan tốc độ, ConfigMap hay mã hoá mạng." }
+      { q: "Phát biểu nào về Kubernetes Secret là đúng?", options: ["Secret luôn được mã hoá mạnh ở mọi nơi", "Giá trị Secret chỉ được encode base64", "Secret không đọc được bằng kubectl", "Secret tự đồng bộ từ AWS Secrets Manager"], answer: 1, explain: "Base64 giải mã được ngay, nên cần mã hoá etcd và giới hạn RBAC. Ai có quyền đọc Secret đều xem được bằng kubectl; đồng bộ từ AWS cần công cụ như External Secrets Operator." },
+      { q: "Ứng dụng đọc `LOG_LEVEL` qua `envFrom`. Bạn sửa ConfigMap, cần làm gì để áp dụng?", options: ["Không cần làm gì, Pod tự nhận", "Chạy `kubectl rollout restart deploy/task-api`", "Xoá ConfigMap rồi tạo lại", "Khởi động lại node đang chạy Pod"], answer: 1, explain: "Biến môi trường được nạp khi container khởi động. Chỉ file mount (không dùng subPath) mới được kubelet cập nhật dần." },
+      { q: "External Secrets Operator giải quyết vấn đề gì?", options: ["Giúp Pod khởi động nhanh hơn", "Git chỉ chứa tham chiếu tới secret", "Thay thế hoàn toàn ConfigMap", "Mã hoá traffic giữa các Pod"], answer: 1, explain: "Operator đồng bộ từ Secrets Manager/Vault vào Kubernetes Secret, nên không có giá trị nhạy cảm trong repo. Nó không liên quan tốc độ, ConfigMap hay mã hoá mạng." }
     ]
   },
   "p10.m1.t1": {
@@ -575,8 +609,8 @@ spec:
       {
         h: "QoS class",
         list: [
-          "`Guaranteed`: mọi container có requests bằng limits cho cả CPU và memory. Bị evict sau cùng.",
-          "`Burstable`: có requests nhưng không thoả Guaranteed. Phổ biến nhất.",
+          "`Guaranteed`: mọi container đều đặt limits cho cả CPU và memory, và requests bằng limits (nếu chỉ đặt limits, Kubernetes tự lấy requests bằng limits). Bị evict sau cùng.",
+          "`Burstable`: ít nhất một container có requests hoặc limits CPU/memory nhưng Pod không thoả Guaranteed. Phổ biến nhất.",
           "`BestEffort`: không có requests hay limits nào. Bị evict đầu tiên khi node thiếu tài nguyên."
         ],
         p: [
@@ -598,13 +632,13 @@ spec:
       "Đặt requests theo số liệu đo được, luôn có memory limit, cấu hình heap nhỏ hơn limit."
     ],
     pitfalls: [
-      "Không đặt requests: Pod là BestEffort, dễ bị evict, và HPA không tính được phần trăm CPU.",
+      "Không đặt requests lẫn limits: Pod là BestEffort, dễ bị evict, và HPA không tính được phần trăm CPU.",
       "Memory limit 256Mi nhưng heap Node.js mặc định có thể vượt, Pod OOMKilled liên tục dưới tải.",
       "Đặt requests quá cao \"cho chắc\", cluster đầy mà node thực tế gần như rảnh."
     ],
     quiz: [
-      { q: "Scheduler dựa vào gì để quyết định node có đủ chỗ cho Pod?", options: ["Mức CPU thực tế của node", "Tổng requests của các Pod đã xếp so với tài nguyên allocatable của node", "Limits của Pod", "Số Pod trên node"], answer: 1, explain: "Scheduler cộng requests, không nhìn mức dùng thực tế hay limits. Số Pod có giới hạn riêng nhưng không phải tiêu chí chính về tài nguyên." },
-      { q: "Container vượt memory limit thì sao?", options: ["Bị throttle", "Bị kernel giết, trạng thái `OOMKilled`", "Tự được cấp thêm memory", "Không có gì"], answer: 1, explain: "Memory không nén được nên process bị giết. Throttle là hành vi khi vượt CPU limit." },
+      { q: "Scheduler dựa vào gì để quyết định node có đủ chỗ cho Pod?", options: ["Mức CPU và memory đang dùng thực tế", "Tổng requests so với allocatable của node", "Tổng limits so với dung lượng của node", "Số Pod đang chạy trên node"], answer: 1, explain: "Scheduler cộng requests, không nhìn mức dùng thực tế hay limits. Số Pod có giới hạn riêng nhưng không phải tiêu chí chính về tài nguyên." },
+      { q: "Container vượt memory limit thì sao?", options: ["Bị throttle, chạy chậm lại", "Bị kernel giết, báo `OOMKilled`", "Được cấp thêm memory từ node", "Không có gì, limit chỉ để tham khảo"], answer: 1, explain: "Memory không nén được nên process bị giết. Throttle là hành vi khi vượt CPU limit." },
       { q: "Pod có requests bằng limits cho cả CPU và memory ở mọi container thuộc QoS class nào?", options: ["BestEffort", "Burstable", "Guaranteed", "Critical"], answer: 2, explain: "Guaranteed yêu cầu requests = limits cho cả CPU và memory. Không có class Critical; `system-cluster-critical` là PriorityClass, khái niệm khác." }
     ]
   },
@@ -675,9 +709,9 @@ spec:
       "Dùng cùng một endpoint nặng cho cả ba probe với timeout mặc định 1 giây."
     ],
     quiz: [
-      { q: "Readiness probe thất bại thì điều gì xảy ra?", options: ["Container bị restart", "Pod bị rút khỏi endpoint của Service, không nhận traffic mới", "Pod bị xoá", "Node bị drain"], answer: 1, explain: "Readiness chỉ điều khiển việc nhận traffic. Restart là hành vi của liveness." },
-      { q: "Vì sao không nên để liveness probe kiểm tra kết nối DB?", options: ["Vì probe không kết nối được mạng", "Vì DB chậm sẽ khiến mọi Pod bị restart đồng loạt dù process vẫn khoẻ", "Vì làm tốn memory", "Vì DB không trả HTTP"], answer: 1, explain: "Restart không sửa được DB mà còn tạo thêm tải kết nối. Kiểm tra phụ thuộc thuộc về readiness." },
-      { q: "Ứng dụng cần 45 giây để khởi động. Cấu hình nào hợp lý?", options: ["Liveness `periodSeconds: 1`", "startupProbe với `periodSeconds: 2`, `failureThreshold: 30`", "Không dùng probe", "Readiness `failureThreshold: 1`"], answer: 1, explain: "Startup probe cho tối đa 60 giây để khởi động, trong thời gian đó liveness chưa chạy. Bỏ probe làm mất khả năng tự hồi phục và rolling update an toàn." }
+      { q: "Readiness probe thất bại thì điều gì xảy ra?", options: ["Container bị kubelet restart", "Pod bị rút khỏi endpoint của Service", "Pod bị xoá và tạo lại", "Node chứa Pod bị drain"], answer: 1, explain: "Readiness chỉ điều khiển việc nhận traffic. Restart là hành vi của liveness." },
+      { q: "Vì sao không nên để liveness probe kiểm tra kết nối DB?", options: ["Vì probe không kết nối được ra mạng", "Vì DB chậm làm mọi Pod restart cùng lúc", "Vì kiểm tra DB tốn nhiều memory", "Vì DB không trả về mã HTTP"], answer: 1, explain: "Restart không sửa được DB mà còn tạo thêm tải kết nối. Kiểm tra phụ thuộc thuộc về readiness." },
+      { q: "Ứng dụng cần 45 giây để khởi động. Cấu hình nào hợp lý?", options: ["livenessProbe `periodSeconds: 1, failureThreshold: 3`", "startupProbe `periodSeconds: 2, failureThreshold: 30`", "Bỏ hết probe để không bị restart nhầm", "readinessProbe `periodSeconds: 5, failureThreshold: 1`"], answer: 1, explain: "Startup probe cho tối đa 2 x 30 = 60 giây để khởi động, trong thời gian đó liveness chưa chạy. Liveness 1 giây x 3 lần sẽ giết app sau khoảng 3 giây; readiness không restart nên không bảo vệ được giai đoạn khởi động; bỏ probe làm mất khả năng tự hồi phục và rolling update an toàn." }
     ]
   },
   "p10.m1.t3": {
@@ -685,7 +719,7 @@ spec:
       {
         h: "HPA hoạt động thế nào",
         p: [
-          "HorizontalPodAutoscaler (HPA) định kỳ đọc metric, tính số replica cần thiết và cập nhật `replicas` của Deployment. Công thức cơ bản: `desired = ceil(current * currentMetric / targetMetric)`. Với CPU, \"utilization\" là phần trăm so với requests, nên container không có CPU requests thì HPA không tính được.",
+          "HorizontalPodAutoscaler (HPA) định kỳ đọc metric, tính số replica cần thiết và cập nhật `replicas` của Deployment. Công thức cơ bản: `desired = ceil(current * currentMetric / targetMetric)`; nếu tỉ lệ `currentMetric / targetMetric` đủ gần 1 (mặc định trong khoảng dung sai 10%), HPA không đổi gì để tránh dao động. Với CPU, \"utilization\" là phần trăm so với requests, nên container không có CPU requests thì HPA không tính được.",
           "HPA cần nguồn metric: metrics-server cho CPU/memory (API `metrics.k8s.io`), hoặc adapter như Prometheus Adapter hay KEDA cho custom metric (độ dài hàng đợi, request mỗi giây)."
         ],
         code: {
@@ -742,9 +776,9 @@ kubectl top pods -l app=task-api`
       "Scale theo memory với runtime không trả memory, HPA tăng mà không bao giờ giảm."
     ],
     quiz: [
-      { q: "HPA hiện `<unknown>/70%` cho CPU. Nguyên nhân phổ biến?", options: ["Đặt maxReplicas quá cao", "Thiếu metrics-server hoặc container không có CPU requests", "Service sai selector", "Dùng autoscaling/v2"], answer: 1, explain: "HPA cần metric từ metrics-server và cần requests để tính phần trăm. maxReplicas và selector của Service không ảnh hưởng; autoscaling/v2 là API đúng." },
+      { q: "HPA hiện `<unknown>/70%` cho CPU. Nguyên nhân phổ biến?", options: ["`maxReplicas` đặt quá cao so với cluster", "Thiếu metrics-server hoặc thiếu CPU requests", "Service của Deployment sai selector", "Manifest dùng `autoscaling/v2` thay vì v1"], answer: 1, explain: "HPA cần metric từ metrics-server và cần requests để tính phần trăm. maxReplicas và selector của Service không ảnh hưởng; autoscaling/v2 là API đúng." },
       { q: "Có 4 Pod, CPU trung bình 140% so với requests, target 70%. HPA muốn bao nhiêu replica?", options: ["4", "6", "8", "14"], answer: 2, explain: "ceil(4 * 140 / 70) = 8, sau đó bị giới hạn bởi min/max và behavior." },
-      { q: "HPA tạo thêm Pod nhưng chúng nằm `Pending` vì node hết chỗ. Cần gì?", options: ["Tăng `averageUtilization`", "Cluster Autoscaler hoặc Karpenter để thêm node", "Xoá HPA", "Đổi Service sang NodePort"], answer: 1, explain: "HPA chỉ scale Pod; thêm node là việc của Cluster Autoscaler/Karpenter. Các lựa chọn khác không tạo thêm sức chứa." }
+      { q: "HPA tạo thêm Pod nhưng chúng nằm `Pending` vì node hết chỗ. Cần gì?", options: ["Tăng `averageUtilization` của HPA", "Cài Cluster Autoscaler hoặc Karpenter", "Xoá HPA và scale bằng tay", "Đổi Service sang kiểu NodePort"], answer: 1, explain: "HPA chỉ scale Pod; thêm node là việc của Cluster Autoscaler/Karpenter. Các lựa chọn khác không tạo thêm sức chứa." }
     ]
   },
   "p10.m1.t4": {
@@ -765,11 +799,23 @@ kubectl top pods -l app=task-api`
         h: "PV, PVC và StorageClass",
         p: [
           "PersistentVolumeClaim (PVC) là yêu cầu lưu trữ của workload (\"cần 20Gi, đọc ghi một node\"). PersistentVolume (PV) là ổ đĩa thật đáp ứng yêu cầu đó. StorageClass mô tả loại ổ và provisioner; với dynamic provisioning, tạo PVC là CSI driver tự tạo ổ (ví dụ EBS gp3 qua EBS CSI driver) và PV tương ứng. `reclaimPolicy` quyết định ổ bị xoá hay giữ lại khi PVC bị xoá.",
-          "Access mode phổ biến: `ReadWriteOnce` (gắn đọc ghi vào một node, như EBS), `ReadWriteMany` (nhiều node cùng lúc, như EFS/NFS). Xoá StatefulSet không xoá PVC theo mặc định, để tránh mất dữ liệu."
+          "Access mode phổ biến: `ReadWriteOnce` (gắn đọc ghi vào một node, như EBS), `ReadWriteMany` (nhiều node cùng lúc, như EFS/NFS). Xoá StatefulSet không xoá PVC theo mặc định, để tránh mất dữ liệu; trường `persistentVolumeClaimRetentionPolicy` (stable từ 1.32) cho phép đổi hành vi này nếu thật sự muốn.",
+          "Tên StorageClass (như `gp3` bên dưới) không có sẵn: cluster chỉ có những StorageClass được tạo ra, và tùy nền tảng có thể không có class mặc định nào. Hãy xem bằng `kubectl get storageclass`. Với EBS, đặt `volumeBindingMode: WaitForFirstConsumer` để ổ chỉ được tạo sau khi Pod đã được xếp lên node, nhờ vậy ổ nằm đúng AZ của node. Trên EKS dùng EBS CSI driver thì provisioner là `ebs.csi.aws.com`; EKS Auto Mode dùng provisioner riêng `ebs.csi.eks.amazonaws.com`."
         ],
         code: {
           lang: "yaml", file: "statefulset.yaml",
-          src: `apiVersion: v1
+          src: `apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata: { name: gp3 }
+provisioner: ebs.csi.aws.com         # EBS CSI driver
+parameters:
+  type: gp3
+  encrypted: "true"
+reclaimPolicy: Delete                # đổi thành Retain nếu muốn giữ ổ khi xoá PVC
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+---
+apiVersion: v1
 kind: Service
 metadata: { name: redis }
 spec:
@@ -819,11 +865,11 @@ spec:
     pitfalls: [
       "Chạy database bằng Deployment với `emptyDir`, Pod bị thay là mất sạch dữ liệu.",
       "Xoá namespace hoặc PVC với StorageClass `reclaimPolicy: Delete`, ổ đĩa và dữ liệu bị xoá vĩnh viễn.",
-      "Dùng EBS (ReadWriteOnce, gắn một AZ) rồi Pod bị lên lịch sang node ở AZ khác, kẹt Pending."
+      "Dùng EBS (ReadWriteOnce, gắn một AZ) rồi Pod bị lên lịch sang node ở AZ khác, kẹt Pending; dùng `volumeBindingMode: WaitForFirstConsumer` và đảm bảo mỗi AZ đều có node."
     ],
     quiz: [
       { q: "Khi Pod `pg-1` của StatefulSet bị xoá, Pod mới sẽ thế nào?", options: ["Có tên ngẫu nhiên và PVC mới", "Vẫn tên `pg-1` và gắn lại PVC cũ", "Không được tạo lại", "Gắn PVC của `pg-0`"], answer: 1, explain: "StatefulSet giữ danh tính và ổ đĩa theo thứ tự. Tên ngẫu nhiên là hành vi của Deployment." },
-      { q: "StorageClass đóng vai trò gì?", options: ["Lưu dữ liệu trực tiếp", "Mô tả loại ổ và provisioner để tạo PV động khi có PVC", "Thay cho PVC", "Chỉ dùng cho ConfigMap"], answer: 1, explain: "StorageClass là \"khuôn\" để provisioner (CSI driver) tạo ổ. PVC vẫn cần để yêu cầu dung lượng; ConfigMap không dùng StorageClass." },
+      { q: "StorageClass đóng vai trò gì?", options: ["Trực tiếp lưu dữ liệu của Pod", "Mô tả loại ổ và provisioner để tạo PV", "Thay cho PVC khi khai báo workload", "Định nghĩa nơi lưu ConfigMap"], answer: 1, explain: "StorageClass là \"khuôn\" để provisioner (CSI driver) tạo ổ. PVC vẫn cần để yêu cầu dung lượng; ConfigMap không dùng StorageClass." },
       { q: "Với đa số đội ứng dụng, cách chạy Postgres production được khuyến nghị?", options: ["Deployment với emptyDir", "StatefulSet tự viết", "DB managed như RDS hoặc Cloud SQL", "Chạy trong sidecar"], answer: 2, explain: "DB managed lo backup, failover, nâng cấp. Tự vận hành trên K8s cần chuyên môn và operator; emptyDir và sidecar không bền vững." }
     ]
   },
@@ -913,9 +959,9 @@ spec:
       "Không đặt `ttlSecondsAfterFinished` hoặc history limit, hàng trăm Job và Pod cũ tích tụ."
     ],
     quiz: [
-      { q: "Vì sao nên chạy migration như một Job riêng thay vì trong entrypoint của ứng dụng?", options: ["Job chạy nhanh hơn", "Tránh nhiều replica cùng migrate, và kiểm soát được thứ tự trước khi rollout", "Deployment không hỗ trợ lệnh", "Job không cần image"], answer: 1, explain: "Một Job chạy một lần, pipeline chờ nó thành công rồi mới rollout. Job vẫn cần image; Deployment vẫn chạy lệnh được nhưng mỗi replica sẽ chạy." },
-      { q: "`concurrencyPolicy: Forbid` trong CronJob nghĩa là gì?", options: ["Không bao giờ chạy", "Bỏ qua lần chạy mới nếu lần trước chưa xong", "Chạy song song không giới hạn", "Huỷ lần trước để chạy lần mới"], answer: 1, explain: "Forbid bỏ qua lần mới; `Replace` mới là huỷ lần cũ; `Allow` (mặc định) cho chạy song song." },
-      { q: "Pod của Job được phép dùng `restartPolicy` nào?", options: ["Always", "Never hoặc OnFailure", "Chỉ Always", "Bất kỳ"], answer: 1, explain: "Job cần Pod kết thúc được, nên `Always` không hợp lệ cho Pod template của Job." }
+      { q: "Vì sao nên chạy migration như một Job riêng thay vì trong entrypoint của ứng dụng?", options: ["Vì Job chạy migration nhanh hơn", "Vì chỉ chạy một lần, trước khi rollout", "Vì Deployment không chạy được lệnh", "Vì Job không cần image của ứng dụng"], answer: 1, explain: "Một Job chạy một lần, tránh nhiều replica cùng migrate, và pipeline chờ nó thành công rồi mới rollout. Job vẫn cần image; Deployment vẫn chạy lệnh được nhưng mỗi replica sẽ chạy." },
+      { q: "`concurrencyPolicy: Forbid` trong CronJob nghĩa là gì?", options: ["CronJob bị tạm dừng hoàn toàn", "Bỏ qua lần mới nếu lần trước chưa xong", "Cho các lần chạy chồng lên nhau", "Huỷ lần trước để chạy lần mới"], answer: 1, explain: "Forbid bỏ qua lần mới; `Replace` mới là huỷ lần cũ; `Allow` (mặc định) cho chạy song song." },
+      { q: "Pod của Job được phép dùng `restartPolicy` nào?", options: ["Chỉ `Always`", "`Never` hoặc `OnFailure`", "`Always` hoặc `OnFailure`", "Bất kỳ giá trị nào"], answer: 1, explain: "Job cần Pod kết thúc được, nên `Always` không hợp lệ cho Pod template của Job." }
     ]
   },
   "p10.m1.t6": {
@@ -994,9 +1040,9 @@ kubectl auth can-i --list -n prod --as=system:serviceaccount:prod:config-reader`
       "Dùng chung ServiceAccount `default` cho mọi ứng dụng, rồi cấp quyền cho nó, mọi Pod trong namespace đều có quyền đó."
     ],
     quiz: [
-      { q: "Muốn cấp quyền đọc ConfigMap chỉ trong namespace `prod` cho một ServiceAccount, dùng gì?", options: ["ClusterRoleBinding với cluster-admin", "Role + RoleBinding trong `prod`", "NetworkPolicy", "ResourceQuota"], answer: 1, explain: "Role và RoleBinding giới hạn trong namespace. ClusterRoleBinding cấp toàn cluster; NetworkPolicy và ResourceQuota không liên quan phân quyền API." },
-      { q: "Vì sao quyền `list` trên `secrets` nguy hiểm tương đương `get`?", options: ["Vì list xoá secret", "Vì kết quả list chứa luôn dữ liệu của các Secret", "Vì list chậm", "Không nguy hiểm"], answer: 1, explain: "API trả về object đầy đủ, gồm trường `data`, khi list. Vì vậy chỉ cấp khi thật cần." },
-      { q: "Ứng dụng web không gọi Kubernetes API. Nên cấu hình gì với ServiceAccount token?", options: ["Cấp thêm quyền admin", "`automountServiceAccountToken: false`", "Dùng token vĩnh viễn", "Không cần quan tâm"], answer: 1, explain: "Không mount token nghĩa là nếu ứng dụng bị chiếm, kẻ tấn công không có credential gọi apiserver. Cấp thêm quyền hay token vĩnh viễn làm rủi ro tăng." }
+      { q: "Muốn cấp quyền đọc ConfigMap chỉ trong namespace `prod` cho một ServiceAccount, dùng gì?", options: ["ClusterRoleBinding tới `cluster-admin`", "Role và RoleBinding trong `prod`", "NetworkPolicy trong `prod`", "ResourceQuota trong `prod`"], answer: 1, explain: "Role và RoleBinding giới hạn trong namespace. ClusterRoleBinding cấp toàn cluster; NetworkPolicy và ResourceQuota không liên quan phân quyền API." },
+      { q: "Vì sao quyền `list` trên `secrets` nguy hiểm tương đương `get`?", options: ["Vì `list` xoá Secret sau khi đọc", "Vì kết quả `list` chứa cả dữ liệu Secret", "Vì `list` làm apiserver quá tải", "Không nguy hiểm, `list` chỉ trả về tên"], answer: 1, explain: "API trả về object đầy đủ, gồm trường `data`, khi list. Vì vậy chỉ cấp khi thật cần." },
+      { q: "Ứng dụng web không gọi Kubernetes API. Nên cấu hình gì với ServiceAccount token?", options: ["Cấp thêm quyền admin cho ServiceAccount", "Đặt `automountServiceAccountToken: false`", "Tạo token Secret dài hạn để mount", "Giữ mặc định, token không có rủi ro"], answer: 1, explain: "Không mount token nghĩa là nếu ứng dụng bị chiếm, kẻ tấn công không có credential gọi apiserver. Cấp thêm quyền hay token vĩnh viễn làm rủi ro tăng." }
     ]
   },
   "p10.m1.t7": {
@@ -1089,8 +1135,8 @@ spec:
       "Bật `readOnlyRootFilesystem` mà ứng dụng cần ghi `/tmp`, Pod crash; mount `emptyDir` cho thư mục ghi tạm."
     ],
     quiz: [
-      { q: "Namespace có policy `podSelector: {}` với `policyTypes: [\"Ingress\"]` và không có rule ingress nào. Kết quả?", options: ["Mở mọi traffic", "Chặn mọi traffic vào các Pod trong namespace", "Chặn traffic ra", "Không có tác dụng"], answer: 1, explain: "Chọn mọi Pod và không có rule cho phép nghĩa là deny-all chiều vào. Chiều ra không bị ảnh hưởng vì không khai báo Egress." },
-      { q: "PodSecurityPolicy đã được thay bằng gì?", options: ["NetworkPolicy", "Pod Security Admission với Pod Security Standards", "RBAC", "ResourceQuota"], answer: 1, explain: "PSP bị xoá từ 1.25; Pod Security Admission tích hợp sẵn áp chuẩn privileged/baseline/restricted qua label namespace." },
+      { q: "Namespace có policy `podSelector: {}` với `policyTypes: [\"Ingress\"]` và không có rule ingress nào. Kết quả?", options: ["Mở mọi traffic vào các Pod", "Chặn mọi traffic vào các Pod", "Chặn mọi traffic ra từ các Pod", "Không có tác dụng vì thiếu rule"], answer: 1, explain: "Chọn mọi Pod và không có rule cho phép nghĩa là deny-all chiều vào. Chiều ra không bị ảnh hưởng vì không khai báo Egress." },
+      { q: "PodSecurityPolicy đã được thay bằng gì?", options: ["NetworkPolicy", "Pod Security Admission", "RBAC", "ResourceQuota"], answer: 1, explain: "PSP bị xoá từ 1.25; Pod Security Admission tích hợp sẵn áp chuẩn privileged/baseline/restricted qua label namespace." },
       { q: "Thiết lập nào giúp kẻ tấn công không thể ghi đè binary trong container?", options: ["`runAsUser: 0`", "`readOnlyRootFilesystem: true`", "`privileged: true`", "`hostNetwork: true`"], answer: 1, explain: "Filesystem gốc chỉ đọc ngăn việc sửa file trong image. Các lựa chọn còn lại đều tăng quyền và rủi ro." }
     ]
   },
@@ -1169,8 +1215,8 @@ k9s --context staging -n prod`
     ],
     quiz: [
       { q: "Pod vừa crash và khởi động lại. Lệnh nào xem log của lần chạy bị crash?", options: ["`kubectl logs <pod>`", "`kubectl logs <pod> --previous`", "`kubectl describe node`", "`kubectl get events -o yaml`"], answer: 1, explain: "`--previous` lấy log của container instance trước đó. Không có cờ này, bạn thấy log của lần chạy mới." },
-      { q: "Muốn gọi thử Service trong cluster từ máy mình mà không phơi ra Internet, dùng gì?", options: ["Đổi Service sang LoadBalancer", "`kubectl port-forward svc/task-api 8080:80`", "`kubectl expose`", "Sửa CoreDNS"], answer: 1, explain: "port-forward tạo đường hầm tạm từ máy bạn qua apiserver. LoadBalancer và expose tạo điểm truy cập lâu dài." },
-      { q: "Context trong kubeconfig gồm những gì?", options: ["Chỉ tên cluster", "Cluster, user và namespace mặc định", "Danh sách Pod", "Mật khẩu root"], answer: 1, explain: "Context gom cluster, thông tin xác thực người dùng và namespace mặc định; đổi context là đổi nơi lệnh được thực thi." }
+      { q: "Muốn gọi thử Service trong cluster từ máy mình mà không phơi ra Internet, dùng gì?", options: ["Đổi Service sang `type: LoadBalancer`", "`kubectl port-forward svc/task-api 8080:80`", "`kubectl expose deploy/task-api --type=NodePort`", "Thêm bản ghi cho Service vào CoreDNS"], answer: 1, explain: "port-forward tạo đường hầm tạm từ máy bạn qua apiserver. LoadBalancer và expose tạo điểm truy cập lâu dài." },
+      { q: "Context trong kubeconfig gồm những gì?", options: ["Chỉ tên và địa chỉ cluster", "Cluster, user và namespace mặc định", "Danh sách Pod và Service đang chạy", "Tài khoản root của các node"], answer: 1, explain: "Context gom cluster, thông tin xác thực người dùng và namespace mặc định; đổi context là đổi nơi lệnh được thực thi." }
     ]
   },
   "p10.m2.t1": {
@@ -1228,9 +1274,9 @@ kubectl get endpointslices -n prod -l kubernetes.io/service-name=task-api`
       "Debug Pending bằng cách xem log ứng dụng; Pod chưa chạy nên không có log, hãy đọc Events."
     ],
     quiz: [
-      { q: "Pod ở trạng thái `Pending`, Events báo `Insufficient memory`. Nguyên nhân?", options: ["Image sai tag", "Không node nào còn đủ memory chưa được đặt chỗ theo requests của Pod", "Liveness probe sai", "Ứng dụng bị leak memory"], answer: 1, explain: "Pending nghĩa là chưa lên lịch, scheduler không tìm được node đủ requests. Image sai là ImagePullBackOff; probe và leak chỉ xảy ra khi Pod đã chạy." },
-      { q: "Container thoát với exit code 137 và lý do `OOMKilled`. Điều này nghĩa là gì?", options: ["Lỗi cú pháp code", "Container vượt memory limit và bị kernel giết", "Không kéo được image", "Bị scheduler từ chối"], answer: 1, explain: "137 = 128 + 9 (SIGKILL); với lý do OOMKilled là vượt memory limit. Các lỗi khác có trạng thái riêng." },
-      { q: "Pod dùng image distroless, không có shell. Cách debug bên trong Pod đang chạy?", options: ["`kubectl exec -- sh`", "`kubectl debug -it <pod> --image=busybox --target=<container>`", "Build lại image có shell rồi deploy production", "Không thể"], answer: 1, explain: "Ephemeral container của `kubectl debug` mang công cụ vào Pod mà không đổi image. exec cần shell có sẵn trong image." }
+      { q: "Pod ở trạng thái `Pending`, Events báo `Insufficient memory`. Nguyên nhân?", options: ["Image được chỉ định sai tag", "Không node nào còn đủ memory theo requests", "Liveness probe cấu hình sai", "Ứng dụng bị rò rỉ memory"], answer: 1, explain: "Pending nghĩa là chưa lên lịch, scheduler không tìm được node đủ requests. Image sai là ImagePullBackOff; probe và leak chỉ xảy ra khi Pod đã chạy." },
+      { q: "Container thoát với exit code 137 và lý do `OOMKilled`. Điều này nghĩa là gì?", options: ["Code ứng dụng có lỗi cú pháp", "Container vượt memory limit, bị giết", "Node không kéo được image", "Scheduler từ chối xếp Pod"], answer: 1, explain: "137 = 128 + 9 (SIGKILL); với lý do OOMKilled là vượt memory limit. Các lỗi khác có trạng thái riêng." },
+      { q: "Pod dùng image distroless, không có shell. Cách debug bên trong Pod đang chạy?", options: ["`kubectl exec -it <pod> -- sh`", "`kubectl debug -it <pod> --image=busybox`", "Build image có shell rồi deploy lại", "Không thể debug image distroless"], answer: 1, explain: "Ephemeral container của `kubectl debug` mang công cụ vào Pod mà không đổi image (thêm `--target=<container>` để thấy process của container đó). exec cần shell có sẵn trong image; build lại image thay đổi thứ đang chạy và mất trạng thái lỗi cần điều tra." }
     ]
   },
   "p10.m2.t2": {
@@ -1295,21 +1341,21 @@ spec:
 helm template task-api charts/task-api -f charts/task-api/values-prod.yaml   # render ra YAML để xem
 helm upgrade --install task-api charts/task-api -n prod --create-namespace \\
   -f charts/task-api/values-prod.yaml --set image.tag=3f9c2ab \\
-  --atomic --timeout 5m
+  --rollback-on-failure --timeout 5m     # Helm 3: dùng --atomic
 helm list -n prod
 helm history task-api -n prod
 helm rollback task-api 3 -n prod
 helm uninstall task-api -n prod`
         },
         p: [
-          "`upgrade --install` dùng được cho cả lần đầu lẫn các lần sau, rất hợp với CI. `--atomic` tự rollback nếu upgrade thất bại hoặc quá thời gian chờ. Helm lưu thông tin release dưới dạng Secret trong namespace của release. Đánh đổi: template Go dễ trở nên khó đọc khi quá nhiều `if`; với ứng dụng nội bộ đơn giản, Kustomize có thể dễ bảo trì hơn."
+          "`upgrade --install` dùng được cho cả lần đầu lẫn các lần sau, rất hợp với CI. `--rollback-on-failure` chờ tài nguyên sẵn sàng và tự rollback nếu upgrade thất bại hoặc quá thời gian chờ. Đây là tên mới trong Helm 4 (phát hành 11/2025) của cờ `--atomic` ở Helm 3; `--atomic` vẫn chạy nhưng báo deprecated. Helm 3 chỉ còn nhận bản vá bảo mật đến 2/2027, nên dự án mới nên dùng Helm 4; Helm 4 cũng mặc định dùng server-side apply cho release mới. Helm lưu thông tin release dưới dạng Secret trong namespace của release. Đánh đổi: template Go dễ trở nên khó đọc khi quá nhiều `if`; với ứng dụng nội bộ đơn giản, Kustomize có thể dễ bảo trì hơn."
         ]
       }
     ],
     summary: [
       "Chart = template + `values.yaml`; mỗi lần cài là một release có lịch sử revision.",
       "Values theo môi trường qua nhiều `-f`; file sau ghi đè file trước, `--set` ghi đè tất cả.",
-      "`helm template` để xem YAML render, `upgrade --install --atomic` cho CI, `rollback` để quay lui.",
+      "`helm template` để xem YAML render, `upgrade --install --rollback-on-failure` (Helm 3: `--atomic`) cho CI, `rollback` để quay lui.",
       "Helm còn là cách chuẩn để cài phần mềm bên thứ ba."
     ],
     pitfalls: [
@@ -1320,7 +1366,7 @@ helm uninstall task-api -n prod`
     quiz: [
       { q: "Lệnh nào render chart thành YAML để xem mà không cài vào cluster?", options: ["`helm install`", "`helm template`", "`helm rollback`", "`helm list`"], answer: 1, explain: "`helm template` render cục bộ. install cài thật, rollback quay revision, list liệt kê release." },
       { q: "Chạy `helm upgrade -f values.yaml -f values-prod.yaml --set image.tag=abc`. Giá trị `image.tag` cuối cùng lấy từ đâu?", options: ["values.yaml", "values-prod.yaml", "`--set` (abc)", "Chart.yaml"], answer: 2, explain: "`--set` có độ ưu tiên cao nhất, sau đó là các file `-f` theo thứ tự (file sau ghi đè file trước), cuối cùng là values mặc định của chart." },
-      { q: "Cờ `--atomic` trong `helm upgrade` có tác dụng gì?", options: ["Cài song song nhiều release", "Tự rollback nếu upgrade thất bại hoặc quá thời gian", "Xoá release cũ", "Mã hoá values"], answer: 1, explain: "`--atomic` chờ tài nguyên sẵn sàng và rollback khi thất bại, tránh để release ở trạng thái hỏng." }
+      { q: "Cờ `--rollback-on-failure` (Helm 3 gọi là `--atomic`) trong `helm upgrade` có tác dụng gì?", options: ["Cài song song nhiều release một lúc", "Tự rollback khi upgrade lỗi hoặc quá hạn", "Xoá release cũ trước khi cài bản mới", "Mã hoá values trước khi lưu release"], answer: 1, explain: "Cờ này chờ tài nguyên sẵn sàng và rollback khi thất bại, tránh để release ở trạng thái hỏng. Nó không cài song song, không xoá release cũ và không mã hoá values." }
     ]
   },
   "p10.m2.t3": {
@@ -1407,8 +1453,8 @@ cd k8s/overlays/prod && kustomize edit set image ghcr.io/my-org/task-api=ghcr.io
       "Tự đặt tên ConfigMap cố định thay vì generator, đổi cấu hình mà Pod không rollout."
     ],
     quiz: [
-      { q: "Khác biệt cốt lõi của Kustomize so với Helm là gì?", options: ["Kustomize dùng template Go", "Kustomize áp overlay/patch lên YAML thuần, không dùng ngôn ngữ template", "Kustomize chỉ chạy trên cloud", "Kustomize không hỗ trợ namespace"], answer: 1, explain: "Kustomize biến đổi YAML hợp lệ bằng overlay và patch. Template Go là của Helm; Kustomize chạy ở mọi nơi và có trường `namespace`." },
-      { q: "Vì sao `configMapGenerator` giúp Pod tự rollout khi cấu hình đổi?", options: ["Nó restart node", "Nó thêm hash nội dung vào tên ConfigMap, tham chiếu trong Deployment đổi nên template Pod đổi", "Nó xoá Pod cũ", "Nó bật HPA"], answer: 1, explain: "Tên mới làm `spec.template` của Deployment thay đổi, kích hoạt rolling update." },
+      { q: "Khác biệt cốt lõi của Kustomize so với Helm là gì?", options: ["Kustomize dùng template Go như Helm", "Kustomize áp patch lên YAML thuần", "Kustomize chỉ chạy trên cluster cloud", "Kustomize không đặt được namespace"], answer: 1, explain: "Kustomize biến đổi YAML hợp lệ bằng overlay và patch. Template Go là của Helm; Kustomize chạy ở mọi nơi và có trường `namespace`." },
+      { q: "Vì sao `configMapGenerator` giúp Pod tự rollout khi cấu hình đổi?", options: ["Nó khởi động lại các node", "Nó thêm hash nội dung vào tên ConfigMap", "Nó xoá các Pod đang dùng ConfigMap", "Nó bật HPA cho Deployment"], answer: 1, explain: "Nội dung đổi thì tên đổi; Kustomize cập nhật tham chiếu trong Deployment nên `spec.template` thay đổi, kích hoạt rolling update. Nó không restart node, không xoá Pod trực tiếp, không liên quan HPA." },
       { q: "Lệnh nào apply overlay prod bằng kubectl mà không cần cài công cụ khác?", options: ["`kubectl apply -f k8s/overlays/prod`", "`kubectl apply -k k8s/overlays/prod`", "`helm install prod`", "`kubectl kustomize apply`"], answer: 1, explain: "`-k` chỉ định thư mục kustomization. `-f` áp từng file thô mà không xử lý kustomization." }
     ]
   },
@@ -1468,9 +1514,9 @@ aws eks describe-cluster --name prod --query cluster.version`
       "Trì hoãn nâng cấp EKS đến khi phiên bản hết hỗ trợ tiêu chuẩn, phải nâng nhiều bản liên tiếp gấp gáp."
     ],
     quiz: [
-      { q: "kind chạy các node Kubernetes như thế nào?", options: ["Trên VM riêng", "Mỗi node là một container Docker", "Trên AWS", "Không có node"], answer: 1, explain: "kind = Kubernetes IN Docker; node là container. minikube có thể dùng VM; kind không cần cloud." },
-      { q: "Với EKS, phần nào AWS vận hành thay bạn?", options: ["Toàn bộ workload và manifest", "Control plane (apiserver, etcd)", "Code ứng dụng", "NetworkPolicy của bạn"], answer: 1, explain: "Managed Kubernetes lo control plane. Workload, manifest, chính sách vẫn là trách nhiệm của bạn." },
-      { q: "Vì sao Service `type: LoadBalancer` trên kind thường ở trạng thái `<pending>`?", options: ["Vì kind không hỗ trợ Service", "Vì không có cloud controller tạo load balancer thật", "Vì thiếu Deployment", "Vì sai namespace"], answer: 1, explain: "Trên cloud, controller của nhà cung cấp tạo LB. Local không có, nên cần port-forward hoặc công cụ như cloud-provider-kind, MetalLB." }
+      { q: "kind chạy các node Kubernetes như thế nào?", options: ["Mỗi node là một VM riêng", "Mỗi node là một container", "Mỗi node là một EC2 trên AWS", "kind không có khái niệm node"], answer: 1, explain: "kind = Kubernetes IN Docker; node là container. minikube có thể dùng VM; kind không cần cloud." },
+      { q: "Với EKS, phần nào AWS vận hành thay bạn?", options: ["Toàn bộ workload và manifest", "Control plane (apiserver, etcd)", "Code và image của ứng dụng", "NetworkPolicy và RBAC của bạn"], answer: 1, explain: "Managed Kubernetes lo control plane. Workload, manifest, chính sách vẫn là trách nhiệm của bạn." },
+      { q: "Vì sao Service `type: LoadBalancer` trên kind thường ở trạng thái `<pending>`?", options: ["Vì kind không hỗ trợ Service", "Vì không có controller tạo load balancer", "Vì chưa có Deployment phía sau", "Vì Service nằm sai namespace"], answer: 1, explain: "Trên cloud, controller của nhà cung cấp tạo LB. Local không có, nên cần port-forward hoặc công cụ như cloud-provider-kind, MetalLB." }
     ]
   },
   "p10.m2.t5": {
@@ -1519,7 +1565,7 @@ spec:
         h: "Khi nào thực sự cần",
         p: [
           "Mesh không miễn phí: thêm độ trễ và tài nguyên cho proxy, thêm một hệ thống phức tạp cần nâng cấp và debug, và khi mesh lỗi, mọi traffic đều bị ảnh hưởng. Với vài service, retry và timeout trong code cùng NetworkPolicy và TLS ở Gateway thường là đủ.",
-          "Hãy cân nhắc mesh khi có nhiều service và nhiều đội, yêu cầu compliance bắt buộc mã hoá traffic nội bộ (zero trust), hoặc cần quan sát thống nhất mà không sửa từng service. Nếu cần, Linkerd thường được đánh giá là đơn giản hơn để bắt đầu, Istio nhiều tính năng hơn."
+          "Hãy cân nhắc mesh khi có nhiều service và nhiều đội, yêu cầu compliance bắt buộc mã hoá traffic nội bộ (zero trust), hoặc cần quan sát thống nhất mà không sửa từng service. Nếu cần, Linkerd thường được đánh giá là đơn giản hơn để bắt đầu, Istio nhiều tính năng hơn. Trước khi chọn, hãy xem mô hình phát hành và hỗ trợ hiện tại của từng dự án (ví dụ từ 2024 Linkerd mã nguồn mở chỉ phát hành bản edge, bản stable do công ty Buoyant cung cấp), vì mesh là thành phần bạn sẽ phải nâng cấp đều đặn."
         ]
       }
     ],
@@ -1535,9 +1581,112 @@ spec:
       "Bật mTLS `STRICT` trước khi mọi workload có proxy, các service chưa có proxy không gọi được nhau."
     ],
     quiz: [
-      { q: "mTLS trong service mesh mang lại gì?", options: ["Nén dữ liệu", "Mã hoá traffic giữa các service và hai bên xác thực nhau bằng chứng chỉ", "Tăng tốc DNS", "Thay thế RBAC của Kubernetes"], answer: 1, explain: "Mutual TLS mã hoá và xác thực cả hai chiều. Nó không nén, không liên quan DNS, và không thay RBAC (quyền gọi Kubernetes API)." },
-      { q: "Trường hợp nào service mesh đáng đầu tư nhất?", options: ["Một monolith duy nhất", "Hàng chục service của nhiều đội, yêu cầu mã hoá traffic nội bộ", "Một website tĩnh", "Một CronJob"], answer: 1, explain: "Lợi ích của mesh tăng theo số service và yêu cầu bảo mật. Với hệ thống nhỏ, chi phí vận hành lớn hơn lợi ích." },
-      { q: "Chế độ ambient của Istio khác mô hình sidecar thế nào?", options: ["Không có mTLS", "Không đặt proxy vào từng Pod; ztunnel mỗi node lo mTLS, waypoint tùy chọn cho tầng 7", "Chỉ chạy ngoài Kubernetes", "Bắt buộc sửa code ứng dụng"], answer: 1, explain: "Ambient bỏ sidecar để giảm tài nguyên và thao tác inject, vẫn có mTLS. Nó chạy trong Kubernetes và không cần sửa code." }
+      { q: "mTLS trong service mesh mang lại gì?", options: ["Nén dữ liệu giữa các service", "Mã hoá và xác thực hai chiều giữa service", "Tăng tốc phân giải DNS nội bộ", "Thay thế RBAC của Kubernetes"], answer: 1, explain: "Mutual TLS mã hoá và xác thực cả hai chiều. Nó không nén, không liên quan DNS, và không thay RBAC (quyền gọi Kubernetes API)." },
+      { q: "Trường hợp nào service mesh đáng đầu tư nhất?", options: ["Một monolith duy nhất chạy 3 replica", "Hàng chục service của nhiều đội", "Một website tĩnh phục vụ qua CDN", "Một CronJob chạy mỗi đêm"], answer: 1, explain: "Lợi ích của mesh tăng theo số service và yêu cầu bảo mật. Với hệ thống nhỏ, chi phí vận hành lớn hơn lợi ích." },
+      { q: "Chế độ ambient của Istio khác mô hình sidecar thế nào?", options: ["Ambient bỏ hẳn mTLS để nhẹ hơn", "Ambient không đặt proxy vào từng Pod", "Ambient chỉ chạy ngoài Kubernetes", "Ambient bắt buộc sửa code ứng dụng"], answer: 1, explain: "Ambient bỏ sidecar: ztunnel mỗi node lo mTLS tầng 4, waypoint proxy tùy chọn cho tầng 7, giảm tài nguyên và thao tác inject. Nó chạy trong Kubernetes và không cần sửa code." }
+    ]
+  },
+  "p10.m1.t8": {
+    sections: [
+      {
+        h: "Gián đoạn chủ ý và PodDisruptionBudget",
+        p: [
+          "Gián đoạn không chủ ý (involuntary) như node hỏng phần cứng, kernel panic thì không gì ngăn được. Gián đoạn chủ ý (voluntary) do người hoặc công cụ khởi xướng: `kubectl drain`, nâng cấp node group, Cluster Autoscaler hay Karpenter thu nhỏ cluster. PodDisruptionBudget (PDB, `policy/v1`) giới hạn loại thứ hai: \"ứng dụng này luôn cần tối thiểu bấy nhiêu Pod sẵn sàng\".",
+          "Mỗi PDB chỉ đặt một trong hai trường `minAvailable` hoặc `maxUnavailable`, dạng số hoặc phần trăm. Phần trăm được làm tròn lên: 7 Pod với `minAvailable: 50%` nghĩa là phải còn 4. `maxUnavailable` tự đúng khi bạn đổi số replica.",
+          "PDB chỉ tác động lên thao tác đi qua Eviction API. Nếu eviction làm vi phạm ngân sách, API server trả `429 Too Many Requests` và công cụ gọi sẽ thử lại sau. Rolling update của Deployment không bị PDB chặn; nó được điều khiển bằng `maxSurge`/`maxUnavailable` của chính Deployment."
+        ]
+      },
+      {
+        h: "Rải Pod ra nhiều zone và node",
+        p: [
+          "PDB bảo vệ số lượng chứ không quan tâm vị trí: ba replica chung một zone thì sự cố zone hạ cả ba. `topologySpreadConstraints` với `topologyKey: topology.kubernetes.io/zone` và `maxSkew: 1` bắt scheduler chia đều Pod giữa các zone; thêm một ràng buộc theo `kubernetes.io/hostname` để các replica tách node. `DoNotSchedule` là ràng buộc cứng, `ScheduleAnyway` chỉ là ưu tiên.",
+          "Mặc định `unhealthyPodEvictionPolicy: IfHealthyBudget` chỉ cho evict Pod đang không Ready khi ngân sách còn dư, nên một ứng dụng đang CrashLoopBackOff có thể làm drain kẹt mãi. Tài liệu Kubernetes khuyến nghị `AlwaysAllow` để Pod hỏng luôn được evict."
+        ],
+        code: {
+          lang: "yaml", file: "k8s/order-api-ha.yaml",
+          src: `apiVersion: apps/v1
+kind: Deployment
+metadata: { name: order-api, namespace: prod }
+spec:
+  replicas: 3
+  selector:
+    matchLabels: { app: order-api }
+  template:
+    metadata:
+      labels: { app: order-api }
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels: { app: order-api }
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: { app: order-api }
+      containers:
+        - name: app
+          image: registry.example.com/order-api:1.8.2
+          readinessProbe:
+            httpGet: { path: /healthz/ready, port: 8080 }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: order-api, namespace: prod }
+spec:
+  maxUnavailable: 1            # mỗi lúc chỉ được evict 1 Pod
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels: { app: order-api }`
+        }
+      },
+      {
+        h: "Drain một node an toàn",
+        p: [
+          "`kubectl drain` cordon node (không nhận Pod mới) rồi evict từng Pod qua Eviction API, nên tôn trọng PDB. Pod của DaemonSet phải bỏ qua bằng `--ignore-daemonsets`; Pod dùng `emptyDir` cần `--delete-emptydir-data` và dữ liệu đó sẽ mất. Trước khi drain, xem cột `ALLOWED DISRUPTIONS`: nếu bằng 0 kéo dài, drain sẽ đứng chờ."
+        ],
+        code: {
+          lang: "bash", file: "drain.sh",
+          src: `kubectl get pdb -A                      # ALLOWED DISRUPTIONS phải > 0
+kubectl cordon ip-10-0-1-23.ec2.internal
+kubectl drain ip-10-0-1-23.ec2.internal \\
+  --ignore-daemonsets --delete-emptydir-data --timeout=10m
+# ... bảo trì xong, nếu node còn dùng tiếp:
+kubectl uncordon ip-10-0-1-23.ec2.internal`
+        }
+      },
+      {
+        h: "Nâng cấp cluster managed (EKS)",
+        list: [
+          "Chuẩn bị: tìm manifest và chart dùng API bị gỡ ở phiên bản đích, thử trước trên staging.",
+          "Nâng control plane trước, từng minor một (1.33 lên 1.34, không nhảy bậc). Theo chính sách version skew, kubelet không được mới hơn API server và có thể cũ hơn tối đa 3 minor; kubectl lệch tối đa 1 minor.",
+          "Nâng add-on (VPC CNI, CoreDNS, kube-proxy) lên bản tương thích.",
+          "Nâng node group: EKS managed node group tạo node mới, cordon và drain node cũ theo PDB; Pod không rời node trong 15 phút (khi không dùng force) thì bước nâng cấp báo `PodEvictionFailure`. Cách khác: tạo node group mới rồi drain nhóm cũ (blue/green).",
+          "Theo dõi lỗi và độ trễ suốt quá trình; readiness probe đúng và xử lý SIGTERM là điều kiện để không rớt request."
+        ],
+        p: [
+          "Control plane EKS không hạ phiên bản được, nên chuẩn bị kỹ."
+        ]
+      }
+    ],
+    summary: [
+      "PDB giới hạn gián đoạn chủ ý (drain, autoscaler thu nhỏ) qua Eviction API, không chặn được sự cố phần cứng hay rolling update.",
+      "Chỉ dùng một trong `minAvailable`/`maxUnavailable`; phần trăm làm tròn lên; nên đặt `unhealthyPodEvictionPolicy: AlwaysAllow`.",
+      "`topologySpreadConstraints` rải replica qua zone và node để một lần drain hay một sự cố zone không hạ cả ứng dụng.",
+      "`kubectl drain --ignore-daemonsets` cordon rồi evict từng Pod, tự chờ khi PDB chưa cho phép.",
+      "Nâng cấp theo thứ tự control plane, add-on, node group, từng minor một, tuân thủ version skew."
+    ],
+    pitfalls: [
+      "Đặt `minAvailable` bằng số replica (hoặc `maxUnavailable: 0`), drain và nâng cấp node group không bao giờ hoàn tất.",
+      "Deployment chỉ có 1 replica kèm PDB: hoặc drain kẹt, hoặc ngân sách cho phép evict và ứng dụng vẫn mất 100% trong lúc chuyển node.",
+      "Nhiều PDB cùng chọn một Pod, Eviction API trả lỗi 500 và drain không evict được Pod đó."
+    ],
+    quiz: [
+      { q: "Deployment có 4 replica, PDB đặt `minAvailable: 4`. Khi chạy `kubectl drain` trên node chứa một Pod của nó thì sao?", options: ["Pod bị xoá ngay rồi tạo lại trên node khác", "Drain bỏ qua PDB vì node đã được cordon", "Drain chờ mãi vì không Pod nào được evict", "Kubernetes tự tăng replica lên 5 rồi evict"], answer: 2, explain: "Evict bất kỳ Pod nào cũng làm số Pod sẵn sàng dưới 4, nên Eviction API trả 429 liên tục. Drain không tự scale Deployment và cordon không vô hiệu hoá PDB." },
+      { q: "PodDisruptionBudget bảo vệ ứng dụng khỏi loại gián đoạn nào?", options: ["Drain node và autoscaler thu nhỏ cluster", "Node mất điện hoặc hỏng phần cứng", "Container vượt memory limit bị OOMKilled", "Rolling update của chính Deployment đó"], answer: 0, explain: "PDB chỉ giới hạn gián đoạn chủ ý đi qua Eviction API. Sự cố phần cứng, OOMKill không ngăn được (dù vẫn tính vào ngân sách), còn rolling update do cấu hình của Deployment điều khiển." },
+      { q: "Control plane vừa nâng lên 1.34. Kubelet phiên bản nào KHÔNG được hỗ trợ?", options: ["kubelet 1.33", "kubelet 1.31", "kubelet 1.32", "kubelet 1.35"], answer: 3, explain: "Kubelet không được mới hơn kube-apiserver, và được phép cũ hơn tối đa 3 minor, nên 1.31 đến 1.34 đều hợp lệ còn 1.35 thì không." }
     ]
   },
 });

@@ -40,7 +40,7 @@ console.log("abc" === "abc");       // true: so sánh theo giá trị`
         ],
         list: [
           "Tiền tệ: lưu theo đơn vị nhỏ nhất (đồng, cent) bằng số nguyên, hoặc dùng kiểu `numeric` ở database và thư viện decimal ở code.",
-          "So sánh số thực: dùng sai số, ví dụ `Math.abs(a - b) < Number.EPSILON`.",
+          "So sánh số thực: dùng sai số thay vì `===`. `Number.EPSILON` (khoảng 2.2e-16) chỉ hợp với số quanh 1; với số lớn hơn, dùng sai số tương đối như `Math.abs(a - b) <= Number.EPSILON * Math.max(Math.abs(a), Math.abs(b))` hoặc một ngưỡng tuyệt đối theo nghiệp vụ (ví dụ 1e-9).",
           "Số rất lớn: dùng `bigint` (`123n`), nhưng lưu ý `JSON.stringify` không serialize được bigint."
         ],
         code: {
@@ -169,13 +169,13 @@ console.log(limiter.hit(), limiter.hit(), limiter.hit()); // true true false`
       },
       {
         q: "Closure là gì?",
-        options: ["Hàm được gọi ngay khi khai báo", "Hàm giữ được truy cập tới biến của scope nơi nó được tạo, kể cả khi scope đó đã kết thúc", "Hàm không có tham số", "Cơ chế giải phóng bộ nhớ tự động"],
+        options: ["Hàm được gọi ngay tại chỗ khai báo, không cần đặt tên", "Hàm vẫn truy cập được biến của scope nơi nó được tạo, kể cả khi scope đó đã kết thúc", "Hàm nhận hàm khác làm tham số hoặc trả về một hàm mới", "Cơ chế engine tự giải phóng biến khi hàm ngoài chạy xong"],
         answer: 1,
-        explain: "Closure là hàm cùng với môi trường lexical nó bắt được. IIFE là hàm gọi ngay, không phải định nghĩa closure. Garbage collector là cơ chế khác."
+        explain: "Closure là hàm cùng với môi trường lexical nó bắt được. IIFE là hàm gọi ngay, higher-order function là hàm nhận/trả về hàm; cả hai có thể tạo closure nhưng không phải định nghĩa của nó. Ngược lại, closure giữ biến lại chứ không giải phóng."
       },
       {
         q: "Vì sao `for (let i...)` với `setTimeout` in ra 0 1 2 còn `var` in ra 3 3 3?",
-        options: ["`let` chạy đồng bộ còn `var` bất đồng bộ", "Mỗi vòng lặp `let` tạo binding mới, còn `var` chỉ có một biến dùng chung cho cả hàm", "`setTimeout` bỏ qua biến `var`", "`var` bị TDZ"],
+        options: ["`let` khiến callback chạy đồng bộ, còn `var` để callback chạy bất đồng bộ", "Mỗi vòng lặp `let` tạo binding mới, còn `var` chỉ có một biến dùng chung cho cả hàm", "`setTimeout` sao chép giá trị `let` lúc đăng ký nhưng bỏ qua biến `var`", "`var` nằm trong TDZ nên callback chỉ đọc được giá trị cuối cùng"],
         answer: 1,
         explain: "Với `let`, mỗi vòng lặp có một biến `i` riêng mà closure bắt lấy. Với `var`, chỉ có một biến ở function scope, khi callback chạy thì vòng lặp đã kết thúc và giá trị là 3."
       }
@@ -264,9 +264,9 @@ console.log(typeof Dog);                // "function"`
       },
       {
         q: "Method khai báo trong class được lưu ở đâu?",
-        options: ["Sao chép vào mỗi instance", "Trên `ClassName.prototype`, dùng chung cho mọi instance", "Trong biến global", "Trong closure của constructor"],
+        options: ["Sao chép riêng vào từng instance khi gọi `new`", "Trên `ClassName.prototype`, dùng chung cho mọi instance", "Trên chính hàm `ClassName` như một thuộc tính tĩnh", "Trong closure của constructor, mỗi instance một bản"],
         answer: 1,
-        explain: "Method thường của class nằm trên prototype nên mọi instance chia sẻ một bản. Chỉ class field (kể cả field arrow) mới được tạo riêng trên từng instance."
+        explain: "Method thường của class nằm trên prototype nên mọi instance chia sẻ một bản. Chỉ class field (kể cả field arrow) mới được tạo riêng trên từng instance, còn method `static` mới nằm trên chính hàm class."
       }
     ]
   },
@@ -346,7 +346,7 @@ process.nextTick(() => console.log("3: nextTick"));
       },
       {
         q: "Microtask queue được xử lý khi nào?",
-        options: ["Mỗi 4ms một lần", "Sau khi call stack rỗng, trước khi event loop chuyển sang macrotask tiếp theo", "Chỉ khi không còn macrotask nào", "Song song với macrotask"],
+        options: ["Định kỳ mỗi 4ms, độc lập với call stack", "Ngay khi call stack rỗng, trước macrotask tiếp theo", "Chỉ khi macrotask queue đã hoàn toàn trống", "Song song với macrotask trên một luồng khác"],
         answer: 1,
         explain: "Mỗi khi call stack rỗng sau một macrotask, event loop xả hết microtask queue rồi mới lấy macrotask tiếp. Không có chu kỳ cố định và không chạy song song."
       }
@@ -412,7 +412,7 @@ declare function getOrders(id: string): Promise<unknown[]>;`
     ],
     pitfalls: [
       "Dùng `array.forEach(async ...)` rồi nghĩ code chờ xong. `forEach` không chờ Promise; hãy dùng `for...of` với await hoặc `Promise.all(array.map(...))`.",
-      "Quên `await` hoặc `return` Promise trong `try/catch`, khiến lỗi thoát khỏi khối catch và thành unhandled rejection.",
+      "Viết `return somePromise()` (thiếu `await`) bên trong `try/catch`: hàm trả Promise ra ngoài trước khi nó reject, nên `catch` không bắt được lỗi. Dùng `return await` khi cần bắt lỗi tại chỗ. Gọi hàm async mà không `await` cũng không `.catch()` thì lỗi thành unhandled rejection.",
       "Dùng `Promise.race` làm timeout rồi tưởng request đã bị hủy. Request vẫn chạy ngầm; dùng `AbortSignal.timeout`."
     ],
     quiz: [
@@ -442,14 +442,14 @@ declare function getOrders(id: string): Promise<unknown[]>;`
       {
         h: "CommonJS và ESM khác nhau ở đâu",
         p: [
-          "CommonJS (CJS) là hệ module gốc của Node: `require()` và `module.exports`. `require` chạy đồng bộ, được gọi ở bất cứ đâu, và trả về một bản sao giá trị exports tại thời điểm đó.",
+          "CommonJS (CJS) là hệ module gốc của Node: `require()` và `module.exports`. `require` chạy đồng bộ, được gọi ở bất cứ đâu, và trả về object `module.exports` (được cache sau lần nạp đầu). Khi bạn destructure `const { count } = require('./x')`, bạn nhận bản sao giá trị tại thời điểm đó; module gốc gán lại biến sau này thì bạn không thấy.",
           "ES Modules (ESM) là chuẩn chính thức của ngôn ngữ: `import`/`export`. Import được phân tích tĩnh trước khi code chạy, nên công cụ biết chính xác bạn dùng gì. Binding là live: nếu module gốc cập nhật biến export, bên import thấy giá trị mới. ESM hỗ trợ top-level `await` và luôn chạy strict mode."
         ],
         list: [
           "Node coi file là ESM khi có đuôi `.mjs`, hoặc đuôi `.js` và `package.json` có `\"type\": \"module\"`.",
           "Trong ESM không có `__dirname`; dùng `import.meta.dirname` (Node 20.11+) hoặc `import.meta.url`.",
           "Trong ESM, đường dẫn import tương đối phải có đuôi file, ví dụ `./user.js`.",
-          "Node hiện đại (22.12+, 24) cho phép `require()` một module ESM đồng bộ, miễn module đó không dùng top-level await."
+          "Node hiện đại (20.19+, 22.12+ và các bản mới hơn) cho phép `require()` một module ESM đồng bộ mà không cần cờ, miễn module đó (và các module nó import) không dùng top-level await."
         ]
       },
       {
@@ -496,7 +496,7 @@ export async function exportReport(format: "pdf" | "csv") {
     quiz: [
       {
         q: "Vì sao tree-shaking hoạt động tốt với ESM hơn CommonJS?",
-        options: ["ESM chạy nhanh hơn", "Import/export của ESM là tĩnh nên bundler phân tích được trước khi chạy", "CommonJS không hỗ trợ export", "ESM tự nén code"],
+        options: ["ESM được V8 biên dịch trước nên chạy nhanh hơn", "Import/export của ESM là tĩnh nên bundler phân tích được trước khi chạy", "CommonJS không có cách nào export nhiều hàm từ một file", "ESM tự nén và minify code khi Node nạp module"],
         answer: 1,
         explain: "Cấu trúc import/export tĩnh cho phép bundler xác định code không dùng. `require` có thể được gọi động nên khó phân tích. Tốc độ chạy và nén không liên quan."
       },
@@ -504,11 +504,11 @@ export async function exportReport(format: "pdf" | "csv") {
         q: "Node coi file `server.js` là ESM khi nào?",
         options: ["Luôn luôn", "Khi `package.json` gần nhất có `\"type\": \"module\"`", "Khi file có dòng `use strict`", "Khi chạy bằng `node --watch`"],
         answer: 1,
-        explain: "Với đuôi `.js`, Node dựa vào trường `type` trong package.json gần nhất. Không có trường này thì mặc định là CommonJS."
+        explain: "Với đuôi `.js`, Node dựa vào trường `type` trong package.json gần nhất. Nếu thiếu trường này, Node coi là CommonJS; các bản mới (22.7+, 20.19+) có thêm cơ chế tự phát hiện cú pháp ESM, nhưng vẫn nên khai báo `type` tường minh để khỏi phụ thuộc vào việc đoán."
       },
       {
         q: "Lợi ích chính của `await import('./heavy.js')` trong một endpoint ít dùng là gì?",
-        options: ["Module được nạp khi cần, giảm thời gian khởi động và bộ nhớ ban đầu", "Module chạy trên thread khác", "Tránh được mọi lỗi runtime", "Module được cache vĩnh viễn trên đĩa"],
+        options: ["Module chỉ được nạp khi cần, giảm thời gian khởi động", "Module được chạy trên một worker thread riêng", "Lỗi trong module không thể làm crash process", "Module được cache trên đĩa cho lần khởi động sau"],
         answer: 0,
         explain: "Import động trì hoãn việc nạp tới khi thật sự cần. Nó không tạo thread mới và không ngăn lỗi. Module được cache trong bộ nhớ của process, không phải trên đĩa."
       }
@@ -592,13 +592,13 @@ console.log(state.user.tags, deep.at instanceof Date); // ["admin"] true`
       },
       {
         q: "Sau `const b = { ...a }`, sửa `b.address.city` thì sao?",
-        options: ["Chỉ `b` thay đổi", "`a.address.city` cũng thay đổi vì `address` là tham chiếu chung", "Ném lỗi vì object bị đóng băng", "Không có gì thay đổi"],
+        options: ["Chỉ `b` đổi vì spread đã sao chép mọi tầng", "`a.address.city` cũng đổi vì `address` là tham chiếu chung", "Ném TypeError vì object tạo bằng spread bị đóng băng", "`b.address` được tạo lại nên cả hai không đổi"],
         answer: 1,
         explain: "Spread là sao chép nông: thuộc tính `address` của hai object cùng trỏ vào một object. Cần `structuredClone` hoặc spread cả tầng `address`."
       },
       {
         q: "Hạn chế nào của `JSON.parse(JSON.stringify(x))` mà `structuredClone` khắc phục được?",
-        options: ["Không sao chép được chuỗi", "Biến `Date` thành string và làm mất `Map`, `Set`", "Không sao chép được số", "Chạy bất đồng bộ"],
+        options: ["Làm mất ký tự Unicode trong chuỗi", "Biến `Date` thành chuỗi, `Map`/`Set` thành `{}`", "Làm tròn số thực về số nguyên", "Trả về Promise nên phải `await`"],
         answer: 1,
         explain: "JSON không có kiểu Date, Map, Set nên chúng bị biến đổi hoặc mất. `structuredClone` giữ được các kiểu này. Chuỗi và số thì cả hai cách đều xử lý được."
       }
@@ -624,8 +624,8 @@ console.log(state.user.tags, deep.at instanceof Date); // ["admin"] true`
         h: "interface và type alias",
         p: [
           "Cả hai đều mô tả được hình dạng object, và trong đa số trường hợp dùng cái nào cũng được. Khác biệt nằm ở khả năng.",
-          "`interface` chỉ mô tả object và có declaration merging: khai báo cùng tên hai lần thì được gộp lại. Đây là cách mở rộng kiểu của thư viện, ví dụ thêm `user` vào `Request` của Express. Kế thừa bằng `extends` cho thông báo lỗi rõ và compiler xử lý nhanh.",
-          "`type` đặt tên cho mọi loại kiểu: union `'a' | 'b'`, tuple, kiểu hàm, mapped type, conditional type. Những thứ này interface không làm được."
+          "`interface` chỉ mô tả kiểu object (kể cả object gọi được như hàm, qua call signature) và có declaration merging: khai báo cùng tên hai lần thì được gộp lại. Đây là cách mở rộng kiểu của thư viện, ví dụ thêm `user` vào `Request` của Express. Kế thừa bằng `extends` cho thông báo lỗi rõ và compiler xử lý nhanh hơn phép giao `&`.",
+          "`type` đặt tên cho mọi loại kiểu: union `'a' | 'b'`, tuple, kiểu hàm viết gọn `(x: string) => void`, mapped type, conditional type. Union, mapped type và conditional type thì interface không biểu diễn được."
         ],
         code: {
           lang: "typescript", file: "src/types.ts",
@@ -680,13 +680,13 @@ export {};`
       },
       {
         q: "Vì sao nên dùng `unknown` thay vì `any` cho dữ liệu chưa rõ kiểu?",
-        options: ["`unknown` chạy nhanh hơn", "`unknown` buộc bạn kiểm tra kiểu trước khi dùng, còn `any` tắt kiểm tra", "`unknown` tự validate lúc runtime", "`any` không dùng được trong strict mode"],
+        options: ["`unknown` được biên dịch ra JavaScript nhanh hơn `any`", "`unknown` buộc bạn narrow trước khi dùng, còn `any` tắt kiểm tra", "`unknown` tự chèn code validate dữ liệu lúc runtime", "`any` bị cấm hoàn toàn khi bật `strict: true`"],
         answer: 1,
         explain: "Với `unknown`, compiler không cho gọi method hay truy cập thuộc tính cho tới khi bạn narrow. Cả hai đều không có tác động runtime, và `any` vẫn dùng được trong strict (chỉ implicit any bị cấm)."
       },
       {
         q: "Declaration merging của interface hữu ích nhất khi nào?",
-        options: ["Khi cần union type", "Khi mở rộng kiểu của thư viện, ví dụ thêm thuộc tính vào `Express.Request`", "Khi muốn tăng tốc biên dịch", "Khi viết kiểu hàm"],
+        options: ["Khi cần gộp nhiều literal thành một union type", "Khi bổ sung thuộc tính vào kiểu của thư viện như `Express.Request`", "Khi muốn tsc bỏ qua kiểm tra các file `.d.ts`", "Khi cần một kiểu hàm có tham số generic"],
         answer: 1,
         explain: "Merging cho phép bổ sung thuộc tính vào interface đã khai báo ở nơi khác, như kiểu của thư viện. Nó không liên quan tới union hay kiểu hàm."
       }
@@ -710,8 +710,9 @@ export {};`
         ],
         code: {
           lang: "typescript", file: "src/generics.ts",
-          src: `function groupBy<T, K extends PropertyKey>(items: T[], keyFn: (item: T) => K): Record<K, T[]> {
-  const out = {} as Record<K, T[]>;
+          src: `// Partial vì không phải key nào cũng có phần tử (giống kiểu của Object.groupBy, ES2024)
+function groupBy<T, K extends PropertyKey>(items: T[], keyFn: (item: T) => K): Partial<Record<K, T[]>> {
+  const out: Partial<Record<K, T[]>> = {};
   for (const item of items) {
     const k = keyFn(item);
     (out[k] ??= []).push(item);
@@ -726,7 +727,7 @@ function pluck<T, K extends keyof T>(items: T[], key: K): T[K][] {
 type Task = { id: number; status: "todo" | "done"; title: string };
 const tasks: Task[] = [{ id: 1, status: "todo", title: "Viết test" }];
 
-const byStatus = groupBy(tasks, (t) => t.status); // Record<"todo" | "done", Task[]>
+const byStatus = groupBy(tasks, (t) => t.status); // Partial<Record<"todo" | "done", Task[]>>
 const titles = pluck(tasks, "title");             // string[]
 // pluck(tasks, "owner");                         // lỗi: "owner" không phải key của Task`
         }
@@ -771,7 +772,7 @@ class InMemoryRepository<T extends { id: string }> {
     quiz: [
       {
         q: "Với `function pluck<T, K extends keyof T>(items: T[], key: K)`, ràng buộc `K extends keyof T` mang lại gì?",
-        options: ["`key` phải là string bất kỳ", "`key` chỉ được là một trong các key của `T`, sai thì báo lỗi lúc biên dịch", "Hàm chạy nhanh hơn", "`key` được validate lúc runtime"],
+        options: ["`key` nhận mọi string, kể cả key không có trong `T`", "`key` chỉ được là key của `T`, sai thì lỗi lúc biên dịch", "Compiler tối ưu truy cập thuộc tính nên hàm chạy nhanh hơn", "`key` được kiểm tra lúc runtime và ném lỗi nếu sai"],
         answer: 1,
         explain: "`keyof T` là union các key của `T`, nên truyền key không tồn tại sẽ lỗi biên dịch. Kiểu không ảnh hưởng tốc độ và không có kiểm tra runtime."
       },
@@ -783,7 +784,7 @@ class InMemoryRepository<T extends { id: string }> {
       },
       {
         q: "Hàm `function log<T>(x: T): void` có vấn đề gì?",
-        options: ["Lỗi cú pháp", "`T` chỉ xuất hiện một lần nên generic không mang lại gì, dùng `unknown` là đủ", "Không gọi được với string", "Bắt buộc phải có `extends`"],
+        options: ["Lỗi cú pháp vì hàm generic không được trả về `void`", "`T` chỉ xuất hiện một lần nên thừa, `x: unknown` là đủ", "Không gọi được với string vì `T` chưa được ràng buộc", "Bắt buộc phải thêm `T extends object` mới biên dịch được"],
         answer: 1,
         explain: "Generic có ích khi liên kết nhiều vị trí trong chữ ký. Ở đây `T` không liên kết với gì nên `x: unknown` tương đương và đơn giản hơn. Code vẫn hợp lệ và gọi được với mọi kiểu."
       }
@@ -850,19 +851,19 @@ function describe(p: PaymentState): string {
     quiz: [
       {
         q: "Trong `switch (p.status)`, vì sao ở `case 'succeeded'` bạn truy cập được `p.transactionId`?",
-        options: ["Vì mọi biến thể đều có `transactionId`", "Vì compiler thu hẹp `p` về biến thể có `status: 'succeeded'`", "Vì TypeScript bỏ qua kiểm tra trong switch", "Vì `transactionId` là optional"],
+        options: ["Vì mọi biến thể của `PaymentState` đều có `transactionId`", "Vì compiler thu hẹp `p` về biến thể có `status: 'succeeded'`", "Vì TypeScript tắt kiểm tra kiểu bên trong khối `switch`", "Vì `transactionId` được khai báo optional ở mọi biến thể"],
         answer: 1,
         explain: "Nhãn `status` là literal nên compiler biết trong nhánh này chỉ còn một biến thể, và biến thể đó có `transactionId`. Các biến thể khác không có thuộc tính này."
       },
       {
         q: "Mục đích của `const unreachable: never = p` trong nhánh default là gì?",
-        options: ["Tăng tốc runtime", "Báo lỗi biên dịch khi có biến thể chưa được xử lý", "Ném lỗi khi chạy", "Chuyển `p` thành null"],
+        options: ["Giúp engine tối ưu `switch` nhanh hơn lúc runtime", "Báo lỗi biên dịch khi còn biến thể chưa được xử lý", "Ném lỗi runtime mỗi khi chương trình chạy vào nhánh default", "Đặt `p` về `null` để garbage collector thu hồi sớm"],
         answer: 1,
         explain: "Nếu mọi biến thể đã xử lý, `p` ở default có kiểu `never` và phép gán hợp lệ. Còn thiếu biến thể thì phép gán lỗi lúc biên dịch. Bản thân dòng này không ném lỗi runtime."
       },
       {
         q: "Lợi ích chính của discriminated union so với object nhiều trường optional là gì?",
-        options: ["Ít dòng code hơn", "Không thể tạo ra trạng thái vô lý như vừa thành công vừa lỗi", "Chạy nhanh hơn", "Không cần kiểm tra kiểu"],
+        options: ["Luôn viết được ít dòng code hơn", "Trạng thái vô lý như vừa thành công vừa lỗi không biểu diễn được", "Object nhỏ hơn nên chạy nhanh hơn lúc runtime", "Không còn phải kiểm tra nhãn trước khi dùng"],
         answer: 1,
         explain: "Mỗi biến thể chỉ có đúng các trường của nó, nên tổ hợp vô lý bị compiler từ chối. Số dòng có thể nhiều hơn và vẫn cần kiểm tra nhãn."
       }
@@ -917,7 +918,7 @@ type Loaded = Awaited<ReturnType<typeof loadUser>>; // User`
       {
         h: "Conditional type",
         p: [
-          "Conditional type có dạng `T extends U ? X : Y`, giống toán tử ba ngôi nhưng cho kiểu. Khi `T` là union, conditional type được phân phối lên từng thành viên. `Exclude<T, U>` dựng sẵn chính là `T extends U ? never : T`.",
+          "Conditional type có dạng `T extends U ? X : Y`, giống toán tử ba ngôi nhưng cho kiểu. Khi `T` là một tham số kiểu đứng trần (không bọc trong `[T]` hay `T[]`) và được truyền vào một union, conditional type được phân phối lên từng thành viên (distributive conditional type). `Exclude<T, U>` dựng sẵn chính là `T extends U ? never : T`.",
           "Từ khóa `infer` cho phép trích một phần kiểu, ví dụ lấy kiểu phần tử của mảng. Conditional type mạnh nhưng dễ khó đọc. Trong code ứng dụng, bạn chủ yếu dùng utility type có sẵn; tự viết conditional type phức tạp thường chỉ cần khi làm thư viện."
         ],
         code: {
@@ -971,8 +972,9 @@ type Open = Exclude<Status, "done">;             // "todo" | "doing"`
       {
         h: "strict: bật ngay từ ngày đầu",
         p: [
-          "`\"strict\": true` là một cờ gộp, bật cùng lúc nhiều kiểm tra: `strictNullChecks` (null và undefined là kiểu riêng, phải xử lý), `noImplicitAny` (cấm tham số không có kiểu bị ngầm hiểu là any), `strictFunctionTypes`, `strictPropertyInitialization`, `useUnknownInCatchVariables` (biến trong `catch` là `unknown`) và một số cờ khác.",
-          "Bật strict ở dự án mới gần như không tốn gì. Bật ở dự án cũ thì có thể phát sinh hàng trăm lỗi, nhưng phần lớn là bug tiềm ẩn thật, chủ yếu quanh null và undefined. Hãy bật strict ngay từ đầu."
+          "`\"strict\": true` là một cờ gộp, bật cùng lúc nhiều kiểm tra: `strictNullChecks` (null và undefined là kiểu riêng, phải xử lý), `noImplicitAny` (cấm tham số không có kiểu bị ngầm hiểu là any), `strictFunctionTypes`, `strictBindCallApply`, `strictPropertyInitialization`, `noImplicitThis`, `alwaysStrict`, `useUnknownInCatchVariables` (biến trong `catch` là `unknown`). Các bản TypeScript mới có thể thêm cờ vào nhóm này, nên nâng cấp TS đôi khi làm lộ lỗi mới.",
+          "Từ TypeScript 6.0, `strict` mặc định là `true`, nhưng nhiều dự án và template cũ vẫn ghi `false`; hãy ghi tường minh `\"strict\": true` để không phụ thuộc phiên bản. Bật ở dự án cũ có thể phát sinh hàng trăm lỗi, nhưng phần lớn là bug tiềm ẩn thật, chủ yếu quanh null và undefined.",
+          "Một thay đổi mặc định khác của TypeScript 6.0 hay làm người mới bối rối: `types` mặc định là `[]`, tức không tự nạp mọi gói `@types/*` nữa. Dự án Node cần khai báo `\"types\": [\"node\"]` (thêm `vitest/globals` nếu dùng global của Vitest), nếu không sẽ gặp lỗi kiểu như không tìm thấy `process`."
         ]
       },
       {
@@ -990,6 +992,7 @@ type Open = Exclude<Status, "done">;             // "todo" | "doing"`
     "moduleResolution": "NodeNext",
     "outDir": "dist",
     "rootDir": "src",
+    "types": ["node"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -1006,7 +1009,8 @@ type Open = Exclude<Status, "done">;             // "todo" | "doing"`
         h: "module resolution và paths",
         p: [
           "`module` và `moduleResolution` quyết định TypeScript hiểu import theo cách nào. Với code chạy trực tiếp trên Node, dùng `NodeNext`: TS tuân theo quy tắc ESM/CJS thật của Node, dựa vào trường `type` trong package.json, và yêu cầu đuôi `.js` trong import tương đối của ESM. Với code đi qua bundler (Vite, frontend), dùng `\"moduleResolution\": \"bundler\"`.",
-          "`paths` tạo alias như `@/modules/user`. Lưu ý quan trọng: `paths` chỉ ảnh hưởng tới việc kiểm tra kiểu, `tsc` không viết lại đường dẫn trong output. Khi chạy, Node sẽ không tìm thấy `@/...` trừ khi bạn dùng bundler, công cụ như `tsc-alias`, hoặc tính năng `imports` với tiền tố `#` trong package.json mà Node hỗ trợ sẵn."
+          "`paths` tạo alias như `@/modules/user`, với đường dẫn tính tương đối từ file tsconfig (không cần `baseUrl`; tùy chọn này đã bị deprecate từ TypeScript 6.0). Lưu ý quan trọng: `paths` chỉ ảnh hưởng tới việc kiểm tra kiểu, `tsc` không viết lại đường dẫn trong output. Khi chạy, Node sẽ không tìm thấy `@/...` trừ khi bạn dùng bundler, công cụ như `tsc-alias`, hoặc tính năng `imports` với tiền tố `#` trong package.json mà Node hỗ trợ sẵn.",
+          "Node bản mới (22.18+, 23.6+) chạy được file `.ts` trực tiếp bằng type stripping: chỉ xóa chú thích kiểu, không kiểm tra kiểu và không đọc tsconfig. Cơ chế này không hỗ trợ cú pháp TS sinh ra code như `enum` hay `namespace`; bật `erasableSyntaxOnly` để compiler cảnh báo sớm. Bạn vẫn cần `tsc --noEmit` trong CI để kiểm tra kiểu."
         ],
         code: {
           lang: "json", file: "package.json",
@@ -1039,7 +1043,7 @@ type Open = Exclude<Status, "done">;             // "todo" | "doing"`
       },
       {
         q: "Bạn cấu hình `paths: { '@/*': ['src/*'] }` và build bằng `tsc`. Điều gì xảy ra khi chạy `node dist/main.js`?",
-        options: ["Chạy bình thường vì tsc viết lại đường dẫn", "Có thể lỗi không tìm thấy module vì tsc không viết lại alias", "tsc báo lỗi biên dịch", "Node tự đọc tsconfig"],
+        options: ["Chạy bình thường vì tsc viết lại alias thành đường dẫn tương đối", "Lỗi không tìm thấy module vì tsc giữ nguyên alias trong output", "tsc từ chối biên dịch vì alias `@/` không hợp lệ", "Chạy bình thường vì Node đọc `paths` trong tsconfig"],
         answer: 1,
         explain: "`paths` chỉ giúp TypeScript kiểm tra kiểu. Output vẫn giữ nguyên `@/...`, và Node không đọc tsconfig nên không hiểu alias này."
       },
@@ -1065,7 +1069,8 @@ type Open = Exclude<Status, "done">;             // "todo" | "doing"`
         h: "Zod: một schema, cả validate lẫn kiểu",
         p: [
           "Zod cho bạn khai báo schema bằng code. Từ schema, bạn vừa validate được dữ liệu lúc chạy, vừa suy ra được kiểu TypeScript bằng `z.infer`. Không còn cảnh interface và logic validate bị lệch nhau.",
-          "`schema.parse(x)` trả dữ liệu đã được kiểm tra hoặc ném `ZodError`. `schema.safeParse(x)` không ném mà trả `{ success, data }` hoặc `{ success, error }`, hợp khi bạn muốn tự trả lỗi 400. Mặc định object schema loại bỏ các key không khai báo, giúp chặn việc client gửi thêm trường như `role: 'admin'`."
+          "`schema.parse(x)` trả dữ liệu đã được kiểm tra hoặc ném `ZodError`. `schema.safeParse(x)` không ném mà trả `{ success, data }` hoặc `{ success, error }`, hợp khi bạn muốn tự trả lỗi 400. Mặc định object schema loại bỏ các key không khai báo, giúp chặn việc client gửi thêm trường như `role: 'admin'`. Muốn báo lỗi khi có key lạ thay vì âm thầm bỏ đi, dùng `z.strictObject({...})`.",
+          "Ví dụ dưới đây viết theo Zod 4 (bản hiện hành): các định dạng chuỗi là hàm cấp cao như `z.email()`, `z.url()`, và lỗi được gom theo trường bằng `z.flattenError()`. Tài liệu và bài viết cũ dùng Zod 3 với cú pháp `z.string().email()` và `error.flatten()`; cú pháp cũ vẫn chạy nhưng đã bị đánh dấu deprecated. Lưu ý `z.coerce.number()` dùng `Number(x)`, nên chuỗi rỗng `\"\"` thành `0` chứ không báo lỗi."
         ],
         code: {
           lang: "typescript", file: "src/users/create-user.schema.ts",
@@ -1122,19 +1127,19 @@ export const env = EnvSchema.parse(process.env); // sai cấu hình: dừng ngay
     quiz: [
       {
         q: "Vì sao `const dto = req.body as CreateUserDto` không an toàn?",
-        options: ["`as` làm chậm chương trình", "`as` chỉ thay đổi kiểu với compiler, không kiểm tra dữ liệu lúc chạy", "`as` xóa các trường thừa", "`as` chỉ dùng được với class"],
+        options: ["`as` sinh thêm code kiểm tra làm chậm mỗi request", "`as` chỉ đổi kiểu với compiler, không kiểm tra dữ liệu lúc chạy", "`as` âm thầm xóa các trường không có trong DTO", "`as` chỉ hoạt động khi DTO được khai báo bằng class"],
         answer: 1,
         explain: "Type assertion chỉ là cách bạn nói với compiler 'tin tôi đi'. Dữ liệu thực vẫn có thể sai hoàn toàn. Nó không xóa trường và không ảnh hưởng tốc độ."
       },
       {
         q: "`z.infer<typeof Schema>` dùng để làm gì?",
-        options: ["Validate dữ liệu lúc chạy", "Suy ra kiểu TypeScript từ schema để không phải viết interface riêng", "Sinh tài liệu API", "Chuyển schema thành SQL"],
+        options: ["Validate dữ liệu lúc chạy và ném `ZodError` khi sai", "Suy ra kiểu TypeScript từ schema, khỏi viết interface riêng", "Sinh tài liệu OpenAPI từ schema cho endpoint", "Chuyển schema thành câu lệnh `CREATE TABLE`"],
         answer: 1,
         explain: "`z.infer` hoạt động ở mức kiểu, lấy ra kiểu TS tương ứng với schema. Validate lúc chạy là việc của `parse`/`safeParse`."
       },
       {
         q: "Lợi ích của việc validate biến môi trường ngay khi khởi động là gì?",
-        options: ["Ứng dụng chạy nhanh hơn", "Cấu hình sai được phát hiện ngay lúc deploy thay vì khi đang phục vụ người dùng", "Không cần file `.env` nữa", "Biến môi trường được mã hóa"],
+        options: ["Đọc `process.env` sau đó nhanh hơn nhờ được cache", "Cấu hình sai lộ ra ngay lúc khởi động thay vì giữa lúc phục vụ", "Không cần file `.env` hay secret manager nữa", "Giá trị biến môi trường được mã hóa trong bộ nhớ"],
         answer: 1,
         explain: "Fail fast giúp lỗi lộ ra sớm, thường ngay ở bước deploy hoặc health check. Nó không mã hóa gì và không thay thế nguồn cấu hình."
       }
@@ -1206,9 +1211,9 @@ function attachFast(orders: Order[], users: User[]) {
       },
       {
         q: "Vì sao `array.push` được coi là O(1) amortized?",
-        options: ["Vì mảng JS luôn có dung lượng vô hạn", "Vì việc cấp phát lại O(n) hiếm khi xảy ra do dung lượng tăng theo cấp số nhân, chia đều ra mỗi lần push rẻ", "Vì push không bao giờ sao chép dữ liệu", "Vì engine dùng linked list"],
+        options: ["Vì engine cấp sẵn dung lượng đủ lớn nên không bao giờ phải mở rộng", "Vì dung lượng tăng theo cấp số nhân nên lần sao chép O(n) hiếm dần", "Vì mỗi lần mở rộng chỉ cấp thêm đúng một ô, không sao chép dữ liệu", "Vì engine lưu mảng dưới dạng linked list nên thêm cuối luôn O(1)"],
         answer: 1,
-        explain: "Thỉnh thoảng mảng phải mở rộng và sao chép, nhưng mỗi lần mở rộng gấp đôi nên tổng chi phí cho n lần push là O(n), trung bình O(1) mỗi lần."
+        explain: "Thỉnh thoảng mảng phải mở rộng và sao chép, nhưng mỗi lần dung lượng tăng theo một hệ số (ví dụ gấp rưỡi hoặc gấp đôi) nên tổng chi phí cho n lần push là O(n), trung bình O(1) mỗi lần. Nếu chỉ tăng thêm một ô mỗi lần, tổng chi phí sẽ là O(n^2)."
       },
       {
         q: "Tra cứu trong hash map có worst case là bao nhiêu?",
@@ -1290,7 +1295,7 @@ console.log(twoSum([2, 7, 11, 15], 9)); // [0, 1]`
       },
       {
         q: "Vì sao nên dùng `Map` thay vì object thuần để đếm số request theo IP?",
-        options: ["Object không lưu được số", "Map có key động mọi kiểu, có `size`, giữ thứ tự và không đụng các key đặc biệt như `__proto__`", "Map luôn nhanh hơn gấp 10 lần", "Object không cho thêm key sau khi tạo"],
+        options: ["Object thuần không lưu được giá trị kiểu số", "Map được thiết kế cho key động và không dính key đặc biệt như `__proto__`", "Map luôn nhanh hơn object gấp 10 lần ở mọi thao tác", "Object thuần không cho thêm key mới sau khi tạo"],
         answer: 1,
         explain: "Map được thiết kế cho từ điển động. Object thuần có prototype và key đặc biệt có thể gây lỗi. Không có con số tốc độ cố định nào như 10 lần."
       },
@@ -1397,7 +1402,7 @@ class Queue<T> {
       },
       {
         q: "Trong cài đặt LRU bằng `Map` của JS, vì sao key đầu tiên của `map.keys()` là key cần loại bỏ?",
-        options: ["Vì Map tự sắp xếp key theo chữ cái", "Vì Map giữ thứ tự chèn, và mỗi lần dùng key được xóa rồi chèn lại ở cuối", "Vì Map luôn lưu key nhỏ nhất ở đầu", "Vì key đầu tiên có hash nhỏ nhất"],
+        options: ["Vì Map tự sắp xếp key theo thứ tự chữ cái", "Vì Map giữ thứ tự chèn và key vừa dùng được chèn lại ở cuối", "Vì Map tự đưa key ít được đọc nhất lên đầu", "Vì Map duyệt key theo giá trị hash tăng dần"],
         answer: 1,
         explain: "Map duyệt theo thứ tự chèn. Việc delete rồi set khi truy cập đẩy key vừa dùng về cuối, nên đầu danh sách là key lâu nhất không được dùng."
       }
@@ -1431,8 +1436,8 @@ function count(node: Category): number {
       {
         h: "BST và vì sao database dùng B-Tree",
         p: [
-          "Binary Search Tree (BST) là cây nhị phân mà mọi node bên trái nhỏ hơn node cha, mọi node bên phải lớn hơn. Tìm, thêm, xóa mất O(chiều cao). Nếu cây cân bằng, chiều cao là O(log n). Nếu chèn dữ liệu đã sắp xếp vào BST thường, cây suy biến thành một đường thẳng và mọi thao tác thành O(n). Vì vậy thực tế dùng cây tự cân bằng như AVL hay Red-Black tree.",
-          "Database lưu dữ liệu trên đĩa theo trang (page), mỗi lần đọc một trang là tốn kém. B-Tree (PostgreSQL dùng biến thể B+Tree cho index mặc định) cho mỗi node chứa hàng trăm key, nên cây rất thấp: vài tầng là đủ cho hàng triệu dòng, tức vài lần đọc trang. Key trong B-Tree được sắp xếp, nên index này phục vụ được cả `=`, `<`, `>`, `BETWEEN`, `ORDER BY` và tìm tiền tố."
+          "Binary Search Tree (BST) là cây nhị phân mà với mỗi node, mọi node trong cây con bên trái nhỏ hơn nó và mọi node trong cây con bên phải lớn hơn nó. Tìm, thêm, xóa mất O(chiều cao). Nếu cây cân bằng, chiều cao là O(log n). Nếu chèn dữ liệu đã sắp xếp vào BST thường, cây suy biến thành một đường thẳng và mọi thao tác thành O(n). Vì vậy thực tế dùng cây tự cân bằng như AVL hay Red-Black tree.",
+          "Database lưu dữ liệu trên đĩa theo trang (page), mỗi lần đọc một trang là tốn kém. B-Tree (PostgreSQL dùng biến thể B+Tree cho index mặc định) cho mỗi node chứa hàng trăm key, nên cây rất thấp: vài tầng là đủ cho hàng triệu dòng, tức vài lần đọc trang. Key trong B-Tree được sắp xếp, nên index này phục vụ được cả `=`, `<`, `>`, `BETWEEN`, `ORDER BY` và tìm tiền tố (`LIKE 'abc%'`; với cột text, PostgreSQL chỉ dùng index cho phép này khi collation là `C` hoặc index tạo với `text_pattern_ops`)."
         ]
       },
       {
@@ -1496,15 +1501,15 @@ function topK(nums: number[], k: number): number[] {
     quiz: [
       {
         q: "Vì sao database dùng B-Tree thay vì BST nhị phân cho index?",
-        options: ["B-Tree dùng ít bộ nhớ RAM hơn", "Mỗi node B-Tree chứa nhiều key nên cây thấp, giảm số lần đọc trang từ đĩa", "BST không sắp xếp được dữ liệu", "B-Tree không cần cân bằng"],
+        options: ["B-Tree luôn dùng ít RAM hơn BST cho cùng dữ liệu", "Node chứa nhiều key nên cây thấp, ít lần đọc trang đĩa", "BST không giữ được thứ tự nên không phục vụ `ORDER BY`", "B-Tree không bao giờ phải cân bằng lại khi thêm hay xóa"],
         answer: 1,
         explain: "Chi phí chính là đọc trang đĩa. Node rộng làm cây chỉ vài tầng. BST vẫn sắp xếp được nhưng cao hơn nhiều. B-Tree vẫn tự cân bằng khi thêm/xóa."
       },
       {
         q: "Tìm top 10 phần tử lớn nhất trong n phần tử bằng min-heap kích thước 10 có độ phức tạp là?",
-        options: ["O(n log n)", "O(n log 10), tức gần O(n)", "O(n^2)", "O(log n)"],
+        options: ["O(n log n)", "O(n log k), với k = 10", "O(n^2)", "O(k log n), với k = 10"],
         answer: 1,
-        explain: "Mỗi phần tử có thể push/pop trên heap kích thước k với chi phí O(log k). Với k = 10 cố định, tổng gần như tuyến tính."
+        explain: "Mỗi phần tử có thể push/pop trên heap kích thước k với chi phí O(log k), tổng O(n log k). Với k = 10 cố định, gần như tuyến tính. O(k log n) sai vì vẫn phải duyệt qua cả n phần tử."
       },
       {
         q: "Tính tổng dung lượng của một thư mục (gồm mọi thư mục con) phù hợp với kiểu duyệt nào?",
@@ -1600,7 +1605,7 @@ console.log(hasCycle(new Map([["deploy", ["build"]], ["build", ["test"]], ["test
       },
       {
         q: "Trong phát hiện chu trình bằng DFS ba màu, gặp một đỉnh đang ở trạng thái 'visiting' nghĩa là gì?",
-        options: ["Đỉnh đó cô lập", "Có cạnh quay về tổ tiên trên đường đi hiện tại, tức có chu trình", "Graph không có hướng", "DFS đã kết thúc"],
+        options: ["Đỉnh đó cô lập, không có cạnh nào đi vào", "Có cạnh quay về đỉnh đang trên đường đi, tức có chu trình", "Graph là vô hướng nên phải chuyển sang BFS", "DFS đã duyệt xong toàn bộ nhánh của đỉnh đó"],
         answer: 1,
         explain: "'Visiting' nghĩa là đỉnh đang nằm trên đường DFS hiện tại. Quay lại nó là đi thành vòng. Đỉnh 'done' thì không tạo chu trình."
       },
@@ -1651,7 +1656,7 @@ console.log([10, 9, 1].sort((a, b) => a - b)); // [1, 9, 10]`
         h: "Binary search trên đáp án",
         p: [
           "Khi đáp án là một con số nằm trong khoảng xác định, và có tính đơn điệu (nếu x thỏa thì mọi giá trị lớn hơn x cũng thỏa), bạn có thể binary search trực tiếp trên đáp án thay vì trên mảng.",
-          "Ví dụ: cần gửi `n` job với tối đa `d` ngày, mỗi ngày xử lý tối đa `c` job. Tìm `c` nhỏ nhất. Với mỗi `c`, kiểm tra xem có xong trong `d` ngày không mất O(n). Tìm `c` bằng binary search trong khoảng từ job lớn nhất tới tổng số job, tổng cộng O(n log S). Dạng bài này xuất hiện nhiều trên LeetCode (Koko Eating Bananas, Capacity To Ship Packages)."
+          "Ví dụ: có `n` kiện hàng với khối lượng cho trước, phải chở theo đúng thứ tự trong tối đa `d` ngày; mỗi ngày xe chở được tổng khối lượng tối đa `c`. Tìm `c` nhỏ nhất. Với mỗi `c`, kiểm tra xem có chở xong trong `d` ngày không mất O(n) (chất hàng tham lam, đầy thì sang ngày mới). Nếu `c` chở kịp thì mọi `c` lớn hơn cũng kịp, đó là tính đơn điệu. Tìm `c` bằng binary search trong khoảng từ kiện nặng nhất tới tổng khối lượng `S`, tổng cộng O(n log S). Dạng bài này xuất hiện nhiều trên LeetCode (Koko Eating Bananas, Capacity To Ship Packages Within D Days)."
         ],
         code: {
           lang: "typescript", file: "src/ship-capacity.ts",
@@ -1696,9 +1701,9 @@ console.log(minCapacity([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 5)); // 15`
       },
       {
         q: "Khi nào quick sort rơi vào worst case O(n^2)?",
-        options: ["Khi mảng có ít phần tử", "Khi pivot liên tục là phần tử nhỏ nhất hoặc lớn nhất, ví dụ lấy phần tử đầu của mảng đã sắp xếp", "Khi mảng có phần tử trùng", "Không bao giờ"],
+        options: ["Khi mảng đầu vào chỉ có dưới 10 phần tử", "Khi pivot liên tục là phần tử nhỏ nhất hoặc lớn nhất", "Khi pivot được chọn ngẫu nhiên ở mỗi lần chia", "Khi mảng đầu vào đã được xáo trộn ngẫu nhiên"],
         answer: 1,
-        explain: "Pivot tệ làm mỗi lần chia chỉ bớt đi một phần tử, cho n tầng đệ quy mỗi tầng O(n). Chọn pivot ngẫu nhiên giảm rủi ro này."
+        explain: "Pivot tệ (ví dụ luôn lấy phần tử đầu của mảng đã sắp xếp) làm mỗi lần chia chỉ bớt đi một phần tử, cho n tầng đệ quy mỗi tầng O(n). Pivot ngẫu nhiên hoặc đầu vào ngẫu nhiên khiến trường hợp này cực kỳ khó xảy ra."
       },
       {
         q: "Điều kiện để áp dụng binary search trên đáp án là gì?",
@@ -1800,9 +1805,9 @@ console.log(climbStairs(5), subsets([1, 2]).length); // 8 4`
       },
       {
         q: "Dấu hiệu nào cho thấy bài toán nên dùng dynamic programming?",
-        options: ["Dữ liệu đã sắp xếp", "Có bài toán con chồng lấp được tính lặp lại nhiều lần", "Cần duyệt theo tầng", "Chỉ có một phần tử"],
+        options: ["Dữ liệu đầu vào đã được sắp xếp tăng dần", "Cùng một bài toán con bị tính đi tính lại", "Cần duyệt graph theo từng tầng khoảng cách", "Cần tìm đoạn con liên tiếp thỏa điều kiện"],
         answer: 1,
-        explain: "DP tiết kiệm bằng cách lưu kết quả bài toán con để không tính lại. Dữ liệu sắp xếp gợi ý binary search, duyệt theo tầng gợi ý BFS."
+        explain: "DP tiết kiệm bằng cách lưu kết quả bài toán con để không tính lại. Dữ liệu sắp xếp gợi ý binary search, duyệt theo tầng gợi ý BFS, đoạn con liên tiếp gợi ý sliding window."
       }
     ]
   },
@@ -1882,19 +1887,19 @@ const notifier: Notifier = new RetryingNotifier(new EmailNotifier());`
     quiz: [
       {
         q: "Vì sao 'ưu tiên composition hơn inheritance'?",
-        options: ["Composition chạy nhanh hơn", "Composition tạo liên kết lỏng, ghép tính năng linh hoạt mà không bùng nổ số lớp", "TypeScript không hỗ trợ kế thừa tốt", "Inheritance không có đa hình"],
+        options: ["Vì gọi method qua đối tượng con nhanh hơn qua prototype", "Vì các mảnh ghép lỏng, kết hợp tính năng mà không bùng nổ số lớp", "Vì TypeScript chỉ hỗ trợ kế thừa một tầng", "Vì kế thừa không hỗ trợ đa hình trong JavaScript"],
         answer: 1,
         explain: "Composition cho phép thay thế và kết hợp từng mảnh độc lập. Tốc độ không phải lý do chính, TS hỗ trợ kế thừa đầy đủ, và kế thừa vẫn có đa hình."
       },
       {
         q: "Khác biệt giữa `private x` của TypeScript và `#x` của JavaScript là gì?",
-        options: ["Không có khác biệt", "`private` chỉ kiểm tra lúc biên dịch, `#x` là private thật lúc chạy", "`#x` chỉ dùng được trong interface", "`private` nhanh hơn"],
+        options: ["Hai cách giống hệt nhau, chỉ khác cú pháp", "`private` chỉ kiểm tra lúc biên dịch, `#x` được bảo vệ lúc chạy", "`#x` chỉ khai báo được trong interface, không dùng trong class", "`private` được engine bảo vệ lúc chạy, `#x` thì không"],
         answer: 1,
         explain: "Modifier `private` bị xóa khi biên dịch, code JS bên ngoài vẫn truy cập được. `#x` được engine bảo vệ, truy cập từ ngoài class là lỗi cú pháp."
       },
       {
         q: "`RetryingNotifier` nhận một `Notifier` khác trong constructor. Đây là ví dụ của điều gì?",
-        options: ["Kế thừa nhiều tầng", "Composition: thêm hành vi bằng cách bọc một đối tượng khác", "Singleton", "Prototype chain"],
+        options: ["Kế thừa: lớp con mở rộng hành vi của lớp cha", "Composition: thêm hành vi bằng cách bọc một đối tượng khác", "Singleton: đảm bảo chỉ có một Notifier trong process", "Factory: chọn cài đặt Notifier theo cấu hình"],
         answer: 1,
         explain: "`RetryingNotifier` chứa và ủy quyền cho một Notifier khác, thêm logic retry mà không kế thừa. Nó cũng dùng được cho SMS hay push notifier."
       }
@@ -1908,7 +1913,7 @@ const notifier: Notifier = new RetryingNotifier(new EmailNotifier());`
         list: [
           "S - Single Responsibility: mỗi module chỉ có một lý do để thay đổi.",
           "O - Open/Closed: mở để mở rộng, đóng để sửa đổi. Thêm tính năng bằng cách thêm code mới, không sửa code đang chạy ổn.",
-          "L - Liskov Substitution: lớp con thay được lớp cha mà không làm sai hành vi. Nếu `ReadonlyRepository` ném lỗi khi gọi `save()`, nó vi phạm LSP.",
+          "L - Liskov Substitution: lớp con thay được lớp cha mà không làm sai hành vi. Nếu `ReadonlyRepository` kế thừa (hoặc cài đặt) `Repository` nhưng ném lỗi khi gọi `save()`, code đang dùng `Repository` sẽ vỡ khi nhận nó, tức vi phạm LSP.",
           "I - Interface Segregation: nhiều interface nhỏ, chuyên biệt tốt hơn một interface to. Đừng bắt client phụ thuộc method nó không dùng.",
           "D - Dependency Inversion: module cấp cao không phụ thuộc module cấp thấp; cả hai phụ thuộc vào abstraction."
         ],
@@ -1988,7 +1993,7 @@ export class OrderService {
       },
       {
         q: "Lợi ích trực tiếp nhất của việc `OrderService` nhận `PaymentGateway` qua constructor là gì?",
-        options: ["Thanh toán nhanh hơn", "Có thể thay bằng bản giả khi test và đổi nhà cung cấp mà không sửa service", "Không cần xử lý lỗi", "Tự động retry"],
+        options: ["Lời gọi thanh toán nhanh hơn vì bỏ qua một tầng", "Thay được bằng bản giả khi test mà không sửa service", "Service không còn phải xử lý lỗi thanh toán", "Constructor tự động retry khi gateway lỗi"],
         answer: 1,
         explain: "Service chỉ biết interface, nên truyền vào cài đặt nào cũng được: bản giả khi test, Stripe hay nhà cung cấp khác khi chạy thật."
       }
@@ -2077,9 +2082,9 @@ console.log(shippingFee("standard", 1.2, 25, 200_000)); // 31000`
       },
       {
         q: "Trong Node.js, vì sao export một instance từ module thường đủ để có hành vi singleton?",
-        options: ["Vì Node chỉ có một thread", "Vì module được cache sau lần import đầu tiên, các nơi import nhận cùng một instance", "Vì TypeScript cấm tạo nhiều instance", "Vì V8 tự gộp các object giống nhau"],
+        options: ["Vì Node chỉ chạy JavaScript trên một thread", "Vì module được cache nên mọi nơi import nhận cùng instance", "Vì TypeScript cấm gọi `new` hai lần với cùng class", "Vì V8 tự gộp các object có nội dung giống nhau"],
         answer: 1,
-        explain: "Hệ thống module cache kết quả đánh giá module, nên mọi import cùng nhận một object. Điều này không liên quan tới số thread."
+        explain: "Hệ thống module cache kết quả đánh giá module (theo đường dẫn đã resolve), nên mọi import cùng nhận một object. Ngoại lệ cần biết: nếu cùng một package bị cài thành hai bản ở hai chỗ trong node_modules, bạn sẽ có hai instance. Điều này không liên quan tới số thread."
       }
     ]
   },
@@ -2133,7 +2138,7 @@ describe("UserService.register", () => {
       {
         h: "DI container trong NestJS",
         p: [
-          "Khi ứng dụng có hàng chục service, lắp ráp thủ công trở nên dài dòng. DI container tự tạo đối tượng và phụ thuộc của nó theo đúng thứ tự. NestJS có container dựng sẵn: bạn đánh dấu class bằng `@Injectable()`, khai báo nó trong `providers` của module, và Nest đọc kiểu tham số constructor để tiêm vào. Mặc định mỗi provider là singleton trong phạm vi ứng dụng.",
+          "Khi ứng dụng có hàng chục service, lắp ráp thủ công trở nên dài dòng. DI container tự tạo đối tượng và phụ thuộc của nó theo đúng thứ tự. NestJS có container dựng sẵn: bạn đánh dấu class bằng `@Injectable()`, khai báo nó trong `providers` của module, và Nest đọc kiểu tham số constructor để tiêm vào. Thông tin kiểu này có được lúc chạy là nhờ tsconfig bật `experimentalDecorators` và `emitDecoratorMetadata` (template của Nest CLI đã bật sẵn); thiếu chúng, Nest không biết cần tiêm gì. Mặc định mỗi provider là singleton trong phạm vi ứng dụng.",
           "Interface của TypeScript biến mất lúc chạy nên Nest không dùng nó làm khóa được. Khi muốn tiêm theo abstraction, bạn dùng một token (string hoặc Symbol) với `@Inject(TOKEN)` và khai báo `useClass` hoặc `useValue` trong module. Trong test, `Test.createTestingModule` cho phép ghi đè provider bằng bản giả."
         ],
         code: {
@@ -2175,19 +2180,19 @@ export class UsersModule {}`
     quiz: [
       {
         q: "Lợi ích lớn nhất của DI khi viết unit test là gì?",
-        options: ["Test chạy trên nhiều thread", "Có thể truyền bản giả cho phụ thuộc, test logic mà không cần database hay API thật", "Không cần viết assertion", "Tự sinh test case"],
+        options: ["Test được chạy song song trên nhiều thread", "Truyền được bản giả, test logic mà không cần database thật", "Không cần viết assertion vì container tự kiểm tra", "Container tự sinh test case cho từng provider"],
         answer: 1,
         explain: "Vì phụ thuộc đến từ bên ngoài, test tự quyết định truyền cài đặt nào. DI không liên quan tới đa luồng hay tự sinh test."
       },
       {
         q: "Vì sao trong NestJS bạn cần token như `@Inject(USER_REPO)` khi tiêm theo interface?",
-        options: ["Vì interface chậm", "Vì interface bị xóa khi biên dịch nên không có giá trị lúc chạy để làm khóa tra cứu", "Vì Nest cấm dùng interface", "Vì token giúp mã hóa dữ liệu"],
+        options: ["Vì tra cứu theo interface chậm hơn theo token", "Vì interface bị xóa khi biên dịch, không còn gì làm khóa", "Vì Nest cấm dùng interface trong chữ ký constructor", "Vì token giúp Nest mã hóa phụ thuộc khi tiêm"],
         answer: 1,
         explain: "Container cần một giá trị runtime làm khóa. Class tồn tại lúc chạy nên dùng được trực tiếp, còn interface thì không."
       },
       {
         q: "Composition root là gì?",
-        options: ["Thư mục gốc của dự án", "Nơi duy nhất lắp ráp các đối tượng và chọn cài đặt cụ thể cho từng phụ thuộc", "Class cha của mọi service", "File cấu hình database"],
+        options: ["Thư mục gốc chứa `package.json` của dự án", "Nơi duy nhất lắp ráp đối tượng và chọn cài đặt cụ thể", "Class cha mà mọi service phải kế thừa", "File khai báo chuỗi kết nối database"],
         answer: 1,
         explain: "Composition root là điểm lắp ráp đồ thị đối tượng, thường gần điểm khởi động như `main.ts` hoặc module gốc của Nest."
       }
@@ -2262,7 +2267,7 @@ console.log(total({ items: [{ price: 100_000, qty: 2 }], coupon: "SALE10" })); /
       },
       {
         q: "`const applyCoupon = (coupon) => (amount) => ...` là ví dụ của gì?",
-        options: ["Recursion", "Higher-order function trả về hàm (currying)", "Side effect", "Class"],
+        options: ["Đệ quy (recursion)", "Hàm trả về hàm (currying)", "Side effect ẩn", "Hàm thuần có memoization"],
         answer: 1,
         explain: "Hàm ngoài nhận `coupon` và trả về một hàm mới nhận `amount`. Kỹ thuật này giúp tạo các bước cấu hình sẵn để ghép vào pipeline."
       }
@@ -2338,22 +2343,112 @@ function canExport(user: User | null): boolean {
     quiz: [
       {
         q: "Refactoring được định nghĩa là gì?",
-        options: ["Viết lại toàn bộ từ đầu", "Thay đổi cấu trúc bên trong mà không thay đổi hành vi bên ngoài", "Thêm tính năng mới", "Sửa bug hiệu năng"],
+        options: ["Viết lại toàn bộ module từ đầu theo thiết kế mới", "Đổi cấu trúc bên trong mà giữ nguyên hành vi bên ngoài", "Thêm tính năng mới kèm dọn dẹp code xung quanh", "Sửa bug và tối ưu hiệu năng cùng một lúc"],
         answer: 1,
         explain: "Refactoring giữ nguyên hành vi, chỉ cải thiện cấu trúc. Viết lại từ đầu hay thêm tính năng đều thay đổi phạm vi và rủi ro."
       },
       {
         q: "Trước khi refactor một module cũ không có test, bạn nên làm gì?",
-        options: ["Xóa module và viết lại", "Viết characterization test ghi lại hành vi hiện tại", "Refactor rồi nhờ QA kiểm tra sau", "Tắt linter"],
+        options: ["Xóa module và viết lại cho sạch", "Viết characterization test ghi lại hành vi hiện tại", "Refactor xong rồi nhờ QA kiểm tra thủ công", "Tắt linter để tránh cảnh báo khi sửa"],
         answer: 1,
         explain: "Characterization test là lưới an toàn, báo ngay khi hành vi thay đổi. Kiểm tra thủ công sau cùng dễ sót và chậm."
       },
       {
         q: "Hàm `getUser(id)` ngoài việc trả user còn cập nhật `lastSeenAt` trong database. Vấn đề là gì?",
-        options: ["Hàm quá ngắn", "Side effect ẩn: tên hàm không cho biết nó ghi dữ liệu", "Tham số quá nhiều", "Không dùng generic"],
+        options: ["Hàm quá ngắn nên cần gộp thêm logic", "Side effect ẩn: tên không cho biết hàm ghi dữ liệu", "Hàm cần thêm tham số để nhận `lastSeenAt`", "Hàm nên dùng generic để trả về mọi entity"],
         answer: 1,
         explain: "Người gọi `getUser` mong đợi một thao tác đọc. Việc ghi ẩn gây bất ngờ, ví dụ khi gọi hàm này trong job báo cáo. Hãy tách thành hàm riêng có tên rõ."
       }
     ]
   },
+
+  "p01.m0.t7": {
+    "sections": [
+      {
+        "h": "Debug là kỹ năng, không phải may mắn",
+        "p": [
+          "Lập trình viên mới thường sửa lỗi bằng cách đoán rồi thử. Cách làm chuyên nghiệp là thu hẹp phạm vi: tái hiện lỗi ổn định, đọc thông báo lỗi, xác định dòng code gây lỗi, đặt giả thuyết và kiểm chứng từng cái một.",
+          "Quy trình ngắn gọn: (1) tái hiện được lỗi, (2) đọc kỹ thông báo và stack trace, (3) thu hẹp bằng breakpoint hoặc log, (4) sửa, (5) viết test để lỗi không quay lại."
+        ]
+      },
+      {
+        "h": "Đọc stack trace",
+        "p": [
+          "Stack trace liệt kê chuỗi hàm đang được gọi tại thời điểm lỗi, dòng trên cùng là nơi lỗi được ném ra. Hãy đọc tên lỗi và thông báo trước (ví dụ `TypeError: Cannot read properties of undefined (reading 'id')`), rồi tìm dòng đầu tiên thuộc code của bạn chứ không phải của thư viện trong node_modules.",
+          "Với TypeScript, số dòng trong stack trace là của file JavaScript đã biên dịch. Chạy Node với cờ `--enable-source-maps` để stack trace trỏ về đúng dòng trong file .ts."
+        ],
+        "code": {
+          "lang": "text",
+          "file": "stack trace",
+          "src": "TypeError: Cannot read properties of undefined (reading 'id')\n    at getOwnerId (/app/src/orders/order.service.ts:42:25)   <- code của bạn: bắt đầu từ đây\n    at OrderController.show (/app/src/orders/order.controller.ts:18:30)\n    at /app/node_modules/@nestjs/core/router/router-execution-context.js:38:29"
+        }
+      },
+      {
+        "h": "Dùng debugger thay vì console.log tràn lan",
+        "p": [
+          "Breakpoint cho phép dừng chương trình tại một dòng, xem giá trị mọi biến, rồi chạy từng bước. Trong VS Code, mở JavaScript Debug Terminal và chạy lệnh như bình thường, debugger sẽ tự gắn vào tiến trình Node.",
+          "Chạy `node --inspect` để Node mở cổng debug tại 127.0.0.1:9229, rồi mở `chrome://inspect` trong Chrome. Cờ `--inspect-brk` dừng ngay dòng đầu tiên, hữu ích khi lỗi xảy ra lúc khởi động. Tài liệu Node.js cảnh báo không bao giờ mở cổng debug ra địa chỉ công khai (0.0.0.0), vì ai kết nối được cũng có thể chạy code tuỳ ý trên máy."
+        ],
+        "code": {
+          "lang": "bash",
+          "file": "terminal",
+          "src": "# Dừng ở dòng đầu, gắn Chrome DevTools qua chrome://inspect\nnode --inspect-brk --enable-source-maps dist/main.js\n\n# Trong code, câu lệnh debugger đóng vai trò breakpoint khi có debugger đang gắn\n# function total(items) { debugger; return items.reduce(...) }"
+        }
+      },
+      {
+        "h": "Chiến thuật khi bế tắc",
+        "p": [
+          "Thu nhỏ bài toán: bỏ bớt code cho tới khi có đoạn ngắn nhất vẫn gây lỗi. Nếu lỗi mới xuất hiện sau một loạt commit, dùng `git bisect` để tìm commit gây lỗi bằng tìm kiếm nhị phân.",
+          "Khi hỏi người khác hoặc tra cứu, hãy đưa thông báo lỗi nguyên văn, phiên bản công cụ, đoạn code tối thiểu tái hiện lỗi và những gì bạn đã thử. Câu hỏi rõ ràng thường tự dẫn bạn tới lời giải."
+        ]
+      }
+    ],
+    "summary": [
+      "Tái hiện lỗi trước, sau đó mới sửa",
+      "Đọc tên lỗi, thông báo và dòng đầu tiên thuộc code của bạn trong stack trace",
+      "Dùng breakpoint hoặc node --inspect để xem trạng thái thay vì đoán",
+      "Bật --enable-source-maps để stack trace trỏ đúng file TypeScript",
+      "Viết test cho lỗi vừa sửa để nó không quay lại"
+    ],
+    "pitfalls": [
+      "Sửa nhiều chỗ cùng lúc nên không biết thay đổi nào thật sự sửa được lỗi",
+      "Chỉ đọc dòng cuối của stack trace, vốn thường nằm trong thư viện, thay vì tìm dòng thuộc code của mình",
+      "Mở cổng debug `--inspect=0.0.0.0` trên server, để lộ quyền chạy code tuỳ ý"
+    ],
+    "quiz": [
+      {
+        "q": "Khi đọc stack trace, bạn nên tìm gì trước tiên sau tên lỗi và thông báo?",
+        "options": [
+          "Dòng cuối cùng của stack trace",
+          "Dòng đầu tiên thuộc code của dự án",
+          "Dòng đầu tiên nằm trong node_modules",
+          "Dòng có số thứ tự nhỏ nhất trong file"
+        ],
+        "answer": 1,
+        "explain": "Dòng đầu tiên thuộc code của bạn thường là nơi cần sửa. Các dòng trong node_modules là thư viện gọi tiếp và hiếm khi là nguyên nhân."
+      },
+      {
+        "q": "Cờ nào làm Node dừng ngay trước dòng code đầu tiên để bạn gắn debugger?",
+        "options": [
+          "--inspect",
+          "--enable-source-maps",
+          "--inspect-brk",
+          "--trace-warnings"
+        ],
+        "answer": 2,
+        "explain": "--inspect-brk mở cổng debug và dừng ở dòng đầu. --inspect chỉ mở cổng mà không dừng, còn --enable-source-maps chỉ ảnh hưởng tới stack trace."
+      },
+      {
+        "q": "Lỗi mới xuất hiện sau 40 commit và bạn không biết commit nào gây ra. Cách hiệu quả nhất là gì?",
+        "options": [
+          "Revert lần lượt từng commit từ mới nhất",
+          "Đọc lại toàn bộ diff của 40 commit",
+          "Dùng git bisect để tìm theo kiểu nhị phân",
+          "Tạo nhánh mới và viết lại tính năng"
+        ],
+        "answer": 2,
+        "explain": "git bisect chia đôi khoảng commit sau mỗi lần kiểm tra, nên chỉ cần khoảng 6 lần thử để tìm ra commit gây lỗi trong 40 commit."
+      }
+    ]
+  }
 });

@@ -23,7 +23,8 @@ window.PHASES = [
           ["Concurrency vs Parallelism", "Concurrency là xử lý xen kẽ nhiều việc, parallelism là chạy thật sự đồng thời trên nhiều core. Node.js dùng concurrency qua event loop."],
           ["Stack, Heap & Garbage Collection", "Biến cục bộ nằm trên stack, object nằm trên heap. Memory leak trong ngôn ngữ có GC xảy ra do vẫn còn giữ tham chiếu."],
           ["File system & quyền truy cập", "Inode, đường dẫn tuyệt đối/tương đối, quyền rwx, owner/group, file descriptor."],
-          ["Encoding: ASCII, UTF-8, Base64", "Vì sao tiếng Việt bị lỗi font, byte vs ký tự, Base64 chỉ là mã hoá chứ KHÔNG phải mã hoá bảo mật."]
+          ["Encoding: ASCII, UTF-8, Base64", "Vì sao tiếng Việt bị lỗi font, byte vs ký tự, Base64 chỉ là mã hoá chứ KHÔNG phải mã hoá bảo mật."],
+          ["Thiết lập môi trường lập trình", "VS Code và extension cần thiết, cài Node bằng trình quản lý phiên bản (fnm/nvm), Git, terminal, WSL trên Windows."]
         ],
         practice: ["Dùng htop quan sát CPU/RAM khi chạy một script vòng lặp vô hạn", "Viết chương trình tạo 2 thread cùng tăng một biến đếm và quan sát race condition"],
         res: [["Teach Yourself CS", "https://teachyourselfcs.com/"], ["Latency numbers every programmer should know", "https://gist.github.com/jboner/2841832"]]
@@ -37,7 +38,8 @@ window.PHASES = [
           ["HTTP/1.1, HTTP/2, HTTP/3", "Method, status code, header, body. Keep-alive, multiplexing (H2), QUIC (H3). Idempotent vs safe methods."],
           ["HTTPS & TLS", "Chứng chỉ, CA, TLS handshake, SNI. Vì sao phải HTTPS kể cả API nội bộ."],
           ["Trình duyệt hoạt động thế nào", "Parse HTML → DOM, CSSOM → render tree → layout → paint. Same-origin policy."],
-          ["Domain & Hosting", "Đăng ký domain, trỏ DNS, shared hosting vs VPS vs cloud vs PaaS."]
+          ["Domain & Hosting", "Đăng ký domain, trỏ DNS, shared hosting vs VPS vs cloud vs PaaS."],
+          ["IP, subnet/CIDR, NAT & cổng","IPv4/IPv6, địa chỉ private, ký hiệu CIDR (/16, /24), NAT, port và socket. Nền để hiểu VPC, security group và mạng Docker."]
         ],
         practice: ["Dùng `dig`, `curl -v`, `openssl s_client` để phân tích một request tới google.com", "Mở DevTools > Network, giải thích từng cột Timing"],
         res: [["MDN – HTTP", "https://developer.mozilla.org/en-US/docs/Web/HTTP"], ["How DNS works (comic)", "https://howdns.works/"], ["roadmap.sh – Backend", "https://roadmap.sh/backend"]]
@@ -101,7 +103,8 @@ window.PHASES = [
           ["Event loop", "Call stack, task queue, microtask (Promise) vs macrotask (setTimeout). Dự đoán thứ tự log."],
           ["Promise & async/await", "Promise.all/allSettled/race/any, xử lý lỗi, tránh await tuần tự không cần thiết."],
           ["Modules", "ESM vs CommonJS, import động, tree-shaking."],
-          ["Xử lý mảng & object bất biến", "map/filter/reduce, spread, structuredClone, tránh mutate state."]
+          ["Xử lý mảng & object bất biến", "map/filter/reduce, spread, structuredClone, tránh mutate state."],
+          ["Debugging: đọc lỗi & dùng debugger", "Đọc stack trace, đặt breakpoint trong VS Code, node --inspect, thu hẹp phạm vi lỗi thay vì đoán mò."]
         ],
         practice: ["Tự cài đặt Promise.all và debounce/throttle", "Giải 10 câu đố thứ tự event loop"],
         res: [["javascript.info", "https://javascript.info/"], ["You Don't Know JS", "https://github.com/getify/You-Dont-Know-JS"], ["Loupe – event loop visualizer", "http://latentflip.com/loupe/"]]
@@ -199,7 +202,8 @@ window.PHASES = [
           ["Form & validation", "React Hook Form + Zod, dùng chung schema với backend."],
           ["Routing", "React Router / TanStack Router, nested routes, protected routes."],
           ["State management", "Local state → Context → Zustand/Redux Toolkit. Tách client state với server state."],
-          ["Server state", "TanStack Query: cache, refetch, optimistic update, pagination."]
+          ["Server state", "TanStack Query: cache, refetch, optimistic update, pagination."],
+          ["TypeScript cho React","Kiểu cho props, children, event, ref, custom hook và component generic; khi nào để TypeScript tự suy luận."]
         ],
         practice: ["Xây một dashboard gọi API công khai, có loading/error/empty state đầy đủ"],
         res: [["react.dev", "https://react.dev/learn"], ["TanStack Query", "https://tanstack.com/query/latest"]]
@@ -210,7 +214,8 @@ window.PHASES = [
           ["CSR / SSR / SSG / ISR / RSC", "Chọn chiến lược render theo nhu cầu SEO, độ mới dữ liệu, hiệu năng."],
           ["App Router & Server Actions", "Layout, loading/error boundary, server component vs client component."],
           ["Package manager & bundler", "npm/pnpm, lockfile, semver range, Vite, monorepo cơ bản (Turborepo)."],
-          ["Testing frontend", "Vitest + Testing Library (test hành vi, không test chi tiết cài đặt), Playwright e2e."]
+          ["Testing frontend", "Vitest + Testing Library (test hành vi, không test chi tiết cài đặt), Playwright e2e."],
+          ["Deploy frontend lên PaaS", "Vercel, Netlify, Cloudflare Pages/Workers: build từ Git, preview theo PR, biến môi trường, domain riêng."]
         ],
         practice: ["Chuyển dashboard sang Next.js, trang chi tiết dùng SSR, trang blog dùng SSG"],
         res: [["Next.js Docs", "https://nextjs.org/docs"], ["Testing Library", "https://testing-library.com/"], ["Playwright", "https://playwright.dev/"]]
@@ -244,7 +249,8 @@ window.PHASES = [
           ["Streams & Buffers", "Xử lý file/response lớn mà không nạp hết vào RAM, backpressure, pipeline()."],
           ["Worker threads & Cluster", "Tách tác vụ CPU-bound, tận dụng đa core (hoặc để container/K8s scale thay)."],
           ["Cấu hình & biến môi trường", "Validate env lúc khởi động (fail fast), không hard-code config."],
-          ["Graceful shutdown", "Bắt SIGTERM, ngừng nhận request, đóng DB/queue rồi mới thoát. Bắt buộc khi chạy trên Kubernetes."]
+          ["Graceful shutdown", "Bắt SIGTERM, ngừng nhận request, đóng DB/queue rồi mới thoát. Bắt buộc khi chạy trên Kubernetes."],
+          ["Profiling & chẩn đoán Node.js","CPU profile (--cpu-prof) và flame graph, heap snapshot tìm memory leak, đo event loop delay, AsyncLocalStorage cho request context."]
         ],
         practice: ["Dùng stream để export 1 triệu dòng CSV với RAM < 100MB", "Đo xem một vòng lặp đồng bộ 2 giây ảnh hưởng thế nào tới các request khác"],
         res: [["Node.js Docs – Event loop", "https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick"], ["Node.js Best Practices", "https://github.com/goldbergyoni/nodebestpractices"], ["roadmap.sh – Node.js", "https://roadmap.sh/nodejs"]]
@@ -273,7 +279,8 @@ window.PHASES = [
           ["Idempotency", "PUT/DELETE vốn idempotent; POST thanh toán cần Idempotency-Key để retry an toàn."],
           ["OpenAPI / Swagger", "API-first, sinh docs và client SDK tự động, contract giữa FE và BE."],
           ["GraphQL", "Schema, resolver, DataLoader chống N+1, khi nào nên và không nên dùng."],
-          ["gRPC & Protobuf", "Giao tiếp service-to-service hiệu năng cao, streaming, định nghĩa schema chặt."]
+          ["gRPC & Protobuf", "Giao tiếp service-to-service hiệu năng cao, streaming, định nghĩa schema chặt."],
+          ["SOAP & tích hợp hệ thống cũ", "WSDL, XML envelope, SOAP Fault; gọi dịch vụ SOAP của ngân hàng/đối tác từ Node và bọc lại bằng Anti-Corruption Layer."]
         ],
         practice: ["Viết OpenAPI spec trước, sau đó mới cài đặt (API-first)", "Thêm cursor pagination và Idempotency-Key cho endpoint tạo đơn hàng"],
         res: [["Microsoft REST API Guidelines", "https://github.com/microsoft/api-guidelines"], ["OpenAPI Spec", "https://spec.openapis.org/oas/latest.html"], ["roadmap.sh – API Design", "https://roadmap.sh/api-design"]]
@@ -332,7 +339,8 @@ window.PHASES = [
           ["Index", "B-tree, composite (thứ tự cột quan trọng), partial, covering (INCLUDE), GIN cho jsonb/full-text. Index làm chậm ghi."],
           ["EXPLAIN ANALYZE", "Seq Scan vs Index Scan, cost, rows ước lượng vs thực tế, cập nhật thống kê bằng ANALYZE."],
           ["Vấn đề N+1", "Nhận diện trong log ORM, sửa bằng JOIN/eager loading/DataLoader."],
-          ["Connection pooling", "Giới hạn kết nối, PgBouncer, cấu hình pool size khi chạy nhiều replica."]
+          ["Connection pooling", "Giới hạn kết nối, PgBouncer, cấu hình pool size khi chạy nhiều replica."],
+          ["Replication, HA & partitioning PostgreSQL","Streaming vs logical replication, replication lag, failover với dịch vụ managed/Patroni, declarative partitioning và dọn dữ liệu cũ."]
         ],
         practice: ["Seed 1 triệu đơn hàng, đo truy vấn trước và sau khi thêm index, ghi lại kết quả"],
         res: [["Use The Index, Luke", "https://use-the-index-luke.com/"], ["explain.dalibo.com", "https://explain.dalibo.com/"]]
@@ -405,7 +413,8 @@ window.PHASES = [
           ["Cookie an toàn", "HttpOnly, Secure, SameSite, __Host- prefix, thời hạn."],
           ["OAuth 2.0 & PKCE", "Authorization Code + PKCE cho SPA/mobile; client credentials cho service-to-service."],
           ["OpenID Connect & SSO", "ID token, discovery, đăng nhập Google/GitHub; SAML trong doanh nghiệp."],
-          ["MFA & quên mật khẩu", "TOTP, token reset dùng một lần, có hạn, lưu dạng hash."]
+          ["MFA & quên mật khẩu", "TOTP, token reset dùng một lần, có hạn, lưu dạng hash."],
+          ["Passkeys & WebAuthn","Đăng nhập không mật khẩu chống phishing: đăng ký/xác thực bằng khoá công khai, relying party, triển khai bằng thư viện đã kiểm chứng."]
         ],
         practice: ["Cài refresh token rotation, phát hiện token bị đánh cắp (reuse detection)"],
         res: [["OWASP Authentication Cheat Sheet", "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"], ["OAuth 2.0 Simplified", "https://www.oauth.com/"], ["jwt.io", "https://jwt.io/introduction"]]
@@ -431,7 +440,8 @@ window.PHASES = [
           ["CORS", "Là cơ chế của trình duyệt, không phải cơ chế bảo mật server. Không dùng `*` kèm credentials."],
           ["SSRF", "Chặn request tới IP nội bộ/metadata cloud (169.254.169.254) khi server tải URL do người dùng đưa vào."],
           ["Rate limiting & brute-force", "Giới hạn theo IP/user, lockout, CAPTCHA."],
-          ["Security headers", "HSTS, X-Content-Type-Options, frame-ancestors; dùng helmet."]
+          ["Security headers", "HSTS, X-Content-Type-Options, frame-ancestors; dùng helmet."],
+          ["Bảo mật upload file & webhook","Giới hạn kích thước, kiểm tra loại file, lưu ngoài web root/object storage; ký webhook bằng HMAC, chống replay bằng timestamp."]
         ],
         practice: ["Làm các lab trong OWASP Juice Shop", "Chạy OWASP ZAP baseline scan vào API của bạn"],
         res: [["OWASP Top 10:2025", "https://owasp.org/Top10/2025/"], ["OWASP Juice Shop", "https://owasp.org/www-project-juice-shop/"], ["PortSwigger Web Security Academy", "https://portswigger.net/web-security"]]
@@ -490,7 +500,8 @@ window.PHASES = [
           ["Git hooks", "Husky + lint-staged chạy lint/test nhanh trước commit; commitlint kiểm tra message."],
           ["Static analysis", "SonarQube/SonarCloud: code smell, duplication, quality gate trong CI."],
           ["Code review", "Checklist: đúng nghiệp vụ, bảo mật, hiệu năng, dễ đọc, có test. PR nhỏ, mô tả rõ."],
-          ["Tài liệu", "README chạy được trong 5 phút, ADR (Architecture Decision Record), sơ đồ C4."]
+          ["Tài liệu", "README chạy được trong 5 phút, ADR (Architecture Decision Record), sơ đồ C4."],
+          ["Làm việc nhóm: Agile/Scrum & ticket", "Sprint, backlog, user story, definition of done, ước lượng, viết ticket và báo cáo tiến độ rõ ràng."]
         ],
         practice: ["Viết 3 ADR cho các quyết định lớn của dự án Task API"],
         res: [["Google Engineering Practices – Code Review", "https://google.github.io/eng-practices/review/"], ["C4 Model", "https://c4model.com/"], ["ADR GitHub", "https://adr.github.io/"]]
@@ -584,7 +595,7 @@ window.PHASES = [
           ["Build once, deploy many", "Build một artifact (image theo SHA) rồi dùng lại cho staging và production, config khác nhau qua env."],
           ["Environments", "dev / staging / production; parity giữa các môi trường; preview environment cho mỗi PR."],
           ["Versioning & Release tự động", "SemVer + Conventional Commits → release-please/semantic-release sinh tag, changelog, GitHub Release."],
-          ["DORA metrics", "Deployment frequency, lead time, change failure rate, time to restore. Dùng để đo đội phát triển tốt tới đâu."]
+          ["DORA metrics", "5 chỉ số chia 2 nhóm. Throughput: change lead time, deployment frequency, failed deployment recovery time. Instability: change fail rate, deployment rework rate."]
         ],
         practice: ["Vẽ sơ đồ pipeline mong muốn cho dự án của bạn trước khi viết YAML"],
         res: [["Martin Fowler – Continuous Integration", "https://martinfowler.com/articles/continuousIntegration.html"], ["Trunk Based Development", "https://trunkbaseddevelopment.com/"], ["DORA", "https://dora.dev/"]]
@@ -640,7 +651,7 @@ window.PHASES = [
           ["DAST", "OWASP ZAP quét ứng dụng đang chạy trên staging."],
           ["SBOM & ký image", "Syft sinh SBOM, Cosign ký image, xác minh chữ ký trước khi deploy (SLSA)."],
           ["Policy as code", "OPA/Kyverno chặn deploy image chưa ký hoặc container chạy root."],
-          ["Bảo mật chính pipeline", "Pin action theo commit SHA thay vì tag; cấp permissions tối thiểu; không dùng pull_request_target với code lạ. Bài học thật: 19/3/2026 kẻ tấn công ghi đè 76/77 tag của trivy-action để đánh cắp secret từ CI."]
+          ["Bảo mật chính pipeline", "Pin action theo commit SHA thay vì tag; cấp permissions tối thiểu; không dùng pull_request_target với code lạ. Bài học thật: 19/3/2026 kẻ tấn công ghi đè 76/77 tag của trivy-action để đánh cắp secret từ CI; pin SHA chỉ bảo vệ đúng tầng bạn pin, action con gọi theo tag vẫn có thể bị nhiễm."]
         ],
         practice: ["Thêm job security vào pipeline; build fail khi có lỗ hổng HIGH/CRITICAL"],
         res: [["roadmap.sh – DevSecOps", "https://roadmap.sh/devsecops"], ["SLSA", "https://slsa.dev/"], ["Sigstore Cosign", "https://docs.sigstore.dev/"], ["Trivy supply chain incident (3/2026)", "https://github.com/aquasecurity/trivy/security/advisories/GHSA-69fq-xp46-6x23"]]
@@ -710,7 +721,7 @@ window.PHASES = [
         t: "Terraform",
         topics: [
           ["HCL, provider, resource", "Khai báo trạng thái mong muốn; data source; biến, output, locals."],
-          ["State", "State là nguồn sự thật của Terraform; remote state trên S3 kèm state locking; không commit state."],
+          ["State", "State là nguồn sự thật của Terraform; remote state trên S3 kèm khoá bằng `use_lockfile` (GA từ Terraform 1.11); không commit state."],
           ["Module", "Đóng gói VPC/ECS/RDS thành module tái sử dụng; dùng module từ registry."],
           ["Môi trường", "Tách thư mục theo env (dev/staging/prod) hoặc workspace; tfvars."],
           ["Terraform trong CI", "fmt/validate/tflint/checkov → plan comment vào PR → apply sau khi merge (có duyệt)."],
@@ -774,7 +785,8 @@ window.PHASES = [
           ["Stateful workloads", "StatefulSet, PV/PVC, StorageClass. Với production, dùng DB managed thay vì tự chạy DB trên K8s."],
           ["Job & CronJob", "Chạy migration, tác vụ định kỳ."],
           ["RBAC & ServiceAccount", "Quyền tối thiểu cho Pod và cho CI."],
-          ["NetworkPolicy & Pod Security", "Chặn traffic mặc định, runAsNonRoot, readOnlyRootFilesystem."]
+          ["NetworkPolicy & Pod Security", "Chặn traffic mặc định, runAsNonRoot, readOnlyRootFilesystem."],
+          ["PodDisruptionBudget & nâng cấp cluster","PDB, drain node, topologySpreadConstraints, nâng cấp control plane và node group mà không rớt request."]
         ],
         practice: ["Làm Lab 06: Deployment đầy đủ probes, limits, HPA và test bằng k6"],
         res: [["Kubernetes – Configure Probes", "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/"], ["Production best practices", "https://learnk8s.io/production-best-practices"]]
@@ -822,7 +834,8 @@ window.PHASES = [
           ["Grafana", "Dashboard theo RED; biến template; dashboard as code."],
           ["Distributed tracing", "Span, context propagation (W3C traceparent); tìm service chậm trong chuỗi gọi."],
           ["OpenTelemetry", "Chuẩn mở: SDK + auto-instrumentation + Collector, xuất tới Jaeger/Tempo/Datadog."],
-          ["Tập trung log", "Loki, ELK/OpenSearch, CloudWatch; retention và chi phí."]
+          ["Tập trung log", "Loki, ELK/OpenSearch, CloudWatch; retention và chi phí."],
+          ["Giám sát phía người dùng","Real User Monitoring (Web Vitals thật), frontend error tracking, synthetic monitoring; đo SLO từ góc nhìn người dùng."]
         ],
         practice: ["Làm Lab 11: expose /metrics, dashboard p95 latency và error rate"],
         res: [["OpenTelemetry Docs", "https://opentelemetry.io/docs/"], ["Prometheus Docs", "https://prometheus.io/docs/introduction/overview/"], ["Grafana Docs", "https://grafana.com/docs/"]]
@@ -871,7 +884,8 @@ window.PHASES = [
           ["Replication", "Leader-follower, multi-leader; replication lag và read-your-writes."],
           ["Partitioning & Sharding", "Theo range/hash; consistent hashing; hot partition."],
           ["CAP, PACELC & mô hình nhất quán", "Strong, eventual, causal consistency; quorum."],
-          ["Ước lượng nhanh", "Tính QPS, dung lượng lưu trữ, băng thông (back-of-the-envelope)."]
+          ["Ước lượng nhanh", "Tính QPS, dung lượng lưu trữ, băng thông (back-of-the-envelope)."],
+          ["Caching nâng cao", "Refresh-ahead, chống cache stampede, TTL có jitter, Memcached vs Redis, CDN push vs pull."]
         ],
         practice: ["Ước lượng tài nguyên cho hệ thống 10 triệu người dùng/ngày"],
         res: [["System Design Primer", "https://github.com/donnemartin/system-design-primer"], ["ByteByteGo", "https://bytebytego.com/"], ["roadmap.sh – System Design", "https://roadmap.sh/system-design"]]
@@ -884,7 +898,8 @@ window.PHASES = [
           ["Domain-Driven Design", "Ubiquitous language, bounded context, aggregate, domain event."],
           ["CQRS & Event Sourcing", "Tách mô hình đọc/ghi; lưu chuỗi sự kiện thay vì trạng thái. Mạnh nhưng phức tạp."],
           ["API Gateway & BFF", "Xác thực, rate limit, routing tập trung; Backend-for-Frontend cho từng loại client."],
-          ["Serverless", "Lambda/Cloud Functions: tốt cho tải không đều; lưu ý cold start, giới hạn thời gian chạy, vendor lock-in."]
+          ["Serverless", "Lambda/Cloud Functions: tốt cho tải không đều; lưu ý cold start, giới hạn thời gian chạy, vendor lock-in."],
+          ["Mẫu thiết kế cloud", "Strangler Fig, Anti-Corruption Layer, Sidecar/Ambassador, Gateway Offloading, Queue-Based Load Leveling, Valet Key."]
         ],
         practice: ["Tái cấu trúc Task API thành modular monolith với ranh giới module rõ ràng"],
         res: [["Microservices.io patterns", "https://microservices.io/patterns/"], ["Martin Fowler – Microservices", "https://martinfowler.com/articles/microservices.html"]]
@@ -910,7 +925,8 @@ window.PHASES = [
           ["Circuit breaker", "Ngắt khi service phụ thuộc lỗi liên tục, trả fallback, thử lại sau (half-open)."],
           ["Bulkhead & Backpressure", "Cô lập tài nguyên theo luồng; từ chối sớm khi quá tải (429/503)."],
           ["Rate limiting algorithms", "Token bucket, leaky bucket, fixed/sliding window."],
-          ["Graceful degradation", "Tắt tính năng phụ (gợi ý, thống kê) để giữ tính năng chính (thanh toán)."]
+          ["Graceful degradation", "Tắt tính năng phụ (gợi ý, thống kê) để giữ tính năng chính (thanh toán)."],
+          ["Anti-pattern hiệu năng", "Chatty I/O, Extraneous Fetching, Busy Database, No Caching, Retry Storm, Noisy Neighbor, Synchronous I/O."]
         ],
         practice: ["Thêm timeout, retry và circuit breaker cho client gọi payment gateway giả lập"],
         res: [["AWS Builders' Library – Timeouts, retries, backoff", "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/"]]
@@ -923,7 +939,8 @@ window.PHASES = [
           ["Chat real-time", "WebSocket gateway, lưu tin nhắn, trạng thái online, fan-out."],
           ["News Feed", "Fan-out on write vs on read, người dùng có nhiều follower."],
           ["Notification System", "Nhiều kênh (email/SMS/push), queue, retry, tuỳ chọn người dùng."],
-          ["Hệ thống đặt vé / Flash sale", "Chống oversell, hàng đợi ảo, giữ chỗ có thời hạn."]
+          ["Hệ thống đặt vé / Flash sale", "Chống oversell, hàng đợi ảo, giữ chỗ có thời hạn."],
+          ["Khung trả lời phỏng vấn system design","Làm rõ yêu cầu → ước lượng → API → data model → kiến trúc tổng thể → đi sâu → đánh đổi, và cách phân bổ 45 phút."]
         ],
         practice: ["Mỗi tuần viết 1 design doc: yêu cầu, ước lượng, sơ đồ, đánh đổi"],
         res: [["Hello Interview – System Design", "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction"], ["High Scalability", "http://highscalability.com/"]]
