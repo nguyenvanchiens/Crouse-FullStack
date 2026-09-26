@@ -1,0 +1,11 @@
+// Cloudflare Workers (static assets). Deploy: npm run deploy
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "devpath-course",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // Router dùng hash (#/...), mọi đường dẫn lạ trả về index.html
+    "not_found_handling": "single-page-application"
+  }
+}
