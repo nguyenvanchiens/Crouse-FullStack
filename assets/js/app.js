@@ -138,7 +138,8 @@
     if (!chapterLoads[pid]) {
       chapterLoads[pid] = new Promise((resolve) => {
         const s = document.createElement('script');
-        s.src = `assets/js/data/lessons/${pid}.js`;
+        // Bản build gắn phiên bản để trình duyệt không dùng file bài học cũ sau khi deploy
+        s.src = `assets/js/data/lessons/${pid}.js` + (window.DEVPATH_VERSION ? `?v=${window.DEVPATH_VERSION}` : '');
         s.onload = () => resolve(true);
         s.onerror = () => resolve(false);
         document.head.appendChild(s);

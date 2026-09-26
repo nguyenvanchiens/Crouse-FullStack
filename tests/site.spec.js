@@ -564,3 +564,21 @@ test.describe('Nội dung kỹ thuật', () => {
     expect((out.match(/^p\d\d\.js$/gm) || []).length).toBe(14);
   });
 });
+
+test.describe('Bản build Cloudflare', () => {
+  test('mọi JS/CSS và file bài học được gắn phiên bản để không dùng cache cũ', async ({ page }) => {
+    test.skip(!process.env.BASE_URL, 'Chỉ chạy với bản build (BASE_URL=...)');
+    await page.goto('/#/learn/p12/1/6');
+    await expect(page.locator('.lc-section').first()).toBeVisible();
+    const version = await page.evaluate(() => window.DEVPATH_VERSION);
+    expect(version).toMatch(/^[0-9a-f]{10}$/);
+    const urls = await page.evaluate(() => [
+      ...[...document.scripts].map((s) => s.getAttribute('src')),
+      ...[...document.querySelectorAll('link[rel="stylesheet"]')].map((l) => l.getAttribute('href'))
+    ].filter((u) => u && u.startsWith('assets/')));
+    expect(urls.length).toBeGreaterThanOrEqual(6);
+    for (const u of urls) expect(u).toContain('?v=' + version);
+    const res = await page.request.get('/');
+    expect(res.headers()['cache-control']).toContain('no-cache');
+  });
+});
