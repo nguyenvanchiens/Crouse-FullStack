@@ -45,9 +45,11 @@ Website là trang tĩnh. `npm run build` copy các file cần thiết (`index.ht
 
 1. Vào Cloudflare Dashboard → **Workers & Pages** → **Create** → **Import a repository**, chọn repo này.
 2. Điền cấu hình build:
-   - Build command: `npm run build`
+   - Build command: để trống (hoặc `npm run build`, đều được)
    - Deploy command: `npx wrangler deploy`
    - Root directory: để trống
+
+   `wrangler deploy` tự chạy `npm run build` trước khi deploy (khai báo ở trường `build.command` trong `wrangler.jsonc`).
 3. Bấm **Deploy**. Từ lần sau, mỗi lần push lên nhánh `main` sẽ tự build và deploy lại.
 
 Cấu hình nằm trong [wrangler.jsonc](wrangler.jsonc): tên Worker là `devpath-course`, phục vụ file tĩnh từ `dist/`.
@@ -63,7 +65,7 @@ Cấu hình nằm trong [wrangler.jsonc](wrangler.jsonc): tên Worker là `devpa
 
 ```bash
 npx wrangler login
-npm run deploy        # build + wrangler deploy
+npm run deploy        # wrangler deploy (tự build trước)
 npm run preview       # chạy thử bằng môi trường Cloudflare ở máy (http://localhost:8787)
 ```
 

@@ -1,8 +1,12 @@
-// Cloudflare Workers (static assets). Deploy: npm run deploy
+// Cloudflare Workers (static assets). Deploy: npx wrangler deploy (hoặc npm run deploy)
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "devpath-course",
   "compatibility_date": "2026-09-01",
+  // wrangler tự chạy lệnh này trước mỗi lần deploy/dev, nên không phụ thuộc ô "Build command" trên dashboard
+  "build": {
+    "command": "npm run build"
+  },
   "assets": {
     "directory": "./dist",
     // Router dùng hash (#/...), mọi đường dẫn lạ trả về index.html
