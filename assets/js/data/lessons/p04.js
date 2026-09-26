@@ -2134,7 +2134,7 @@ export async function createUser(overrides: Partial<NewUser> = {}) {
         h: "Các loại backup",
         list: [
           "Logical backup (`pg_dump`): xuất schema và dữ liệu thành SQL hoặc định dạng nén. Linh hoạt: khôi phục một bảng, chuyển sang phiên bản Postgres mới. Chậm với DB lớn và chỉ là ảnh chụp tại một thời điểm.",
-          "Physical backup (`pg_basebackup`, pgBackRest, WAL-G): sao chép file dữ liệu của cả cluster. Nhanh hơn với DB lớn, khôi phục toàn bộ cluster. Từ PostgreSQL 17, `pg_basebackup --incremental` chỉ sao chép phần thay đổi so với bản trước, ghép lại bằng `pg_combinebackup` khi restore.",
+          "Physical backup (`pg_basebackup`, pgBackRest, WAL-G): sao chép file dữ liệu của cả cluster. Nhanh hơn với DB lớn, khôi phục toàn bộ cluster. Từ PostgreSQL 17, `pg_basebackup --incremental=<backup_manifest của bản trước>` chỉ sao chép phần thay đổi so với bản trước, ghép lại bằng `pg_combinebackup` khi restore. Tính năng này yêu cầu bật `summarize_wal = on` trên server trước khi tạo bản backup đầy đủ làm gốc.",
           "Snapshot đĩa/dịch vụ managed (RDS, Cloud SQL): nhanh và tiện, nhưng phụ thuộc nhà cung cấp.",
           "PITR (Point-In-Time Recovery): physical backup + lưu trữ liên tục WAL. Cho phép khôi phục về đúng thời điểm, ví dụ 14:32:10, một giây trước khi ai đó chạy nhầm `DELETE` không có WHERE."
         ],

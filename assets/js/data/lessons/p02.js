@@ -1291,7 +1291,7 @@ export function useToggleTodo(page: number) {
       {
         h: "Ví dụ trong Next.js App Router",
         p: [
-          "Trong App Router, trang mặc định là Server Component. Cách bạn fetch dữ liệu và các tùy chọn cache quyết định trang được render tĩnh hay động. Mặc định giữa các phiên bản Next.js đã thay đổi (từ Next.js 15, `fetch` không còn được cache mặc định), nên hãy khai báo rõ ý định thay vì dựa vào mặc định.",
+          "Trong App Router, trang mặc định là Server Component. Cách bạn fetch dữ liệu và các tùy chọn cache quyết định trang được render tĩnh hay động. Mặc định giữa các phiên bản Next.js đã thay đổi (từ Next.js 15, `fetch` không còn được cache mặc định; tuy vậy nếu route được prerender tĩnh thì `fetch` chỉ chạy một lần lúc `next build`), nên hãy khai báo rõ ý định bằng `cache: 'force-cache'` hoặc `cache: 'no-store'` thay vì dựa vào mặc định.",
           "Ví dụ dưới dùng mô hình cache truyền thống (route segment config `revalidate` và tùy chọn `next.revalidate` của fetch). Từ Next.js 16 có thêm chế độ Cache Components (bật bằng `cacheComponents: true` trong `next.config.ts`): dữ liệu mặc định là động, bạn chủ động đánh dấu phần cần cache bằng chỉ thị `\"use cache\"` kết hợp `cacheLife` và `cacheTag`, và trang được prerender thành một khung tĩnh rồi stream phần động vào (Partial Prerendering). Khi bật chế độ này, một số route segment config như `revalidate` được thay bằng `cacheLife`, nên hãy đọc hướng dẫn migrate trước khi bật."
         ],
         code: {
@@ -1468,7 +1468,7 @@ pnpm outdated`
         code: {
           lang: "json", file: "turbo.json",
           src: `{
-  "$schema": "https://turborepo.com/schema.json",
+  "$schema": "https://turborepo.dev/schema.json",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

@@ -383,7 +383,7 @@ echo "Smoke test OK"`
       }
     ],
     verify: ["Trong repo không có AWS_ACCESS_KEY_ID", "Production chờ người duyệt, hiển thị nút Review deployments", "Cố tình làm /health trả 500 → pipeline tự rollback về task definition cũ", "Cùng một image SHA chạy ở cả staging và production"],
-    pitfalls: ["Trust policy dùng `repo:org/*` quá rộng", "Migration phá vỡ tương thích với code cũ nên rollback code thì lỗi (dùng expand–contract)", "Build lại image cho production thay vì dùng lại image đã test"]
+    pitfalls: ["Trust policy dùng `repo:org/*` quá rộng", "Migration phá vỡ tương thích với code cũ nên rollback code thì lỗi (dùng expand–contract)", "Build lại image cho production thay vì dùng lại image đã test", "Repo private trên gói GitHub Free/Pro/Team không dùng được Required reviewers và wait timer cho environment (gói Free còn không có environment secrets cho repo private). Khi đó hãy làm lab trên repo public, hoặc thay bước duyệt bằng job production chỉ chạy qua `workflow_dispatch` do người có quyền bấm"]
   },
   {
     id: "lab05",
