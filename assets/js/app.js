@@ -277,10 +277,12 @@
 
     const html = `
     <nav class="crumbs" aria-label="Breadcrumb"><a href="#/roadmap">Lộ trình</a><span aria-hidden="true">›</span><span>Chương ${phaseNum(p)}</span></nav>
+    <header class="detail-head">
+      <h1>${esc(p.title)}</h1>
+      <p class="lead">${esc(p.summary)}</p>
+    </header>
     <div class="detail">
       <div class="detail-main">
-        <h1>${esc(p.title)}</h1>
-        <p class="lead">${esc(p.summary)}</p>
 
         <section class="learn-box">
           <h2>Bạn sẽ học được gì?</h2>

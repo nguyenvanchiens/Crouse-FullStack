@@ -242,7 +242,9 @@ kbd { font: 600 .7rem var(--font); border: 1px solid var(--line); border-bottom-
 
 /* ===== Trang chi tiết chương ===== */
 .detail { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; align-items: start; }
-.detail-main > h1 { margin-top: 4px; }
+.detail-head { margin-bottom: 8px; }
+.detail-head h1 { margin-top: 4px; }
+.detail-main > .learn-box:first-child { margin-top: 0; }
 .learn-box { margin: 28px 0; padding: 24px 26px; border: 1px solid var(--line); border-radius: var(--r-lg); }
 .learn-box h2 { font-size: 1.2rem; margin-bottom: 14px; }
 .learn-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px; }
@@ -527,6 +529,7 @@ body[data-route="learn"] .main { margin: 0; padding: 0; }
   .brand-name { display: none; }
   .split, .mod-extra, .learn-list { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .enroll { display: block; }
+  .enroll .cover { aspect-ratio: 16 / 9; min-height: 0; }
   .track-head { flex-direction: column; align-items: flex-start; }
   .course-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 14px; }
   .cc-body h3 { font-size: .92rem; }
