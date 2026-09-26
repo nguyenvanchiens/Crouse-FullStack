@@ -2,6 +2,9 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p00.m0.t0": {
+    videos: [
+      { id: "FqR5vESuKe0", title: "Latency Numbers Programmer Should Know: Crash Course System Design #1", channel: "ByteByteGo", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Bốn thành phần bạn cần hình dung",
@@ -91,6 +94,9 @@ iostat -x 1 3        # chi tiết I/O từng disk (gói sysstat)`
   },
 
   "p00.m0.t1": {
+    videos: [
+      { id: "4rLW7zg21gI", title: "FANG Interview Question | Process vs Thread", channel: "ByteByteGo", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "Process: chương trình đang chạy",
@@ -172,6 +178,9 @@ if (isMainThread) {
   },
 
   "p00.m0.t2": {
+    videos: [
+      { id: "RlM9AfWf1WU", title: "Concurrency Vs Parallelism!", channel: "ByteByteGo", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "Hai khái niệm dễ nhầm",
@@ -257,6 +266,9 @@ console.timeEnd('đồng thời');`
   },
 
   "p00.m0.t3": {
+    videos: [
+      { id: "5OJRqkYbK-4", title: "Stack vs Heap Memory - Simple Explanation", channel: "Alex Hyett", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Stack và heap khác nhau thế nào",
@@ -346,6 +358,9 @@ declare function loadProfile(id: string): unknown;`
   },
 
   "p00.m0.t4": {
+    videos: [
+      { id: "LnKoncbQBsM", title: "Linux File Permissions in 5 Minutes | MUST Know!", channel: "Travis Media", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Inode và đường dẫn",
@@ -427,6 +442,10 @@ stat app.sh                   # xem inode, quyền, thời gian`
   },
 
   "p00.m0.t5": {
+    videos: [
+      { id: "DntKZ9xJ1sM", title: "ASCII, Unicode, UTF-8: Explained Simply", channel: "LeetCoder", lang: "en", minutes: 3, embed: true },
+      { id: "xAihdJLlmPw", title: "From Binary to Text: ASCII, Unicode, UTF & base64", channel: "Bartek Spitza", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Byte không phải ký tự",
@@ -509,6 +528,9 @@ node -e "console.log(Buffer.from('hi').toString('base64url'))"`
   },
 
   "p00.m1.t0": {
+    videos: [
+      { id: "sMHzfigUxz4", title: "How the Internet Works in 9 Minutes", channel: "ByteByteGo", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Internet là mạng của các mạng",
@@ -593,6 +615,9 @@ curl -o /dev/null -s -w 'dns: %{time_namelookup}s  connect: %{time_connect}s  tl
   },
 
   "p00.m1.t1": {
+    videos: [
+      { id: "Ohuxcw7Bx5E", title: "Hiểu Mô Hình OSI Và Các Giao Thức HTTP, TCP, UDP - Không Thể Bỏ Qua", channel: "s2sontech", lang: "vi", minutes: 26, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần mô hình phân tầng",
@@ -685,6 +710,9 @@ curl -v https://api.example.com/health   # 502, 503, 401...`
   },
 
   "p00.m1.t2": {
+    videos: [
+      { id: "27r4Bzuj5NQ", title: "Everything You Need to Know About DNS: Crash Course System Design #4", channel: "ByteByteGo", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "DNS là danh bạ của Internet",
@@ -767,6 +795,9 @@ dig @1.1.1.1 example.com TXT   # hỏi thẳng một resolver cụ thể`
   },
 
   "p00.m1.t3": {
+    videos: [
+      { id: "UMwQjFzTQXw", title: "HTTP 1 Vs HTTP 2 Vs HTTP 3!", channel: "ByteByteGo", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Cấu trúc một request và response",
@@ -863,6 +894,9 @@ curl -X POST https://api.example.com/api/tasks \\
   },
 
   "p00.m1.t4": {
+    videos: [
+      { id: "j9QmMEWmcfo", title: "SSL, TLS, HTTPS Explained", channel: "ByteByteGo", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "TLS giải quyết ba vấn đề",
@@ -942,6 +976,9 @@ echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/
   },
 
   "p00.m1.t5": {
+    videos: [
+      { id: "5rLFYtXHo9s", title: "How does a browser work ? | Engineering side", channel: "Hitesh Choudhary", lang: "en", minutes: 30, embed: true }
+    ],
     sections: [
       {
         h: "Từ HTML tới pixel",
@@ -1021,6 +1058,9 @@ bootstrap();`
   },
 
   "p00.m1.t6": {
+    videos: [
+      { id: "GQwBzdYRS_c", title: "What is a VPS? (vs cloud and other types of hosting)", channel: "Tony Teaches Tech", lang: "en", minutes: 3, embed: true }
+    ],
     sections: [
       {
         h: "Domain hoạt động thế nào",
@@ -1098,6 +1138,10 @@ example.com.        300  IN  TXT    "v=spf1 include:_spf.provider.com ~all"`
   },
 
   "p00.m2.t0": {
+    videos: [
+      { id: "FCYkyJVmxDg", title: "Tự học Linux #1: Các lệnh cơ bản trong linux và các thủ thuật khi gõ lệnh", channel: "Sharky Lập Trình", lang: "vi", minutes: 19, embed: true },
+      { id: "42iQKuQodW4", title: "Linux Directories Explained in 100 Seconds", channel: "Fireship", lang: "en", minutes: 3, embed: true }
+    ],
     sections: [
       {
         h: "Cấu trúc thư mục Linux",
@@ -1183,6 +1227,9 @@ docker system df                        # dung lượng Docker dùng`
   },
 
   "p00.m2.t1": {
+    videos: [
+      { id: "ob3SLQoMJOo", title: "Lệnh sudo, chmod, chown trong Ubuntu/Linux | Các lệnh trong Ubuntu", channel: "F8 Official", lang: "vi", minutes: 34, embed: true }
+    ],
     sections: [
       {
         h: "User, group và root",
@@ -1269,6 +1316,9 @@ umask                                    # xem umask hiện tại, thường 002
   },
 
   "p00.m2.t2": {
+    videos: [
+      { id: "LfC6pv8VISk", title: "KILL Linux processes!! (also manage them) // Linux for Hackers // EP 7", channel: "NetworkChuck", lang: "en", minutes: 22, embed: true }
+    ],
     sections: [
       {
         h: "Xem và tìm process",
@@ -1381,6 +1431,10 @@ journalctl -u task-api --since '1 hour ago' -p err   # chỉ lỗi trong 1 giờ
   },
 
   "p00.m2.t3": {
+    videos: [
+      { id: "Tc_jntovCM0", title: "Linux Crash Course - The grep Command", channel: "Learn Linux TV", lang: "en", minutes: 15, embed: true },
+      { id: "mV_8GbzwZMM", title: "Linux Command Line Pipes and Redirection", channel: "Engineer Man", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Pipe và redirect",
@@ -1472,6 +1526,10 @@ find . -name '*.tmp' -print0 | xargs -0 rm -f`
   },
 
   "p00.m2.t4": {
+    videos: [
+      { id: "rlMfRa7vfO8", title: "How SSH Really Works", channel: "ByteByteGo", lang: "en", minutes: 4, embed: true },
+      { id: "8ugcUTNoGj4", title: "Secure SSH Key Login on Ubuntu: No Root, No Password", channel: "Tony Teaches Tech", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "SSH và xác thực bằng khoá",
@@ -1578,6 +1636,10 @@ PubkeyAuthentication yes`
   },
 
   "p00.m2.t5": {
+    videos: [
+      { id: "BMCu5d3B7Qc", title: "Tự học Linux #6: Lập trình Shell script trong ubuntu", channel: "Sharky Lập Trình", lang: "vi", minutes: 22, embed: true },
+      { id: "tK9Oc6AEnR4", title: "Bash Scripting Tutorial for Beginners", channel: "freeCodeCamp.org", lang: "en", minutes: 48, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần bash script",
@@ -1674,6 +1736,9 @@ done`
   },
 
   "p00.m2.t6": {
+    videos: [
+      { id: "Q3_3saEQiSA", title: "curl: A Practical Guide", channel: "Navek", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "Kiểm tra kết nối từng bước",
@@ -1758,6 +1823,10 @@ sudo tcpdump -i any -nn -w cap.pcap port 443   # ghi ra file, mở bằng Wiresh
   },
 
   "p00.m2.t7": {
+    videos: [
+      { id: "1kicKTbK768", title: "Linux Crash Course - The apt Command", channel: "Learn Linux TV", lang: "en", minutes: 16, embed: true },
+      { id: "ggSyF1SVFr4", title: "Vim Basics in 8 Minutes", channel: "tutoriaLinux", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Package manager làm gì",
@@ -1843,6 +1912,9 @@ node -v`
   },
 
   "p00.m3.t0": {
+    videos: [
+      { id: "e9lnsKot_SQ", title: "How Git Works: Explained in 4 Minutes", channel: "ByteByteGo", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "Git lưu snapshot, không lưu diff",
@@ -1927,6 +1999,10 @@ git log --oneline --graph --all  # xem đồ thị commit`
   },
 
   "p00.m3.t1": {
+    videos: [
+      { id: "l0VtRcPz1ME", title: "Tôi chưa bao giờ hiểu Git Rebase và Git Merge cho đến khi Sếp giải thích cho tôi như thế này | Git", channel: "Tips Javascript", lang: "vi", minutes: 39, embed: true },
+      { id: "0chZFIZLR_0", title: "Git MERGE vs REBASE: Everything You Need to Know", channel: "ByteByteGo", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Ba cách tích hợp thay đổi",
@@ -2021,6 +2097,9 @@ git merge --no-ff feature/login    # luôn tạo merge commit`
   },
 
   "p00.m3.t2": {
+    videos: [
+      { id: "pNj0J9WwJR8", title: "Xử lý Git Conflict trong một nốt nhạc | TrungQuanDev | Thành thạo Git - GitHub", channel: "TrungQuanDev - Một Lập Trình Viên", lang: "vi", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "Conflict xảy ra khi nào",
@@ -2116,6 +2195,9 @@ git mergetool                      # mở công cụ 3 cột đã cấu hình`
   },
 
   "p00.m3.t3": {
+    videos: [
+      { id: "vQgcl8VouLU", title: "Tóm tắt toàn diện về việc sử dụng Git và quy trình làm việc của GitFlow và sếp yêu cầu tôi phải học", channel: "Tips Javascript", lang: "vi", minutes: 36, embed: true }
+    ],
     sections: [
       {
         h: "Ba workflow phổ biến",
@@ -2194,6 +2276,9 @@ git mergetool                      # mở công cụ 3 cột đã cấu hình`
   },
 
   "p00.m3.t4": {
+    videos: [
+      { id: "OJqUWvmf4gg", title: "Write git commit messages like a PRO with Conventional Commits", channel: "Justin Brooks", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "Conventional Commits",
@@ -2278,6 +2363,10 @@ echo "sửa bug" | npx commitlint            # báo lỗi: thiếu type`
   },
 
   "p00.m3.t5": {
+    videos: [
+      { id: "Q-kqm0AgJZ8", title: "Git bisect is insanely good (and so easy)", channel: "Joshua Morony", lang: "en", minutes: 4, embed: true },
+      { id: "qsTthZi23VE", title: "Advanced Git Tutorial - Interactive Rebase, Cherry-Picking, Reflog, Submodules and more", channel: "freeCodeCamp.org", lang: "en", minutes: 34, embed: true }
+    ],
     sections: [
       {
         h: "Dọn lịch sử với rebase -i và cherry-pick",
@@ -2477,6 +2566,9 @@ git log --all -p -S 'AKIA' # tìm chuỗi nghi là AWS access key trong lịch s
   },
 
   "p00.m0.t6": {
+    videos: [
+      { id: "DMnOs7mMzhw", title: "1. Cài đặt môi trường cho dự án (NVM, Node, Git, Yarn...vv) | ReactJS + Material UI | TrungQuanDev", channel: "TrungQuanDev - Một Lập Trình Viên", lang: "vi", minutes: 21, embed: true }
+    ],
     "sections": [
       {
         "h": "Vì sao cần chuẩn bị môi trường ngay từ đầu",
@@ -2564,6 +2656,10 @@ git log --all -p -S 'AKIA' # tìm chuỗi nghi là AWS access key trong lịch s
     ]
   },
   "p00.m1.t7": {
+    videos: [
+      { id: "FTUV0t6JaDA", title: "NAT Explained - Network Address Translation", channel: "PowerCert Animated Videos", lang: "en", minutes: 4, embed: true },
+      { id: "oZGZRtaGyG8", title: "What is a Subnet Mask??? (you NEED to know it!!)", channel: "NetworkChuck", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Địa chỉ IP và các vùng private",

@@ -2,6 +2,9 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p05.m0.t0": {
+    videos: [
+      { id: "qgpsIBLvrGY", title: "Password Storage Tier List: encryption, hashing, salting, bcrypt, and beyond", channel: "Studying With Alex", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao không lưu mật khẩu dạng thô hay SHA?",
@@ -107,6 +110,9 @@ export async function verifyAndUpgrade(user: { id: number; passwordHash: string 
   },
 
   "p05.m0.t1": {
+    videos: [
+      { id: "fyTxwIa-1U0", title: "Session Vs JWT: The Differences You May Not Know!", channel: "ByteByteGo", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Stateful session: server nhớ bạn",
@@ -204,6 +210,10 @@ export async function revokeAllSessions(userId: number) {
   },
 
   "p05.m0.t2": {
+    videos: [
+      { id: "XwQ-wxfCeJs", title: "1. Bạn Đã Thật Sự Hiểu JWT và Cơ Chế Refresh Token Tự Động Chưa? | TrungQuanDev", channel: "TrungQuanDev - Một Lập Trình Viên", lang: "vi", minutes: 19, embed: true },
+      { id: "s-4k5TcGKHg", title: "Refresh Token Rotation and Reuse Detection in Node.js JWT Authentication", channel: "Dave Gray", lang: "en", minutes: 35, embed: true }
+    ],
     sections: [
       {
         h: "Cấu trúc của JWT",
@@ -339,6 +349,10 @@ export async function rotateRefreshToken(presented: string) {
   },
 
   "p05.m0.t3": {
+    videos: [
+      { id: "LvlUsIwYLW4", title: "Cookie là gì? Tìm hiểu Cookie hoạt động HTTPOnly, Secure với EXPRESS NODEJS", channel: "Tips Javascript", lang: "vi", minutes: 21, embed: true },
+      { id: "aUF2QCEudPo", title: "SameSite Cookie Attribute Explained by Example (Strict, Lax, None & No SameSite)", channel: "Hussein Nasser", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Các thuộc tính bảo vệ cookie",
@@ -432,6 +446,9 @@ export function clearSessionCookie(res: Response) {
   },
 
   "p05.m0.t4": {
+    videos: [
+      { id: "5FrA0UzV1Aw", title: "OAuth is Broken Without This | Meet PKCE", channel: "ByteMonk", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "OAuth 2.0 giải quyết bài toán gì?",
@@ -534,6 +551,10 @@ export function buildAuthorizeUrl(state: string, challenge: string) {
   },
 
   "p05.m0.t5": {
+    videos: [
+      { id: "5KChrGWFcpk", title: "Single Sign-On (SSO) Explained in 10 Minutes | SAML, OIDC & SCIM", channel: "ByteMonk", lang: "en", minutes: 8, embed: true },
+      { id: "t18YB3xDfXI", title: "An Illustrated Guide to OAuth and OpenID Connect", channel: "OktaDev", lang: "en", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "OpenID Connect: lớp danh tính trên OAuth",
@@ -636,6 +657,9 @@ export async function findOrCreateUser(p: { sub: string; email?: string; email_v
   },
 
   "p05.m0.t6": {
+    videos: [
+      { id: "46AKWNOJ3-Y", title: "How HOTP and TOTP work", channel: "loops", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "MFA và TOTP hoạt động thế nào?",
@@ -769,6 +793,9 @@ export async function resetPassword(token: string, newPassword: string) {
   },
 
   "p05.m1.t0": {
+    videos: [
+      { id: "S4WqjQUsfSY", title: "1. Phân quyền RBAC: Role-Based Access Control là gì? | RBAC Permissions | TrungQuanDev", channel: "TrungQuanDev - Một Lập Trình Viên", lang: "vi", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Authentication khác Authorization",
@@ -895,6 +922,9 @@ export class PermissionsGuard implements CanActivate {
   },
 
   "p05.m1.t1": {
+    videos: [
+      { id: "rvZ35YW4t5k", title: "Role-based access control (RBAC) vs. Attribute-based access control (ABAC)", channel: "IBM Technology", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Khi RBAC không đủ",
@@ -1007,6 +1037,9 @@ allow if {
   },
 
   "p05.m1.t2": {
+    videos: [
+      { id: "2KqZJDf7uQI", title: "TÔI MẤT (bị hack) TÀI KHOẢN NHƯ THẾ NÀY? IDOR là gì?", channel: "Tips Javascript", lang: "vi", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "IDOR: lỗi phổ biến nhất nhưng đơn giản nhất",
@@ -1104,6 +1137,10 @@ async createInvoice(currentUserId: string, dto: CreateInvoiceDto) {
   },
 
   "p05.m1.t3": {
+    videos: [
+      { id: "d57oH6mcKa0", title: "Multi Tenant Architecture: Từ lý thuyết tới thực tế", channel: "Code With Me", lang: "vi", minutes: 14, embed: true },
+      { id: "vZT1Qx2xUCo", title: "Everything you need to know about Postgres Row Level Security | POSETTE 2024", channel: "Microsoft Developer", lang: "en", minutes: 18, embed: true }
+    ],
     sections: [
       {
         h: "Ba mô hình cô lập tenant",
@@ -1210,6 +1247,9 @@ COMMIT;`
   },
 
   "p05.m2.t0": {
+    videos: [
+      { id: "Jzr0Jdnq_EI", title: "OWASP Top 10 2025: Your complete guide to securing your applications", channel: "Aikido Security", lang: "en", minutes: 25, embed: true }
+    ],
     sections: [
       {
         h: "OWASP Top 10 là gì và dùng để làm gì?",
@@ -1309,6 +1349,9 @@ async function canAccess(userId: string, docId: string) {
   },
 
   "p05.m2.t1": {
+    videos: [
+      { id: "TwisdmReRzA", title: "Infra Coffee Time #20: SQL Injection là gì? Tìm hiểu về mối đe dọa tiềm ẩn của mọi website", channel: "Viettel IDC", lang: "vi", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "SQL Injection xảy ra thế nào?",
@@ -1419,6 +1462,10 @@ export async function login(body: unknown) {
   },
 
   "p05.m2.t2": {
+    videos: [
+      { id: "z4LhLJnmoZ0", title: "Cross-Site Scripting: A 25-Year Threat That Is Still Going Strong", channel: "IBM Technology", lang: "en", minutes: 10, embed: true },
+      { id: "txHc4zk6w3s", title: "Content Security Policy explained | how to protect against Cross Site Scripting (XSS)", channel: "Jan Goebel", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "XSS: khi dữ liệu biến thành script",
@@ -1529,6 +1576,9 @@ export function safeHref(url: string) {
   },
 
   "p05.m2.t3": {
+    videos: [
+      { id: "80S8h5hEwTY", title: "Your App Is NOT Secure If You Don’t Use CSRF Tokens", channel: "Web Dev Simplified", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "CSRF: mượn cookie của nạn nhân",
@@ -1636,6 +1686,10 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   },
 
   "p05.m2.t4": {
+    videos: [
+      { id: "eNuJLp4DJcI", title: "Giới thiệu về CORS | Cross Origin Resource Sharing", channel: "Ông Dev", lang: "vi", minutes: 4, embed: true },
+      { id: "PNtFSVU-YTI", title: "Learn CORS In 6 Minutes", channel: "Web Dev Simplified", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Same-Origin Policy và CORS",
@@ -1748,6 +1802,9 @@ bootstrap();`
   },
 
   "p05.m2.t5": {
+    videos: [
+      { id: "Gk3_Q-3R6jc", title: "Server-Side Request Forgery (SSRF) Explained", channel: "NahamSec", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "SSRF: server bị lợi dụng để gửi request",
@@ -1860,6 +1917,9 @@ const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5
   },
 
   "p05.m2.t6": {
+    videos: [
+      { id: "YXkOdWBwqaA", title: "Rate Limiter System Design: Token Bucket, Leaky Bucket, Scaling", channel: "ByteByteGo", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần rate limiting?",
@@ -1958,6 +2018,9 @@ export class AuthController {
   },
 
   "p05.m2.t7": {
+    videos: [
+      { id: "4bQeGUzHpOE", title: "HTTP Secure Headers for Web App Security | CORS, CSP, HSTS and more", channel: "ByteMonk", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Security header: cấu hình rẻ, hiệu quả cao",
@@ -2063,6 +2126,9 @@ bootstrap();`
   },
 
   "p05.m3.t0": {
+    videos: [
+      { id: "BqekRTA6VCs", title: "Secrets Management: Secure Credentials & Avoid Data Leaks", channel: "IBM Technology", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Secret là gì và rò rỉ từ đâu?",
@@ -2158,6 +2224,9 @@ export async function loadSecrets() {
   },
 
   "p05.m3.t1": {
+    videos: [
+      { id: "-MmyAFR_pYw", title: "NPM Supply Chain Attacks Explained (And How To Stop Them)", channel: "DigitalOcean", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Chuỗi cung ứng phần mềm là bề mặt tấn công",
@@ -2427,7 +2496,7 @@ export const logger = pino({
       '*.password',
       '*.token',
       '*.nationalId',
-      '*.phone',
+      '*.phone'
     ],
     censor: '[REDACTED]',
   },
@@ -2493,6 +2562,10 @@ export function maskEmail(email: string) {
   },
 
   "p05.m0.t7": {
+    videos: [
+      { id: "xYfiOnufBSk", title: "How Passkeys Work - Computerphile", channel: "Computerphile", lang: "en", minutes: 19, embed: true },
+      { id: "rsJcXHUZhRY", title: "A Developer's Guide to WebAuthN", channel: "OktaDev", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Passkey là gì và vì sao chống được phishing?",
@@ -2626,6 +2699,10 @@ export async function finishLogin(sessionId: string, body: any) {
   },
 
   "p05.m2.t8": {
+    videos: [
+      { id: "rPdn88pO7x0", title: "How File Upload Vulnerabilities Work!", channel: "Intigriti", lang: "en", minutes: 7, embed: true },
+      { id: "I2ZYUulreI4", title: "Implementing Signature Verification for Webhooks (GitHub HMAC verification)", channel: "Hookdeck", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Upload file: mọi thứ từ client đều có thể giả",

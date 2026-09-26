@@ -582,3 +582,29 @@ test.describe('Bản build Cloudflare', () => {
     expect(res.headers()['cache-control']).toContain('no-cache');
   });
 });
+
+test.describe('Video tham khảo', () => {
+  test('hiện video kèm link YouTube, bấm Phát ngay mới tải khung video', async ({ page }) => {
+    await page.goto('/#/learn/p03/0/1');
+    const card = page.locator('.video-card').first();
+    await expect(card).toBeVisible();
+    await expect(card.locator('.video-meta')).toContainText('phút');
+    const link = card.locator('a', { hasText: 'Mở trên YouTube' });
+    await expect(link).toHaveAttribute('href', /^https:\/\/www\.youtube\.com\/watch\?v=[A-Za-z0-9_-]{11}$/);
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', /noopener/);
+    // Chưa bấm thì chưa có iframe (trang nhẹ, không tải YouTube)
+    await expect(page.locator('.video-card iframe')).toHaveCount(0);
+    await card.locator('.video-actions [data-act="play-video"]').click();
+    const frame = card.locator('iframe');
+    await expect(frame).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/[A-Za-z0-9_-]{11}\?autoplay=1/);
+    await expect(card).toHaveClass(/is-playing/);
+  });
+
+  test('bài không có video thì không hiện mục video', async ({ page }) => {
+    await page.goto('/#/learn/p05/0/0');
+    await expect(page.locator('.lesson-content .lc-section').first()).toBeVisible();
+    const has = await page.evaluate(() => !!window.LESSON_CONTENT['p05.m0.t0']?.videos?.length);
+    await expect(page.locator('.lc-videos')).toHaveCount(has ? 1 : 0);
+  });
+});

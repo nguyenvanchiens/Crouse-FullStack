@@ -2,6 +2,9 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p03.m0.t0": {
+    videos: [
+      { id: "gMtchRodC2I", title: "When is NodeJS Single-Threaded and when is it Multi-Threaded?", channel: "Hussein Nasser", lang: "en", minutes: 19, embed: true }
+    ],
     sections: [
       {
         h: "Node.js gồm những gì",
@@ -90,6 +93,9 @@ export async function verifyPassword(plain: string, stored: string) {
     ]
   },
   "p03.m0.t1": {
+    videos: [
+      { id: "GVx47SJYZhI", title: "Event loop Nodejs - Lần cuối giải thích cho những bạn còn NGHI NGỜ thông qua hai VÍ DỤ kinh điển", channel: "Tips Javascript", lang: "vi", minutes: 25, embed: true }
+    ],
     sections: [
       {
         h: "Event loop là gì",
@@ -193,6 +199,9 @@ setInterval(() => {
     ]
   },
   "p03.m0.t2": {
+    videos: [
+      { id: "6u7B54FGpGA", title: "Stream trong NodeJS: Kinh nghiệm của 2 Lập Trình Viên xử lý tối ưu FILE LỚN như thế nào?", channel: "Tips Javascript", lang: "vi", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Buffer và vì sao cần Stream",
@@ -294,6 +303,10 @@ export class ReportsController {
     ]
   },
   "p03.m0.t3": {
+    videos: [
+      { id: "MuwJJrfIfsU", title: "How to use Multithreading with \"worker threads\" in Node.js?", channel: "Software Developer Diaries", lang: "en", minutes: 20, embed: true },
+      { id: "6lHvks6R6cI", title: "Scaling your Node.js app using the \"cluster\" module", channel: "Software Developer Diaries", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Hai bài toán khác nhau",
@@ -382,6 +395,10 @@ export function fibInWorker(n: number): Promise<number> {
     ]
   },
   "p03.m0.t4": {
+    videos: [
+      { id: "Vgr3MWb7aOw", title: "49. Tổ chức biến môi trường ENV đúng cách | NodeJS + MongoDB | TrungQuanDev", channel: "TrungQuanDev - Một Lập Trình Viên", lang: "vi", minutes: 25, embed: true },
+      { id: "DCZzFGX_050", title: "Stop using typescript env variables wrong", channel: "Web Dev Cody", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao không hard-code cấu hình",
@@ -496,6 +513,9 @@ export class AppModule {}
     ]
   },
   "p03.m0.t5": {
+    videos: [
+      { id: "-OjPhPV6Rjs", title: "Here's how to Gracefully Shutdown your apps (with Node.js examples)", channel: "Software Developer Diaries", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Điều gì xảy ra khi Pod bị dừng",
@@ -597,6 +617,9 @@ export class EmailWorker implements OnApplicationShutdown {
     ]
   },
   "p03.m1.t0": {
+    videos: [
+      { id: "g4z5zwJMSuo", title: "Middleware là gì? Ví dụ về middleware với ExpressJS!", channel: "F8 Official", lang: "vi", minutes: 33, embed: true }
+    ],
     sections: [
       {
         h: "Vòng đời một request trong Express",
@@ -697,6 +720,10 @@ declare function findProject(id: string): Promise<unknown>;`
     ]
   },
   "p03.m1.t1": {
+    videos: [
+      { id: "IdsBwplQAMw", title: "Every NestJS Concept Explained in 9 Minutes", channel: "Tech Vision", lang: "en", minutes: 9, embed: true },
+      { id: "8vtO7wpRMU0", title: "Khóa học NestJS 2024 - Service và Dependency Injection trong NestJS", channel: "Unicode Việt Nam", lang: "vi", minutes: 19, embed: true }
+    ],
     sections: [
       {
         h: "Module, Controller, Provider",
@@ -810,6 +837,9 @@ export class TimingInterceptor implements NestInterceptor {
     ]
   },
   "p03.m1.t2": {
+    videos: [
+      { id: "hyc-7w3pee8", title: "10. What are controllers, services, repositories, middlewares and request context?", channel: "Sriniously", lang: "en", minutes: 60, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao phân lớp",
@@ -922,6 +952,9 @@ export class TasksModule {}`
     ]
   },
   "p03.m1.t3": {
+    videos: [
+      { id: "ZLp92Iw0rkI", title: "NestJS DTO Schemas, Validation & Pipes Tutorial", channel: "Dave Gray", lang: "en", minutes: 30, embed: true }
+    ],
     sections: [
       {
         h: "Validate tại biên hệ thống",
@@ -1035,6 +1068,9 @@ export const createTaskSchema = z.object({
     ]
   },
   "p03.m1.t4": {
+    videos: [
+      { id: "AWqqg9Dtnc4", title: "NestJs - Exception Filters [06]", channel: "Computerix", lang: "en", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần xử lý lỗi tập trung",
@@ -1149,6 +1185,10 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     ]
   },
   "p03.m1.t5": {
+    videos: [
+      { id: "I2mWnh66Bkg", title: "12 Logging BEST Practices in 12 minutes", channel: "Better Stack", lang: "en", minutes: 12, embed: true },
+      { id: "fluDEkA1h6w", title: "Pino JS - Logging in JavaScript / Node.js applications", channel: "Better Stack", lang: "en", minutes: 42, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao log dạng JSON",
@@ -1244,6 +1284,9 @@ export class AppModule {}
     ]
   },
   "p03.m1.t6": {
+    videos: [
+      { id: "1OhmRmMsGdQ", title: "What is 12-Factor App? | Twelve Factor App Methodology Explained | KodeKloud", channel: "KodeKloud", lang: "en", minutes: 30, embed: true }
+    ],
     sections: [
       {
         h: "12-Factor App là gì",
@@ -1330,6 +1373,9 @@ await app.listen(Number(process.env.PORT ?? 3000), '0.0.0.0');
     ]
   },
   "p03.m2.t0": {
+    videos: [
+      { id: "7nm1pYuKAhY", title: "Deep Dive into REST API Design and Implementation Best Practices", channel: "Software Developer Diaries", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "REST xoay quanh resource",
@@ -1426,6 +1472,9 @@ export class TasksController {
     ]
   },
   "p03.m2.t1": {
+    videos: [
+      { id: "qmpUfWN7hh4", title: "HTTP Status Codes Explained In 5 Minutes", channel: "ByteByteGo", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Status code là hợp đồng với client",
@@ -1528,6 +1577,9 @@ declare class ProjectsService {
     ]
   },
   "p03.m2.t2": {
+    videos: [
+      { id: "zwDIN04lIpc", title: "Pagination in MySQL - offset vs. cursor", channel: "PlanetScale", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Không bao giờ trả toàn bộ collection",
@@ -1623,6 +1675,9 @@ LIMIT 21;`
     ]
   },
   "p03.m2.t3": {
+    videos: [
+      { id: "tgDAFumt65o", title: "Why Stripe’s API Never Breaks | Date-Based Versioning Explained", channel: "ByteMonk", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "API là lời hứa với client",
@@ -1717,6 +1772,10 @@ Link: <https://docs.example.com/migrate-v2>; rel="deprecation"`
     ]
   },
   "p03.m2.t4": {
+    videos: [
+      { id: "inUimYVAGv0", title: "System Design: Idempotency triển khai thế nào khi Payment xảy ra duplicated trong đồng thời cao?", channel: "Tips Javascript", lang: "vi", minutes: 19, embed: true },
+      { id: "m6DtqSb1BDM", title: "Build a robust Payments service using Idempotency Keys", channel: "Arpit Bhayani", lang: "en", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "Idempotent là gì và vì sao quan trọng",
@@ -1813,6 +1872,9 @@ async createPayment(key: string, dto: CreatePaymentDto) {
     ]
   },
   "p03.m2.t5": {
+    videos: [
+      { id: "4RMzl8k6dXg", title: "NestJS Swagger Guide: OpenApi Documentation", channel: "Computerix", lang: "en", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "OpenAPI là hợp đồng máy đọc được",
@@ -1919,6 +1981,10 @@ oasdiff breaking openapi.main.yaml openapi.yaml`
     ]
   },
   "p03.m2.t6": {
+    videos: [
+      { id: "PWbsH2q8g3c", title: "GraphQL vs REST API: Nên chọn cái nào?", channel: "Holetex", lang: "vi", minutes: 9, embed: true },
+      { id: "uCbFMZYQbxE", title: "GraphQL N+1 Problem", channel: "Ben Awad", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "GraphQL giải quyết vấn đề gì",
@@ -2026,6 +2092,10 @@ export function createLoaders() {
     ]
   },
   "p03.m2.t7": {
+    videos: [
+      { id: "n2GI_4Rbzwg", title: "gRPC vs Rest API dùng khi nào? Ở đâu? Xem đồng nghiệp giải thích", channel: "Tips Javascript", lang: "vi", minutes: 10, embed: true },
+      { id: "gnchfOojMk4", title: "What is RPC? gRPC Introduction.", channel: "ByteByteGo", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "gRPC là gì",
@@ -2136,6 +2206,10 @@ export class OrdersGrpcController {
     ]
   },
   "p03.m3.t0": {
+    videos: [
+      { id: "1BfCnjr_Vjg", title: "WebSockets in 100 Seconds & Beyond with Socket.io", channel: "Fireship", lang: "en", minutes: 9, embed: true },
+      { id: "gzIcGhJC8hA", title: "Scaling Websockets with Redis, HAProxy and Node JS - High-availability Group Chat Application", channel: "Hussein Nasser", lang: "en", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần WebSocket",
@@ -2254,6 +2328,9 @@ export class RedisIoAdapter extends IoAdapter {
     ]
   },
   "p03.m3.t1": {
+    videos: [
+      { id: "4HlNv1qpZFY", title: "Server-Sent Events Crash Course", channel: "Hussein Nasser", lang: "en", minutes: 30, embed: true }
+    ],
     sections: [
       {
         h: "Luồng một chiều không cần WebSocket",
@@ -2361,6 +2438,10 @@ export class NotificationsController {
     ]
   },
   "p03.m3.t2": {
+    videos: [
+      { id: "DBWH_dvvVuU", title: "Tìm hiểu NestJS Queue trong 25 phút", channel: "Unicode Việt Nam", lang: "vi", minutes: 26, embed: true },
+      { id: "vFI_Nf2PWFQ", title: "Building a Scalable Queue System with NestJS & BullMQ & Redis", channel: "Computerix", lang: "en", minutes: 45, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần background job",
@@ -2479,6 +2560,10 @@ declare function generateReportIfMissing(id: string): Promise<void>;`
     ]
   },
   "p03.m3.t3": {
+    videos: [
+      { id: "ZsficIGDjbo", title: "NestJs Cron Jobs: Schedule & Automate Tasks", channel: "Computerix", lang: "en", minutes: 14, embed: true },
+      { id: "qY4MfWv01pI", title: "How Distributed Lock works | ft Redis | System Design", channel: "ByteMonk", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Cron trong ứng dụng",
@@ -2601,6 +2686,9 @@ await digestQueue.upsertJobScheduler(
     ]
   },
   "p03.m3.t4": {
+    videos: [
+      { id: "wbNyipJw9rI", title: "Use Presigned PUT URLs to Easily Upload Files to AWS S3", channel: "TomDoesTech", lang: "en", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "Upload qua server: multipart/form-data",
@@ -2715,6 +2803,9 @@ export async function createUploadUrl(userId: string, contentType: string) {
     ]
   },
   "p03.m3.t5": {
+    videos: [
+      { id: "Wa9KDiB7C_I", title: "How to Send Emails with Node.js and Nodemailer - Tutorial by Mailtrap", channel: "Mailtrap", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Không gửi email trong request",
@@ -2813,6 +2904,9 @@ export class EmailWorker extends WorkerHost {
   },
 
   "p03.m2.t8": {
+    videos: [
+      { id: "CVIBALqn_0E", title: "SOAP (+ Why REST APIs Became Popular)", channel: "Coding with Yalco", lang: "en", minutes: 9, embed: true }
+    ],
     "sections": [
       {
         "h": "Vì sao backend vẫn phải biết SOAP",
@@ -2895,6 +2989,10 @@ export class EmailWorker extends WorkerHost {
     ]
   },
   "p03.m0.t6": {
+    videos: [
+      { id: "2VkUF8jzouQ", title: "# Next-Gen Flame Graphs: Making Node.js Performance Profiling Actually Work - Matteo Collina", channel: "OpenJS Foundation", lang: "en", minutes: 32, embed: true },
+      { id: "hliOMEQRqf8", title: "Understanding and Debugging Memory Leaks in Your Node.js Applications [I]", channel: "node.js", lang: "en", minutes: 31, embed: true }
+    ],
     sections: [
       {
         h: "CPU profile và flame graph",

@@ -2,6 +2,10 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p02.m0.t0": {
+    videos: [
+      { id: "bOUhq46fd5g", title: "Why & When to Use Semantic HTML Elements over Divs", channel: "ByteGrad", lang: "en", minutes: 12, embed: true },
+      { id: "2oiBKSjOOFE", title: "The Only Accessibility Video You Will Ever Need", channel: "Web Dev Simplified", lang: "en", minutes: 38, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao HTML ngữ nghĩa quan trọng",
@@ -80,6 +84,10 @@ Object.assign(window.LESSON_CONTENT, {
     ]
   },
   "p02.m0.t1": {
+    videos: [
+      { id: "AgZ0PX28bnA", title: "Mức độ ưu tiên trong CSS", channel: "F8 Official", lang: "vi", minutes: 11, embed: true },
+      { id: "bv16wjxgV4U", title: "CSS Box-sizing | Tính ứng dụng của Box-sizing", channel: "F8 Official", lang: "vi", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Box model: mỗi phần tử là một chiếc hộp",
@@ -161,6 +169,10 @@ body {
     ]
   },
   "p02.m0.t2": {
+    videos: [
+      { id: "G19jZzK5FWI", title: "Học Flexbox CSS qua ví dụ | Flexbox CSS | Flexbox layout | Flexbox example | Flexbox trong CSS", channel: "F8 Official", lang: "vi", minutes: 35, embed: true },
+      { id: "hJHQVpv6-Z8", title: "CSS Grid trong 30 phút (2022)", channel: "Holetex", lang: "vi", minutes: 28, embed: true }
+    ],
     sections: [
       {
         h: "Flexbox: bố cục một chiều",
@@ -249,6 +261,9 @@ body {
     ]
   },
   "p02.m0.t3": {
+    videos: [
+      { id: "x4u1yp3Msao", title: "A practical guide to responsive web design", channel: "Kevin Powell", lang: "en", minutes: 23, embed: true }
+    ],
     sections: [
       {
         h: "Mobile-first là gì và vì sao",
@@ -329,6 +344,9 @@ body {
     ]
   },
   "p02.m0.t4": {
+    videos: [
+      { id: "6biMWgD6_JY", title: "Tailwind CSS v4 Full Course 2026 | Master Tailwind in One Hour", channel: "JavaScript Mastery", lang: "en", minutes: 54, embed: true }
+    ],
     sections: [
       {
         h: "Utility-first là gì",
@@ -409,6 +427,10 @@ export function Button({ variant = "primary", className = "", ...props }: Props)
     ]
   },
   "p02.m1.t0": {
+    videos: [
+      { id: "AA3WWZAMv_0", title: "DOM events", channel: "F8 Official", lang: "en", minutes: 27, embed: true },
+      { id: "cOoP8-NPLSo", title: "Learn Event Delegation In 10 Minutes", channel: "Web Dev Simplified", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "DOM là gì",
@@ -477,6 +499,10 @@ form.addEventListener("submit", (event) => {
     ]
   },
   "p02.m1.t1": {
+    videos: [
+      { id: "iYgAWJ2Djkw", title: "62. CORS đâu có lỗi lầm gì? | Rất nhiều bạn đang hiểu nhầm về CORS | NodeJS + MongoDB | TrungQuanDev", channel: "TrungQuanDev - Một Lập Trình Viên", lang: "vi", minutes: 28, embed: true },
+      { id: "BeZfiCPhZbI", title: "I Cannot Believe Abort Controller Can Do This", channel: "Web Dev Simplified", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "fetch và xử lý lỗi HTTP",
@@ -554,6 +580,10 @@ export async function fetchWithRetry(url: string, retries = 3): Promise<Response
     ]
   },
   "p02.m1.t2": {
+    videos: [
+      { id: "DfQJjR2PISQ", title: "Lưu access token ở local storage hay Cookies? | Ông Dev | Techlog", channel: "Ông Dev", lang: "vi", minutes: 7, embed: true },
+      { id: "YLRTSVetPQ0", title: "Cookies vs Local Storage vs Session Storage", channel: "Holetex", lang: "en", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "Bốn lựa chọn lưu trữ",
@@ -632,6 +662,9 @@ export function savePrefs(p: Prefs) {
     ]
   },
   "p02.m1.t3": {
+    videos: [
+      { id: "KZ1kxzsJZ5g", title: "How to optimize web responsiveness with Interaction to Next Paint", channel: "Chrome for Developers", lang: "en", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "Core Web Vitals",
@@ -704,6 +737,10 @@ export default function Report() {
     ]
   },
   "p02.m2.t0": {
+    videos: [
+      { id: "TvE2FuYiuXo", title: "Props là gì? | Dùng props khi nào? | Khái niệm Props", channel: "F8 Official", lang: "vi", minutes: 26, embed: true },
+      { id: "7jKMAWvlAbY", title: "TẠI SAO không nên dùng Index làm Key trong React???", channel: "Holetex", lang: "vi", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Component là hàm trả về UI",
@@ -785,6 +822,10 @@ export function SearchPage() {
     ]
   },
   "p02.m2.t1": {
+    videos: [
+      { id: "hjIxfXKmkjk", title: "React useEffect hook chi tiết dành cho người mới | React JS", channel: "F8 Official", lang: "vi", minutes: 25, embed: true },
+      { id: "V1f8MOQiHRw", title: "You might not need useEffect() ...", channel: "Academind", lang: "en", minutes: 22, embed: true }
+    ],
     sections: [
       {
         h: "useState và useRef",
@@ -859,6 +900,10 @@ export function useDebounce<T>(value: T, delay = 300): T {
     ]
   },
   "p02.m2.t2": {
+    videos: [
+      { id: "724nBX6jGRQ", title: "React reconciliation: how it works and why should we care", channel: "Developer Way", lang: "en", minutes: 15, embed: true },
+      { id: "feEY3Qajrwg", title: "Preventing re-renders with React.memo", channel: "Developer Way", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Render và commit",
@@ -924,6 +969,9 @@ export function ProductList({ names }: { names: string[] }) {
     ]
   },
   "p02.m2.t3": {
+    videos: [
+      { id: "cc_xmawJ8Kg", title: "React Hook Form - Complete Tutorial (with Zod)", channel: "Cosden Solutions", lang: "en", minutes: 28, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao dùng React Hook Form",
@@ -1013,6 +1061,10 @@ export type RegisterInput = z.infer<typeof registerSchema>;
     ]
   },
   "p02.m2.t4": {
+    videos: [
+      { id: "5jYlY4y5Dfs", title: "React Router V6 | Thư viện React router dom | Định tuyến trong ReactJS", channel: "F8 Official", lang: "vi", minutes: 15, embed: true },
+      { id: "oTIJunBa6MA", title: "React Router - Complete Tutorial", channel: "Cosden Solutions", lang: "en", minutes: 24, embed: true }
+    ],
     sections: [
       {
         h: "Client-side routing hoạt động thế nào",
@@ -1107,6 +1159,10 @@ export function RequireAuth() {
     ]
   },
   "p02.m2.t5": {
+    videos: [
+      { id: "_ngCLZ5Iz-0", title: "Zustand - Complete Tutorial", channel: "Cosden Solutions", lang: "en", minutes: 19, embed: true },
+      { id: "VenLRGHx3D4", title: "State Managers Are Making Your Code Worse In React", channel: "Web Dev Simplified", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Bậc thang quản lý state",
@@ -1175,6 +1231,9 @@ export const useCart = create<CartState>()((set) => ({
     ]
   },
   "p02.m2.t6": {
+    videos: [
+      { id: "mPaCnwpFvZY", title: "TanStack Query - How to become a React Query God", channel: "Austin Davis", lang: "en", minutes: 29, embed: true }
+    ],
     sections: [
       {
         h: "TanStack Query giải quyết gì",
@@ -1266,6 +1325,10 @@ export function useToggleTodo(page: number) {
     ]
   },
   "p02.m3.t0": {
+    videos: [
+      { id: "HLEu57iLrRo", title: "SSR & CSR | Sever side rendering | Client side rendering", channel: "F8 Official", lang: "en", minutes: 13, embed: true },
+      { id: "S5tjBqzs31w", title: "Next.js CSR vs SSR vs SSG vs ISR and now PPR!", channel: "ByteGrad", lang: "en", minutes: 34, embed: true }
+    ],
     sections: [
       {
         h: "Các chiến lược render",
@@ -1335,6 +1398,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     ]
   },
   "p02.m3.t1": {
+    videos: [
+      { id: "gSSsZReIFRk", title: "Next.js App Router: Routing, Data Fetching, Caching", channel: "Vercel", lang: "en", minutes: 15, embed: true },
+      { id: "BWJJwk2j-7A", title: "Server Actions - Viết code backend trong React ???", channel: "Holetex", lang: "vi", minutes: 19, embed: true }
+    ],
     sections: [
       {
         h: "Cấu trúc App Router",
@@ -1431,6 +1498,10 @@ export async function createTodo(formData: FormData) {
     ]
   },
   "p02.m3.t2": {
+    videos: [
+      { id: "XyPNw_3jsLY", title: "How JavaScript package managers work: npm vs. yarn vs. pnpm vs. npx", channel: "Software Developer Diaries", lang: "en", minutes: 12, embed: true },
+      { id: "TeOSuGRHq7k", title: "How to structure a JS/TS monorepo | From Zero to Turbo - Part 1", channel: "Anthony Shew", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "npm, pnpm và lockfile",
@@ -1500,6 +1571,10 @@ pnpm outdated`
     ]
   },
   "p02.m3.t3": {
+    videos: [
+      { id: "6dOpQIwyV6g", title: "React Testing Full Course 2026 | Vitest and React Testing Library Tutorial", channel: "RoadsideCoder", lang: "en", minutes: 48, embed: true },
+      { id: "3NW0Mz943_E", title: "React Testing with Playwright (Complete Tutorial)", channel: "Cosden Solutions", lang: "en", minutes: 33, embed: true }
+    ],
     sections: [
       {
         h: "Test hành vi, không test chi tiết cài đặt",
@@ -1584,6 +1659,10 @@ test("người dùng đăng nhập và thấy dashboard", async ({ page }) => {
     ]
   },
   "p02.m3.t4": {
+    videos: [
+      { id: "AiiGjB2AxqA", title: "Deploying Next.js to Vercel", channel: "Vercel", lang: "en", minutes: 6, embed: true },
+      { id: "nZrAgov_-D8", title: "Environments on Vercel", channel: "Vercel", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "PaaS cho frontend làm gì thay bạn",
@@ -1650,6 +1729,10 @@ test("người dùng đăng nhập và thấy dashboard", async ({ page }) => {
     ]
   },
   "p02.m2.t7": {
+    videos: [
+      { id: "sl3vJrgvU-U", title: "Học TypeScript cho React Developer (2024)", channel: "Holetex", lang: "vi", minutes: 39, embed: true },
+      { id: "5s6dIkrv6Y4", title: "Learn React Generic Components In 6 Minutes", channel: "Web Dev Simplified", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Kiểu cho props và children",

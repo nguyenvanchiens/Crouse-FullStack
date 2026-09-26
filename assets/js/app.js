@@ -102,6 +102,7 @@
     trophy: '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M6 3h8v4a4 4 0 0 1-8 0zM6 5H3.5a2.5 2.5 0 0 0 2.8 3M14 5h2.5a2.5 2.5 0 0 1-2.8 3M10 11v3M7 17h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     list: '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7 5h10M7 10h10M7 15h10M3 5h.01M3 10h.01M3 15h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     close: '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    play: '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M6 4l10 6-10 6z" fill="currentColor"/></svg>',
     moon: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="currentColor"/></svg>'
   };
 
@@ -400,10 +401,50 @@
         <p class="quiz-explain" ${answered ? '' : 'hidden'}><strong>${answered && chosen === q.answer ? 'Chính xác.' : 'Chưa đúng.'}</strong> ${rich(q.explain)}</p>
       </div>`;
     }).join('');
-    return `${blocks}
+    return `${videoList(c.videos)}${blocks}
       ${c.summary?.length ? `<section class="lc-box lc-summary"><h2>Tóm tắt</h2><ul>${c.summary.map((x) => `<li>${rich(x)}</li>`).join('')}</ul></section>` : ''}
       ${c.pitfalls?.length ? `<section class="lc-box lc-pitfalls"><h2>Lỗi thường gặp</h2><ul>${c.pitfalls.map((x) => `<li>${rich(x)}</li>`).join('')}</ul></section>` : ''}
       ${quiz ? `<section class="quiz"><h2>Kiểm tra nhanh</h2>${quiz}<button type="button" class="link-btn" data-act="quiz-reset" data-lesson="${L.id}">Làm lại quiz</button></section>` : ''}`;
+  }
+
+  // Video tham khảo: link mở YouTube; video cho phép nhúng thì có nút phát ngay trong trang.
+  // Khung video (youtube-nocookie) chỉ được tạo khi người học bấm phát.
+  const ytWatch = (id) => `https://www.youtube.com/watch?v=${id}`;
+  function videoList(videos) {
+    if (!videos?.length) return '';
+    return `<section class="lc-videos" aria-label="Video tham khảo">
+      <h2>Video tham khảo</h2>
+      ${videos.map((v) => `<div class="video-card" data-video="${esc(v.id)}">
+        <div class="video-media">
+          ${v.embed
+            ? `<button type="button" class="video-play" data-act="play-video" data-id="${esc(v.id)}" data-title="${esc(v.title)}" aria-label="Phát ngay trong trang: ${esc(v.title)}">
+                <img src="https://i.ytimg.com/vi/${esc(v.id)}/mqdefault.jpg" alt="" loading="lazy" width="320" height="180">
+                <span class="video-play-icon" aria-hidden="true">${ICON.play}</span>
+              </button>`
+            : `<a class="video-play" href="${ytWatch(v.id)}" target="_blank" rel="noopener noreferrer" aria-label="Mở trên YouTube: ${esc(v.title)}">
+                <img src="https://i.ytimg.com/vi/${esc(v.id)}/mqdefault.jpg" alt="" loading="lazy" width="320" height="180">
+                <span class="video-play-icon" aria-hidden="true">${ICON.play}</span>
+              </a>`}
+        </div>
+        <div class="video-info">
+          <p class="video-title">${esc(v.title)}</p>
+          <p class="video-meta">${esc(v.channel)} · ${v.minutes} phút · ${v.lang === 'vi' ? 'Tiếng Việt' : 'Tiếng Anh, có thể bật phụ đề tự động tiếng Việt'}</p>
+          <div class="video-actions">
+            ${v.embed ? `<button type="button" class="btn btn-sm btn-primary" data-act="play-video" data-id="${esc(v.id)}" data-title="${esc(v.title)}">${ICON.play}<span>Phát ngay</span></button>` : ''}
+            <a class="btn btn-sm" href="${ytWatch(v.id)}" target="_blank" rel="noopener noreferrer">Mở trên YouTube${ICON.ext}</a>
+          </div>
+        </div>
+      </div>`).join('')}
+    </section>`;
+  }
+  function playVideo(btn) {
+    const card = btn.closest('.video-card');
+    const media = card && $('.video-media', card);
+    if (!media) return;
+    const id = btn.dataset.id;
+    media.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0" title="${esc(btn.dataset.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+    card.classList.add('is-playing');
+    $$('[data-act="play-video"]', card).forEach((b) => b.remove());
   }
 
   // Xáo thứ tự lựa chọn cố định theo từng câu (tránh đoán đáp án theo vị trí)
@@ -800,6 +841,7 @@
       $$('.pb-side').forEach((b) => b.setAttribute('aria-expanded', open));
       if (!isNarrow()) { sideOpen = open; store.write('devpath-side', sideOpen); }
     }
+    if (act === 'play-video') { playVideo(btn); return; }
     if (act === 'theme') toggleTheme();
     if (act === 'quiz-reset') {
       Object.keys(progress).filter((k) => k.startsWith(btn.dataset.lesson + '.q')).forEach((k) => delete progress[k]);

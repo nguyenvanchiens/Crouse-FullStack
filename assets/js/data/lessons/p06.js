@@ -2,6 +2,9 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p06.m0.t0": {
+    videos: [
+      { id: "YaXJeUkBe4Y", title: "5 Types of Testing Software Every Developer Needs to Know!", channel: "Alex Hyett", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần chiến lược kiểm thử",
@@ -76,6 +79,10 @@ test/
   },
 
   "p06.m0.t1": {
+    videos: [
+      { id: "lgkyhEHIC_c", title: "Code không bug cùng với Unit Test và Automation Testing - Code Cùng Code Dạo", channel: "Phạm Huy Hoàng", lang: "vi", minutes: 9, embed: true },
+      { id: "XdDZKeM5_pQ", title: "Unit Testing (Vitest) Tutorial #1 - What is Unit Testing?", channel: "Net Ninja", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Unit test là gì và nên test cái gì",
@@ -179,6 +186,9 @@ npx vitest run task.policy   # lọc theo tên file`
   },
 
   "p06.m0.t2": {
+    videos: [
+      { id: "NPp2pvhGbkM", title: "Unit Tests and Test Doubles like Mocks, Stubs & Fakes", channel: "The Theory Of Code", lang: "en", minutes: 18, embed: true }
+    ],
     sections: [
       {
         h: "Bốn loại test double",
@@ -268,6 +278,9 @@ describe('OrderService.confirm', () => {
   },
 
   "p06.m0.t3": {
+    videos: [
+      { id: "sNg0bnMF_qY", title: "Testcontainers have forever changed the way I write tests", channel: "Dreams of Code", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao dùng database thật khi test",
@@ -370,6 +383,9 @@ describe('TasksRepository', () => {
   },
 
   "p06.m0.t4": {
+    videos: [
+      { id: "FKnzS_icp20", title: "Testing Node Server with Jest and Supertest", channel: "Sam Meech-Ward", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "API e2e test kiểm tra gì",
@@ -482,6 +498,10 @@ async function login(app: INestApplication, email: string): Promise<string> {
   },
 
   "p06.m0.t5": {
+    videos: [
+      { id: "U05q0zJsKsU", title: "[Introduction to contract testing - Part 1] The problem with end-to-end integrated tests", channel: "PactFlow", lang: "en", minutes: 6, embed: true },
+      { id: "IetyhDr48RI", title: "[Introduction to contract testing - Part 2] Contract testing and how Pact works", channel: "PactFlow", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Vấn đề giữa các service",
@@ -573,6 +593,9 @@ describe('task-api contract', () => {
   },
 
   "p06.m0.t6": {
+    videos: [
+      { id: "ghuo8m7AXEM", title: "How to do Performance Testing with k6", channel: "Alex Hyett", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Các loại test hiệu năng",
@@ -673,6 +696,9 @@ echo $?   # khác 0 nếu vi phạm threshold`
   },
 
   "p06.m0.t7": {
+    videos: [
+      { id: "Jv2uxzhPFl4", title: "Test-Driven Development // Fun TDD Introduction with JavaScript", channel: "Fireship", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "TDD: Red, Green, Refactor",
@@ -769,6 +795,9 @@ export default defineConfig({
   },
 
   "p06.m1.t0": {
+    videos: [
+      { id: "K4fAs0OFqtk", title: "Setup dự án Node.js CHUẨN với TypeScript ESLint Prettier | Express.js hay Fastify đều dùng được", channel: "Được Dev", lang: "vi", minutes: 22, embed: true }
+    ],
     sections: [
       {
         h: "Lint và format là hai việc khác nhau",
@@ -863,6 +892,9 @@ export default defineConfig(
   },
 
   "p06.m1.t1": {
+    videos: [
+      { id: "Kr4VxMbF3LY", title: "Lint Like a Senior Developer w/ eslint + husky + lint staged + github actions", channel: "Syntax", lang: "en", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "Git hooks là gì",
@@ -944,6 +976,9 @@ echo "export default { extends: ['@commitlint/config-conventional'] };" > commit
   },
 
   "p06.m1.t2": {
+    videos: [
+      { id: "GRVA4AiO7OM", title: "SonarQube Tutorial: Everything You Need to Know for Beginners", channel: "Sonar", lang: "en", minutes: 43, embed: true }
+    ],
     sections: [
       {
         h: "Static analysis nhìn thấy gì",
@@ -1048,6 +1083,9 @@ sonar.javascript.lcov.reportPaths=coverage/lcov.info`
   },
 
   "p06.m1.t3": {
+    videos: [
+      { id: "d9_fweNDjKw", title: "Better Code Reviews in 6 SIMPLE STEPS", channel: "Modern Software Engineering", lang: "en", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "Code review để làm gì",
@@ -1127,6 +1165,10 @@ Migration? Biến môi trường mới? Feature flag? Cách rollback?`
   },
 
   "p06.m1.t4": {
+    videos: [
+      { id: "7o_PgOQWqdY", title: "What is the C4 model?", channel: "IcePanel", lang: "en", minutes: 4, embed: true },
+      { id: "6H6zfCNeqek", title: "Architecture Decision Records (ADR) as a LOG that answers \"WHY?\"", channel: "CodeOpinion", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "README chạy được trong 5 phút",
@@ -1233,6 +1275,9 @@ Không dùng MongoDB ở giai đoạn này.
   },
 
   "p06.m1.t5": {
+    videos: [
+      { id: "KmOKQS9u-90", title: "Scrum cơ bản | Quy trình phát triển phần mềm | Ong Dev", channel: "Ông Dev", lang: "vi", minutes: 16, embed: true }
+    ],
     "sections": [
       {
         "h": "Code tốt chưa đủ, còn phải làm việc nhóm tốt",

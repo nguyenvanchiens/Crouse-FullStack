@@ -15,6 +15,7 @@ const ids = process.argv.slice(2).length ? process.argv.slice(2) : (fs.existsSyn
 const LANGS = ['bash', 'yaml', 'typescript', 'javascript', 'json', 'sql', 'dockerfile', 'hcl', 'nginx', 'groovy', 'text', 'html', 'css', 'tsx', 'python', 'go', 'promql', 'ini'];
 
 let errors = 0;
+const seenVideos = new Map(); // một video chỉ gắn cho một bài
 const err = (m) => { errors++; console.log('  ✗ ' + m); };
 const isStr = (s) => typeof s === 'string' && s.trim().length > 0;
 
@@ -50,6 +51,20 @@ for (const pid of ids) {
       }
       words += [...(s.p || []), ...(s.list || [])].join(' ').split(/\s+/).length;
     });
+    // videos (tuỳ chọn): [{ id, title, channel, lang: 'vi'|'en', minutes, embed }]
+    if (x.videos !== undefined) {
+      if (!Array.isArray(x.videos) || x.videos.length > 3) err(`${k}: videos phải là mảng tối đa 3 phần tử`);
+      (x.videos || []).forEach((v, i) => {
+        if (!/^[A-Za-z0-9_-]{11}$/.test(v.id || '')) err(`${k}.videos[${i}]: id YouTube không hợp lệ`);
+        if (!isStr(v.title) || !isStr(v.channel)) err(`${k}.videos[${i}]: thiếu title/channel`);
+        if (!['vi', 'en'].includes(v.lang)) err(`${k}.videos[${i}]: lang phải là 'vi' hoặc 'en'`);
+        if (!Number.isInteger(v.minutes) || v.minutes < 1) err(`${k}.videos[${i}]: minutes phải là số nguyên dương`);
+        if (typeof v.embed !== 'boolean') err(`${k}.videos[${i}]: embed phải là true/false`);
+        const dup = seenVideos.get(v.id);
+        if (dup && dup !== k) err(`${k}.videos[${i}]: video ${v.id} đã dùng ở ${dup}`);
+        seenVideos.set(v.id, k);
+      });
+    }
     if (!Array.isArray(x.summary) || x.summary.length < 2 || !x.summary.every(isStr)) err(`${k}: summary cần ≥ 2 ý`);
     if (!Array.isArray(x.pitfalls) || !x.pitfalls.length || !x.pitfalls.every(isStr)) err(`${k}: pitfalls cần ≥ 1`);
     if (!Array.isArray(x.quiz) || x.quiz.length < 2) err(`${k}: quiz cần ≥ 2 câu`);

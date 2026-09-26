@@ -2,6 +2,9 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p04.m0.t0": {
+    videos: [
+      { id: "fNf75u_7GXw", title: "Học SQL 25. Hiểu rõ các câu lệnh INNER JOIN, LEFT JOIN, RIGHT JOIN trong SQL", channel: "TITV", lang: "vi", minutes: 22, embed: true }
+    ],
     sections: [
       {
         h: "SELECT hoạt động theo thứ tự logic nào?",
@@ -118,6 +121,10 @@ LIMIT 50;`
   },
 
   "p04.m0.t1": {
+    videos: [
+      { id: "nc1BQUb64ek", title: "SQL Window Function (SQL OVER PARTITION BY) Tự Học SQL CSDL Nâng Cao", channel: "Vịt làm Data", lang: "vi", minutes: 18, embed: true },
+      { id: "LJC8277LONg", title: "SQL WITH Clause | Clearly Explained | CTEs vs Subqueries vs Temp Tables | Recursive CTEs", channel: "Maven Analytics", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "CTE: đặt tên cho từng bước truy vấn",
@@ -227,6 +234,9 @@ ORDER BY day;`
   },
 
   "p04.m0.t2": {
+    videos: [
+      { id: "nPEHQz3EDt4", title: "Học SQL 08. Phân biệt Khóa Chính và Khóa Ngoại, Ràng buộc toàn vẹn Dữ liệu | Tự học câu lệnh SQL", channel: "TITV", lang: "vi", minutes: 45, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao để database giữ ràng buộc?",
@@ -328,6 +338,9 @@ CREATE INDEX orders_user_id_idx ON orders (user_id);`
   },
 
   "p04.m0.t3": {
+    videos: [
+      { id: "oWF5jTFBSHw", title: "Tips for handling timezones in Postgres", channel: "Aaron Francis", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Chọn kiểu dữ liệu là quyết định dài hạn",
@@ -537,6 +550,9 @@ EXECUTE FUNCTION set_updated_at();`
   },
 
   "p04.m1.t0": {
+    videos: [
+      { id: "XkqciOtQUCI", title: "Series #Database & #SQL - Tập 3: Entity Relationship Diagram #ERD", channel: "Hai Lúa học Business Analysis", lang: "vi", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "ERD: vẽ trước khi tạo bảng",
@@ -648,6 +664,10 @@ UPDATE users SET deleted_at = now() WHERE id = 42;`
   },
 
   "p04.m1.t1": {
+    videos: [
+      { id: "TKYd6gKF2Cc", title: "CSDL PTIT | 3 DẠNG CHUẨN HÓA 1NF, 2NF, 3NF", channel: "Cô gái IT", lang: "vi", minutes: 8, embed: true },
+      { id: "GFQaEYEc8_8", title: "Learn Database Normalization - 1NF, 2NF, 3NF, 4NF, 5NF", channel: "Decomplexify", lang: "en", minutes: 29, embed: true }
+    ],
     sections: [
       {
         h: "Chuẩn hoá để làm gì?",
@@ -738,6 +758,10 @@ WHERE sub.post_id = p.id AND p.comment_count <> sub.cnt;`
   },
 
   "p04.m1.t2": {
+    videos: [
+      { id: "CcfEjMISKoQ", title: "12 phút hiểu tất cả về INDEX trong Database", channel: "sydexa", lang: "vi", minutes: 13, embed: true },
+      { id: "-qNSXK7s7_w", title: "Database Indexing Explained (with PostgreSQL)", channel: "Hussein Nasser", lang: "en", minutes: 18, embed: true }
+    ],
     sections: [
       {
         h: "Index hoạt động thế nào?",
@@ -838,6 +862,9 @@ CREATE INDEX products_attr_path_gin ON products USING gin (attributes jsonb_path
   },
 
   "p04.m1.t3": {
+    videos: [
+      { id: "P7EUFtjeAmI", title: "Postgres Explain Explained - How Databases Prepare Optimal Query Plans to Execute SQL", channel: "Hussein Nasser", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Planner quyết định cách chạy truy vấn",
@@ -958,6 +985,9 @@ LIMIT 10;`
   },
 
   "p04.m1.t4": {
+    videos: [
+      { id: "h0Y9oaBQv9w", title: "Giải quyết N + 1 Problem, ngoài JOIN thì cách hệ thống LỚN như FB hay Netflix sử dụng là đây!", channel: "Tips Javascript", lang: "vi", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "N+1 là gì và vì sao nguy hiểm?",
@@ -1064,6 +1094,9 @@ const userLoader = new DataLoader<number, User | undefined>(async (ids) => {
   },
 
   "p04.m1.t5": {
+    videos: [
+      { id: "GTeCtIoV2Tw", title: "Connection Pooling in PostgresSQL with NodeJS (Performance Numbers)", channel: "Hussein Nasser", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao kết nối Postgres đắt?",
@@ -1173,6 +1206,10 @@ default_pool_size = 20`
   },
 
   "p04.m2.t0": {
+    videos: [
+      { id: "GAe5oB742dw", title: "ACID Properties in Databases With Examples", channel: "ByteByteGo", lang: "en", minutes: 5, embed: true },
+      { id: "s3hKYMOpp3E", title: "Write-Ahead Logs. The secret to fast database queries.", channel: "Ben Dicken", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Transaction và bốn chữ ACID",
@@ -1268,6 +1305,10 @@ COMMIT;`
   },
 
   "p04.m2.t1": {
+    videos: [
+      { id: "VWXZUWzT46U", title: "Section 112: LÀM CHỦ MYSQL - 4 mức độ cô lập trong Transaction, hiệu suất NHANH hay CHẬM tùy bạn...", channel: "Tips Javascript", lang: "vi", minutes: 26, embed: true },
+      { id: "G8wDjV0N9tk", title: "Transaction Isolation Levels With PostgreSQL as an example", channel: "mkdev", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Các hiện tượng khi chạy đồng thời",
@@ -1360,6 +1401,9 @@ RETURNING stock;`
   },
 
   "p04.m2.t2": {
+    videos: [
+      { id: "URwmzTeuHdk", title: "All Postgres Locks Explained | A Deep Dive", channel: "Hussein Nasser", lang: "en", minutes: 48, embed: true }
+    ],
     sections: [
       {
         h: "Row lock và SELECT ... FOR UPDATE",
@@ -1482,6 +1526,9 @@ COMMIT; -- lock tự nhả`
   },
 
   "p04.m2.t3": {
+    videos: [
+      { id: "wEsPL50Uiyo", title: "This is why understanding database concurrency control is important", channel: "Web Dev Cody", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Bài toán: sản phẩm cuối cùng",
@@ -1590,6 +1637,10 @@ UPDATE products SET stock = stock - 1 WHERE id = 7 AND stock > 0 RETURNING stock
   },
 
   "p04.m2.t4": {
+    videos: [
+      { id: "TBmDBw1IIoY", title: "PostgreSQL Internals in Action: MVCC", channel: "Denis Magda", lang: "en", minutes: 16, embed: true },
+      { id: "9PqfJmk_T7k", title: "Giải mã VACUUM trong PostgreSQL, phần lõi HIỆU NĂNG mà 80% dev không để ý | Trần Quốc Huy - Wecommit", channel: "Trần Quốc Huy - Wecommit", lang: "vi", minutes: 28, embed: true }
+    ],
     sections: [
       {
         h: "MVCC: nhiều phiên bản của một dòng",
@@ -1692,6 +1743,9 @@ COMMIT;`
   },
 
   "p04.m3.t0": {
+    videos: [
+      { id: "x1fCJ7sUXCM", title: "Raw SQL, SQL Query Builder, or ORM?", channel: "ArjanCodes", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "ORM và query builder khác nhau thế nào?",
@@ -1797,6 +1851,9 @@ const c = await prisma.$queryRaw\`
   },
 
   "p04.m3.t1": {
+    videos: [
+      { id: "mMsZPZKNc4g", title: "Database Migrations Explained", channel: "Software Developer Diaries", lang: "en", minutes: 27, embed: true }
+    ],
     sections: [
       {
         h: "Migration là lịch sử của schema",
@@ -2129,6 +2186,9 @@ export async function createUser(overrides: Partial<NewUser> = {}) {
   },
 
   "p04.m3.t4": {
+    videos: [
+      { id: "Jvdtx-Smffo", title: "PostgreSQL Backup & Point-In-Time Recovery", channel: "Scaling Postgres", lang: "en", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "Các loại backup",
@@ -2223,6 +2283,10 @@ psql -h localhost -U postgres -d app_restore_test -c "SELECT COUNT(*), MAX(creat
   },
 
   "p04.m4.t0": {
+    videos: [
+      { id: "XFMCmc9NL1o", title: "Redis là gì? | System Design #2 |  @Ông Dev ​", channel: "Ông Dev", lang: "vi", minutes: 12, embed: true },
+      { id: "z_NbVtbgBJw", title: "What Is Redis Really About? Why Is It So Popular?", channel: "ByteByteGo", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Redis là gì và vì sao nhanh?",
@@ -2438,6 +2502,10 @@ export async function updateProduct(id: number, data: { name: string }) {
   },
 
   "p04.m4.t2": {
+    videos: [
+      { id: "a4yX7RUgTxI", title: "Top 5 Redis Use Cases", channel: "ByteByteGo", lang: "en", minutes: 6, embed: true },
+      { id: "YV4ePyW3DO8", title: "Rate limiting with Redis: An essential guide", channel: "Redis", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Session store và rate limiting",
@@ -2546,6 +2614,9 @@ new Worker('email', async (job) => {
   },
 
   "p04.m4.t3": {
+    videos: [
+      { id: "hmGz79ae2AY", title: "MongoDB Data Modeling and Schema Fundamentals | From Relational to Document Model", channel: "MongoDB", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Document database hoạt động thế nào?",
@@ -2636,6 +2707,9 @@ db.comments.find({ postId: ObjectId("66f5a1b2c3d4e5f601234568") })
   },
 
   "p04.m4.t4": {
+    videos: [
+      { id: "VfcRxtBKI54", title: "Types of Databases: Relational vs. Columnar vs. Document vs. Graph vs. Vector vs. Key-value & more", channel: "Anton Putra", lang: "en", minutes: 18, embed: true }
+    ],
     sections: [
       {
         h: "Không có database tốt nhất, chỉ có phù hợp nhất",
@@ -2729,6 +2803,10 @@ ORDER BY bucket;
   },
 
   "p04.m4.t5": {
+    videos: [
+      { id: "GRwIa-ce7RA", title: "Master Postgres Full-text Search in 5 Minutes", channel: "Supabase", lang: "en", minutes: 5, embed: true },
+      { id: "ZP0NmfyfsoM", title: "What is Elasticsearch?", channel: "IBM Technology", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao LIKE '%từ%' không đủ?",
@@ -2819,6 +2897,9 @@ SELECT name FROM products WHERE name % 'tai ngh' ORDER BY similarity(name, 'tai 
   },
 
   "p04.m4.t6": {
+    videos: [
+      { id: "BHqjEjzAicA", title: "CAP Theorem Simplified", channel: "ByteByteGo", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Định lý CAP nói gì?",
@@ -2910,6 +2991,9 @@ async function updateProfile(userId: number, data: { bio: string }) {
   },
 
   "p04.m1.t6": {
+    videos: [
+      { id: "oJj-pltxBUM", title: "PostgreSQL Partitioning Tutorial", channel: "Code with Lucian", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Streaming vs logical replication",

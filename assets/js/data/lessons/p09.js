@@ -2,6 +2,10 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p09.m0.t0": {
+    videos: [
+      { id: "1sdaPoXWQrw", title: "Deploy Web cơ bản với Nginx | Cài đặt và cấu hình Nginx cơ bản trên Ubuntu", channel: "F8 Official", lang: "vi", minutes: 22, embed: true },
+      { id: "iInUBOVeBCc", title: "NGINX Explained - What is Nginx", channel: "TechWorld with Nana", lang: "en", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "Nginx làm gì trong hệ thống backend",
@@ -85,6 +89,10 @@ server {
     ]
   },
   "p09.m0.t1": {
+    videos: [
+      { id: "zsC9dHZdeLo", title: "📗 #4 - Proxy vs Reverse Proxy | Software Engineering Cơ Bản", channel: "Viet Tran", lang: "vi", minutes: 10, embed: true },
+      { id: "xo5V9g9joFs", title: "Proxy vs Reverse Proxy vs Load Balancer | Simply Explained", channel: "TechWorld with Nana", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Forward proxy: đứng về phía client",
@@ -148,6 +156,9 @@ app.listen(3000, '127.0.0.1');`
     ]
   },
   "p09.m0.t2": {
+    videos: [
+      { id: "no4jiN8E1LU", title: "Bảo mật Nginx với Lets Encrypt trên Ubuntu 20.04 với Certbot / Kiên Lê TV", channel: "Kien Le Tech", lang: "vi", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "TLS và Let's Encrypt hoạt động thế nào",
@@ -225,6 +236,10 @@ server {
     ]
   },
   "p09.m0.t3": {
+    videos: [
+      { id: "JDU3NGSJtgs", title: "Cloud Talks #6: Tổng quan về CDN và ứng dụng thực tế", channel: "Viettel IDC", lang: "vi", minutes: 8, embed: true },
+      { id: "RI9np1LWzqw", title: "What Is A CDN? How Does It Work?", channel: "ByteByteGo", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "CDN là gì và vì sao cần",
@@ -291,6 +306,10 @@ app.get('/api/me', auth, (req, res) => {
     ]
   },
   "p09.m0.t4": {
+    videos: [
+      { id: "F-ubkT1WNFk", title: "UFW Made Easy: Complete Getting Started Guide", channel: "Learn Linux TV", lang: "en", minutes: 29, embed: true },
+      { id: "uYDT2SsHImQ", title: "AWS Security Groups Simply Explained: A Step-by-Step Tutorial for Beginners", channel: "Tiny Technical Tutorials", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Nguyên tắc: chỉ mở cái cần mở",
@@ -363,6 +382,9 @@ resource "aws_vpc_security_group_ingress_rule" "db_from_app" {
     ]
   },
   "p09.m0.t5": {
+    videos: [
+      { id: "U-i_UDDYLxY", title: "What are DNS Zones And Records?", channel: "IBM Technology", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Các loại bản ghi DNS cần biết",
@@ -425,6 +447,10 @@ www.example.com.     300  IN  CNAME  example.com.`
     ]
   },
   "p09.m1.t0": {
+    videos: [
+      { id: "RVDwsmyFA-Q", title: "#1/14 Giới Thiệu AWS IAM | Root User vs IAM User | AWS IAM Crash Course", channel: "Viet Tran", lang: "vi", minutes: 12, embed: true },
+      { id: "_ZCTvmaPgao", title: "AWS IAM Core Concepts You NEED to Know", channel: "Be A Better Dev", lang: "en", minutes: 22, embed: true }
+    ],
     sections: [
       {
         h: "Các khái niệm cốt lõi của IAM",
@@ -494,6 +520,10 @@ aws s3 ls --profile dev`
     ]
   },
   "p09.m1.t1": {
+    videos: [
+      { id: "QM63dyA_4Pc", title: "AWS Networking Basics | AWS VPC & Subnets for Beginners | AWS Training | KodeKloud", channel: "KodeKloud", lang: "en", minutes: 18, embed: true },
+      { id: "h8gQYaFZfDM", title: "AWS So Sánh Security Group vs NACL", channel: "Viet Tran", lang: "vi", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "VPC, subnet public và private",
@@ -594,6 +624,10 @@ resource "aws_route_table_association" "private_a" {
     ]
   },
   "p09.m1.t2": {
+    videos: [
+      { id: "uNoY1NTUfQU", title: "Clip 5 - AWS Compute Services: EC2, ECS, EKS và Lambda - Mì AI", channel: "Mì AI", lang: "vi", minutes: 47, embed: true },
+      { id: "-L6g9J9_zB8", title: "AWS EC2 vs ECS vs Lambda | Which is right for YOU?", channel: "Be A Better Dev", lang: "en", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "Ba mức trừu tượng của compute",
@@ -690,6 +724,10 @@ resource "aws_ecs_service" "api" {
     ]
   },
   "p09.m1.t3": {
+    videos: [
+      { id: "peAcsNa7MEI", title: "Clip 4 - Tìm hiểu về các hình thức lưu trữ S3, EBS, EFS - Mì AWS -  Mì AI", channel: "Mì AI", lang: "vi", minutes: 44, embed: true },
+      { id: "C9StEK6EMQY", title: "AWS Storage Explained | EBS vs EFS vs S3 | AWS Training", channel: "KodeKloud", lang: "en", minutes: 18, embed: true }
+    ],
     sections: [
       {
         h: "S3, EBS, EFS: ba kiểu lưu trữ khác nhau",
@@ -790,6 +828,9 @@ export async function createUploadUrl(userId: string, contentType: string) {
     ]
   },
   "p09.m1.t4": {
+    videos: [
+      { id: "fW_prKJR79Y", title: "Multi-AZ vs Read Replicas | Amazon RDS Tutorial for Beginners (2025)", channel: "BeSA Cloud Academy", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao dùng database managed",
@@ -871,6 +912,10 @@ resource "aws_db_instance" "main" {
     ]
   },
   "p09.m1.t5": {
+    videos: [
+      { id: "Ww5hgeOI7ug", title: "Amazon CloudFront Hands-on P4 | Cấu hình Route 53, ACM và CloudFront", channel: "Viet Tran", lang: "vi", minutes: 9, embed: true },
+      { id: "ZGGpEwThhrM", title: "Create an Application Load Balancer (ALB) in AWS | AWS Elastic Load Balancing Tutorial for Beginners", channel: "Tiny Technical Tutorials", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Luồng request qua các dịch vụ",
@@ -964,6 +1009,10 @@ resource "aws_route53_record" "api" {
     ]
   },
   "p09.m1.t6": {
+    videos: [
+      { id: "O0sofGVT7uw", title: "AWS Budgets Tutorial - Setup Alerts for AWS Billing | Amazon Web Services", channel: "Amazon Web Services", lang: "en", minutes: 5, embed: true },
+      { id: "Yxl7e88cTAQ", title: "Basics of Amazon CloudWatch and CloudWatch Metrics | AWS Tutorials for Beginners", channel: "Tiny Technical Tutorials", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "CloudWatch: logs, metrics, alarms",
@@ -1104,6 +1153,10 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
     ]
   },
   "p09.m2.t0": {
+    videos: [
+      { id: "wl2DtMtEPRA", title: "Terraform cơ bản - triển khai ứng dụng trên AWS dùng terraform / Kiên Lê TV", channel: "Kien Le Tech", lang: "vi", minutes: 12, embed: true },
+      { id: "_45W3Z8XWL4", title: "Terraform Basics", channel: "HashiCorp, an IBM Company", lang: "en", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Khai báo trạng thái mong muốn",
@@ -1205,6 +1258,9 @@ output "bucket_name" {
     ]
   },
   "p09.m2.t1": {
+    videos: [
+      { id: "AmWnWfuSTfQ", title: "Terraform state locking with new use_lockfile native AWS S3 bucket locking mechanism", channel: "Automation Avenue", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "State là gì và vì sao quan trọng",
@@ -1267,6 +1323,9 @@ terraform force-unlock <LOCK_ID>`
     ]
   },
   "p09.m2.t2": {
+    videos: [
+      { id: "GSXx8AZjKK4", title: "Terraform Basics: Modules", channel: "Ned in the Cloud", lang: "en", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "Module: đóng gói hạ tầng tái sử dụng",
@@ -1358,6 +1417,9 @@ module "vpc" {
     ]
   },
   "p09.m2.t3": {
+    videos: [
+      { id: "6QgHLncP5VA", title: "Terraform Workspaces Are Bad Actually, And Here's Why.", channel: "Ned in the Cloud", lang: "en", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Hai cách tách môi trường",
@@ -1502,6 +1564,9 @@ jobs:
     ]
   },
   "p09.m2.t5": {
+    videos: [
+      { id: "Qzk1M2r9VM8", title: "Importing Existing Resources Into Terraform", channel: "Bryan Krausen", lang: "en", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "Drift là gì",
@@ -1562,6 +1627,9 @@ terraform plan -detailed-exitcode -input=false`
     ]
   },
   "p09.m2.t6": {
+    videos: [
+      { id: "HzBA6FIn_Bo", title: "The ruthless forking of Terraform", channel: "Fireship", lang: "en", minutes: 3, embed: true }
+    ],
     sections: [
       {
         h: "OpenTofu: fork mã nguồn mở của Terraform",
@@ -1621,6 +1689,10 @@ for (const env of envs) {
     ]
   },
   "p09.m3.t0": {
+    videos: [
+      { id: "1id6ERvfozo", title: "What is Ansible | Ansible Playbook explained | Ansible Tutorial for Beginners", channel: "TechWorld with Nana", lang: "en", minutes: 17, embed: true },
+      { id: "p9bda0-TIRc", title: "Ansible Playbook Basics - FINALLY Explained Clearly!", channel: "Alta3 Research", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Ansible: quản lý cấu hình không cần agent",
@@ -1715,6 +1787,9 @@ ansible_user=deploy`
     ]
   },
   "p09.m3.t1": {
+    videos: [
+      { id: "OmQRpi3CSjU", title: "HashiCorp Packer Tutorial: Building Custom Images for AWS, Azure, and Docker", channel: "KodeKloud", lang: "en", minutes: 29, embed: true }
+    ],
     sections: [
       {
         h: "Golden image là gì",
@@ -1812,6 +1887,9 @@ build {
     ]
   },
   "p09.m3.t2": {
+    videos: [
+      { id: "II4PFe9BbmE", title: "What is mutable vs. immutable infrastructure?", channel: "HashiCorp, an IBM Company", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Sửa tại chỗ và thay mới",

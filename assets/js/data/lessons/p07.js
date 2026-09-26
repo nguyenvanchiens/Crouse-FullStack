@@ -2,6 +2,10 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p07.m0.t0": {
+    videos: [
+      { id: "a1M_thDTqmU", title: "Virtual Machine (VM) vs Docker", channel: "IBM Technology", lang: "en", minutes: 9, embed: true },
+      { id: "xfBbLg6-4xY", title: "Tất tần tật về Docker trong 10 phút", channel: "Việt Nguyễn AI", lang: "vi", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần container?",
@@ -80,6 +84,9 @@ docker rm -f demo`
     ]
   },
   "p07.m0.t1": {
+    videos: [
+      { id: "tQgpBRfr5EY", title: "What Are Docker Layers Anyway?", channel: "Depot", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Image là gì?",
@@ -162,6 +169,9 @@ docker image inspect task-api:dev --format '{{json .RootFS.Layers}}'`
     ]
   },
   "p07.m0.t2": {
+    videos: [
+      { id: "jC6J2-YJxbk", title: "Docker Concepts: What is a Registry?", channel: "Docker", lang: "en", minutes: 2, embed: true }
+    ],
     sections: [
       {
         h: "Registry lưu trữ và phân phối image",
@@ -242,6 +252,9 @@ FROM node:24-alpine@sha256:<digest-lay-tu-registry>`
     ]
   },
   "p07.m0.t3": {
+    videos: [
+      { id: "21onkZfL2yM", title: "Docker vs Containerd: Understanding the Differences and Choosing the Right Containerization Tool", channel: "KodeKloud", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "OCI: tiêu chuẩn chung cho container",
@@ -320,6 +333,10 @@ sudo crictl images`
     ]
   },
   "p07.m1.t0": {
+    videos: [
+      { id: "T5MHC7WeU5Y", title: "Intern đánh bại Senior: Làm thế nào tối ưu Docker? Và cái kết là Docker image từ 500MB xuống 100MB", channel: "Tips Javascript", lang: "vi", minutes: 15, embed: true },
+      { id: "t779DVjCKCs", title: "Docker Image BEST Practices - From 1.2GB to 10MB", channel: "Better Stack", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Vấn đề của Dockerfile một stage",
@@ -419,6 +436,9 @@ docker image ls task-api`
     ]
   },
   "p07.m1.t1": {
+    videos: [
+      { id: "_nMpndIyaBU", title: "Docker Crash Course #8 - Layer Caching", channel: "Net Ninja", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Cache quyết định tốc độ build",
@@ -516,6 +536,9 @@ docker build --progress=plain -t task-api:dev . 2>&1 | grep -E "CACHED|npm ci"`
     ]
   },
   "p07.m1.t2": {
+    videos: [
+      { id: "8vXoMqWgbQQ", title: "Top 8 Docker Best Practices for using Docker in Production", channel: "TechWorld with Nana", lang: "en", minutes: 18, embed: true }
+    ],
     sections: [
       {
         h: "Chọn base image tối giản",
@@ -781,6 +804,9 @@ docker buildx imagetools create -t $IMAGE:1.4.0 $IMAGE:$SHA`
     ]
   },
   "p07.m1.t5": {
+    videos: [
+      { id: "hWSHtHasJUI", title: "How to Build Multi-Architecture Docker Images with BuildX | Deploy containers to x86 and ARM!", channel: "DevOps Directive", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "BuildKit là gì",
@@ -868,6 +894,9 @@ docker buildx build \\
     ]
   },
   "p07.m2.t0": {
+    videos: [
+      { id: "HGKfE-cn9y4", title: "Master Docker Compose the Way I Wish I Did – Docker for Newbs EP 2", channel: "typecraft", lang: "en", minutes: 25, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần Docker Compose",
@@ -990,6 +1019,10 @@ docker compose down            # dừng, giữ volume`
     ]
   },
   "p07.m2.t1": {
+    videos: [
+      { id: "p2PH_YPCsis", title: "Docker Volumes explained in 6 minutes", channel: "TechWorld with Nana", lang: "en", minutes: 6, embed: true },
+      { id: "W7X6u2BGVRY", title: "How Docker Networking Actually Works", channel: "KodeKloud", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Dữ liệu trong container là tạm thời",
@@ -1094,6 +1127,9 @@ docker compose exec api getent hosts db   # kiểm tra DNS nội bộ`
     ]
   },
   "p07.m2.t2": {
+    videos: [
+      { id: "pgf0Tc1ugEY", title: "Docker Compose v2 and Profiles Are the Best Thing Ever", channel: "Nick Janetakis", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "Hai loại .env dễ nhầm",
@@ -1201,6 +1237,9 @@ TAG=a1b2c3d docker compose up -d`
     ]
   },
   "p07.m2.t3": {
+    videos: [
+      { id: "tLK9nNFHWH8", title: "Debugging Docker Containers with docker exec and docker logs || Docker Tutorial 5", channel: "TechWorld with Nana", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Bộ công cụ debug cơ bản",
@@ -1380,6 +1419,9 @@ kubectl describe pod <pod>          # Last State: Terminated, Reason: OOMKilled`
     ]
   },
   "p07.m2.t5": {
+    videos: [
+      { id: "-IH5inFyEqU", title: "Container Image Scanning with Trivy -- Ep. 1 Trivy Overview", channel: "Aqua Security Open Source", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Image của bạn chứa lỗ hổng của người khác",

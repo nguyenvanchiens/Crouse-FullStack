@@ -12,6 +12,7 @@ Nội dung đối chiếu với roadmap.sh (Backend, DevOps, Full Stack), OWASP 
 | 339 bài học | Mỗi bài: giải thích chi tiết, ví dụ code, tóm tắt, lỗi thường gặp, 3 câu quiz có giải thích |
 | 11 Labs | Dockerfile, Compose, GitHub Actions CI, CD + OIDC + rollback, Terraform AWS, K8s + Gateway API, Argo CD, GitLab CI, Jenkins, Nginx blue-green, Prometheus |
 | Dự án | 1 dự án cuối mỗi chương, 12 bậc dự án và Capstone *ShopFlow* có mốc và tiêu chí chấm |
+| Video | 462 video YouTube tuyển chọn cho 314/339 bài (ưu tiên tiếng Việt), xem ngay trong trang hoặc mở trên YouTube |
 | Sự nghiệp | Checklist sẵn sàng đi làm, portfolio, câu hỏi phỏng vấn |
 
 Tính năng:
@@ -19,6 +20,7 @@ Tính năng:
 - Theo dõi tiến độ, quiz lưu kết quả, xuất/nhập tiến độ bằng file JSON.
 - Tìm kiếm `Ctrl+K` (gõ không dấu vẫn tìm được), chuyển bài bằng phím ← →.
 - Dark mode, responsive, nút sao chép code.
+- Video tham khảo: khung YouTube (youtube-nocookie) chỉ tải khi bấm "Phát ngay".
 
 ## Chạy
 
@@ -35,6 +37,7 @@ npm install
 npx playwright install chromium
 npm test                       # desktop + mobile, gồm accessibility (axe) và kiểm tra nội dung
 node tests/validate-lessons.js # kiểm tra định dạng nội dung bài học
+npm run verify:videos          # kiểm tra lại video còn tồn tại, đúng tiêu đề/kênh (chạy chậm để tránh bị YouTube chặn)
 ```
 
 ## Deploy lên Cloudflare

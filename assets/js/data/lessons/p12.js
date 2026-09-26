@@ -2,6 +2,10 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p12.m0.t0": {
+    videos: [
+      { id: "rJbcLjR3QfY", title: "📗 #19 - Stateful App vs Stateless App | Học Software Engineering Cơ Bản", channel: "Viet Tran", lang: "vi", minutes: 8, embed: true },
+      { id: "xpDnVSmNFX0", title: "System Design BASICS: Horizontal vs. Vertical Scaling", channel: "Gaurav Sen", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Scale dọc và scale ngang là gì",
@@ -85,6 +89,10 @@ app.use(session({
   },
 
   "p12.m0.t1": {
+    videos: [
+      { id: "EINOE9z3sLE", title: "Load Balancers giải thích 5 thuật toán bằng hình ảnh và cùng nhau vào dự án lớn | architecture notes", channel: "Tips Javascript", lang: "vi", minutes: 14, embed: true },
+      { id: "aKMLgFVxZYk", title: "Load balancing in Layer 4 vs Layer 7 with HAPROXY Examples", channel: "Hussein Nasser", lang: "en", minutes: 38, embed: true }
+    ],
     sections: [
       {
         h: "Load balancer làm gì",
@@ -170,6 +178,9 @@ server {
   },
 
   "p12.m0.t2": {
+    videos: [
+      { id: "msqPp2J3c6Y", title: "Cache là gì? | System Design #1 | @ÔngDev", channel: "Ông Dev", lang: "vi", minutes: 22, embed: true }
+    ],
     sections: [
       {
         h: "Các tầng cache từ client đến DB",
@@ -256,6 +267,9 @@ async function updateProduct(id: string, data: Partial<Product>) {
   },
 
   "p12.m0.t3": {
+    videos: [
+      { id: "sfPqrEXMoCM", title: "Database Replication - kỹ thuật buộc phải biết trong System Design | Trần Quốc Huy - Wecommit", channel: "Trần Quốc Huy - Wecommit", lang: "vi", minutes: 34, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần replication",
@@ -326,6 +340,10 @@ SELECT now() - pg_last_xact_replay_timestamp() AS replay_delay;`
   },
 
   "p12.m0.t4": {
+    videos: [
+      { id: "YtG_-dVgcGY", title: "📗 #13 - Database Partitioning vs Sharding | Software Engineering Cơ Bản", channel: "Viet Tran", lang: "vi", minutes: 11, embed: true },
+      { id: "L521gizea4s", title: "Sharding in System Design Interviews w/ Meta Staff Engineer", channel: "Hello Interview", lang: "en", minutes: 31, embed: true }
+    ],
     sections: [
       {
         h: "Partitioning là gì và khi nào cần",
@@ -417,6 +435,10 @@ export class HashRing {
   },
 
   "p12.m0.t5": {
+    videos: [
+      { id: "x3QVvym-Qfw", title: "Tìm hiểu về CAP Theorem trong System Design với Google Tech Lead", channel: "Engineer Pro", lang: "vi", minutes: 19, embed: true },
+      { id: "dEtdQ5r--sY", title: "📗 #6 - Strong Consistency vs Eventual Consistency | Software Engineering Cơ Bản", channel: "Viet Tran", lang: "vi", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "CAP nói gì, và không nói gì",
@@ -498,6 +520,9 @@ W + R = 4 > N = 3  => tập đọc luôn chạm ít nhất một node có bản 
   },
 
   "p12.m0.t6": {
+    videos: [
+      { id: "UC5xf8FbdJc", title: "Back-Of-The-Envelope Estimation / Capacity Planning", channel: "ByteByteGo", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần ước lượng",
@@ -578,6 +603,10 @@ Cache: 20% bài nóng trong ngày = 4M x 1 KB ≈ 4 GB -> vừa một Redis`
   },
 
 "p12.m1.t0": {
+    videos: [
+      { id: "bm_sBM4XVm8", title: "The Modular Monolith: Scale Without Microservices", channel: "CodeOpinion", lang: "en", minutes: 12, embed: true },
+      { id: "GoDS0X7RTyI", title: "Microservices là gì? Kiến trúc \"nhỏ\" cho các dự án siêu to - Code Dạo Dễ Òm", channel: "Phạm Huy Hoàng", lang: "vi", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Ba kiểu kiến trúc",
@@ -663,6 +692,10 @@ export class OrderService {
   },
 
   "p12.m1.t1": {
+    videos: [
+      { id: "QR2PScc_fMA", title: "Chia sẻ kiến trúc - Giải thích Clean Architecture", channel: "Việt Trần", lang: "vi", minutes: 11, embed: true },
+      { id: "gVZM61e-uJw", title: "Giới thiệu Hexagonal và so sánh với Clean Architecture", channel: "Việt Trần", lang: "vi", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Ý tưởng cốt lõi",
@@ -750,6 +783,9 @@ export class PlaceOrderUseCase {
   },
 
   "p12.m1.t2": {
+    videos: [
+      { id: "4rhzdZIDX_k", title: "Domain Driven Design: What You Need To Know", channel: "Alex Hyett", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Ubiquitous language và bounded context",
@@ -835,6 +871,10 @@ export class PlaceOrderUseCase {
   },
 
   "p12.m1.t3": {
+    videos: [
+      { id: "VUcE_s0RoiY", title: "📗 #7 - Kiến Trúc CQRS | Software Engineering Cơ Bản", channel: "Viet Tran", lang: "vi", minutes: 8, embed: true },
+      { id: "i2eVTk2Fb40", title: "What is Event Sourcing and CQRS? (EDA - part 3)", channel: "A Dev' Story", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "CQRS: tách mô hình đọc và ghi",
@@ -912,6 +952,10 @@ SELECT type, data FROM events WHERE stream_id = $1 ORDER BY version;`
   },
 
   "p12.m1.t4": {
+    videos: [
+      { id: "6ULyxuHKxg8", title: "What is API Gateway?", channel: "ByteByteGo", lang: "en", minutes: 3, embed: true },
+      { id: "Pmzrogq4W4I", title: "Expert Guide: Backend for Frontend (BFF) in Microservices", channel: "ByteMonk", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "API Gateway làm gì",
@@ -1001,6 +1045,10 @@ export class HomeController {
   },
 
   "p12.m1.t5": {
+    videos: [
+      { id: "9IjmBrBSGKs", title: "Serveless là gì? Ví dụ trên AWS Services", channel: "Viet Tran", lang: "vi", minutes: 14, embed: true },
+      { id: "BhQh9QZdiKQ", title: "AWS Lambda Function Execution and Cold Start", channel: "Be A Better Dev", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Serverless là gì",
@@ -1087,6 +1135,10 @@ export const handler = async (event: S3Event) => {
   },
 
 "p12.m2.t0": {
+    videos: [
+      { id: "XvnppkWqJbs", title: "Message Queues vs Pub/Sub | System Design", channel: "System Design School", lang: "en", minutes: 9, embed: true },
+      { id: "zz30WOaV1ts", title: "📗 #5 - Pub/Sub Là gì? Kiến trúc Fan-out | Software Engineering Cơ Bản", channel: "Viet Tran", lang: "vi", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao dùng messaging",
@@ -1163,6 +1215,10 @@ PUB/SUB
   },
 
   "p12.m2.t1": {
+    videos: [
+      { id: "DQRj7I3PcuM", title: "Chính xác là tôi nên sử dụng MQ khi nào? Giờ bạn đã hiểu về Message Queue | Series RabbitMQ Node.js", channel: "Tips Javascript", lang: "vi", minutes: 24, embed: true },
+      { id: "o8eU5WiO8fw", title: "RabbitMQ Explained - Exchanges", channel: "CloudAMQP", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Mô hình của RabbitMQ",
@@ -1266,6 +1322,10 @@ await ch.consume('billing.order-paid', async (msg) => {
   },
 
   "p12.m2.t2": {
+    videos: [
+      { id: "a7lmP5hdgB0", title: "Kafka: Đây là 7 thứ đủ để bắt đầu cuộc chiến TOPIC, PARTITIONs và Consumer Group", channel: "Tips Javascript", lang: "vi", minutes: 17, embed: true },
+      { id: "-RDyEFvnTXI", title: "Apache Kafka Fundamentals You Should Know", channel: "ByteByteGo", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Kafka là một log phân tán",
@@ -1360,6 +1420,10 @@ await consumer.run({
   },
 
   "p12.m2.t3": {
+    videos: [
+      { id: "V0c0qAP7sWk", title: "Kafka Delivery Semantics | At-Least-Once, At-Most-Once & Exactly-Once", channel: "Irtiza Hafiz", lang: "en", minutes: 7, embed: true },
+      { id: "GsZ_ZtlRCBg", title: "Fix Duplicate Messages with the Idempotent Consumer Pattern", channel: "Milan Jovanović", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Ba mức đảm bảo giao nhận",
@@ -1444,6 +1508,9 @@ export async function handleOrderPaid(msg: { id: string; orderId: string; amount
   },
 
   "p12.m2.t4": {
+    videos: [
+      { id: "5YLpjPmsPCA", title: "What is the Transactional Outbox Pattern? | Designing Event-Driven Microservices", channel: "Confluent, an IBM Company", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Vấn đề dual-write",
@@ -1532,6 +1599,10 @@ export async function relayOnce(batch = 100) {
   },
 
   "p12.m2.t5": {
+    videos: [
+      { id: "DOFflggE_0Q", title: "Distributed Transactions Explained: 2 Phase Commit vs Saga Pattern", channel: "Hello Interview", lang: "en", minutes: 15, embed: true },
+      { id: "0W8BtIwh824", title: "What is a Saga in Microservices?", channel: "Temporal", lang: "en", minutes: 26, embed: true }
+    ],
     sections: [
       {
         h: "Transaction phân tán qua chuỗi bước",
@@ -1619,6 +1690,9 @@ export async function placeOrder(orderId: string): Promise<void> {
   },
 
 "p12.m3.t0": {
+    videos: [
+      { id: "2GAQVXGT_Zw", title: "Frontend and Backends Timeouts", channel: "Hussein Nasser", lang: "en", minutes: 25, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao mọi lời gọi mạng phải có timeout",
@@ -1704,6 +1778,9 @@ export function remainingMs(deadline: number, reserveMs = 50) {
   },
 
   "p12.m3.t1": {
+    videos: [
+      { id: "yGO4Igb45V0", title: "Every engineer should know this (retries with jitter)", channel: "Software Developer Diaries", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Khi nào được retry",
@@ -1794,6 +1871,9 @@ await retry(
   },
 
   "p12.m3.t2": {
+    videos: [
+      { id: "dJI2saoM5_k", title: "Circuit Breaker Pattern in Microservices", channel: "ByteMonk", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Ý tưởng giống cầu dao điện",
@@ -1909,6 +1989,10 @@ export class CircuitBreaker {
   },
 
   "p12.m3.t3": {
+    videos: [
+      { id: "d-QQvJIBrUc", title: "The Bulkhead Pattern: How To Make Your System Fault-tolerant", channel: "CodeOpinion", lang: "en", minutes: 8, embed: true },
+      { id: "3DTSIlj72Qs", title: "Backpressure in Software Development simply explained", channel: "Software Developer Diaries", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Bulkhead: cô lập tài nguyên",
@@ -1994,6 +2078,10 @@ const paymentBulkhead = new Bulkhead(100, 200);`
   },
 
   "p12.m3.t4": {
+    videos: [
+      { id: "4LcRTajOUs0", title: "Rate Limiter System Design: Token Bucket, Leaky Bucket | Nó đơn giản nhưng rất hiệu quả phải không?", channel: "Tips Javascript", lang: "vi", minutes: 9, embed: true },
+      { id: "mQCJJqUfn9Y", title: "Five Rate Limiting Algorithms ~ Key Concepts in System Design", channel: "Hello Byte", lang: "en", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần rate limit",
@@ -2169,6 +2257,9 @@ const bucket = new TokenBucket(20, 10);`
   },
 
 "p12.m4.t0": {
+    videos: [
+      { id: "iUU4O1sWtJA", title: "Beginner System Design Interview: Design Bitly w/ a Ex-Meta Staff Engineer", channel: "Hello Interview", lang: "en", minutes: 60, embed: true }
+    ],
     sections: [
       {
         h: "Yêu cầu",
@@ -2253,6 +2344,9 @@ Client --> API tạo link --> ID generator (dải số theo lô) --> base62 --> 
   },
 
   "p12.m4.t1": {
+    videos: [
+      { id: "MIJFyUPG4Z4", title: "Design a Distributed Rate Limiter w/ a Ex-Meta Staff Engineer: System Design Breakdown", channel: "Hello Interview", lang: "en", minutes: 56, embed: true }
+    ],
     sections: [
       {
         h: "Yêu cầu",
@@ -2375,6 +2469,9 @@ export async function consume(key: string, capacity: number, ratePerSec: number)
   },
 
   "p12.m4.t2": {
+    videos: [
+      { id: "cr6p0n0N-VA", title: "Design Whatsapp: System Design Interview w/ a Ex-Meta Senior Manager", channel: "Hello Interview", lang: "en", minutes: 58, embed: true }
+    ],
     sections: [
       {
         h: "Yêu cầu",
@@ -2465,6 +2562,9 @@ Lưu trữ: 2 x 10^9 x 200 B                      ≈ 400 GB/ngày ≈ 150 TB/n�
   },
 
 "p12.m4.t3": {
+    videos: [
+      { id: "Qj4-GruzyDU", title: "Design FB News Feed System Design Interview w/ ex: Meta Senior Manager", channel: "Hello Interview", lang: "en", minutes: 26, embed: true }
+    ],
     sections: [
       {
         h: "Yêu cầu",
@@ -2584,6 +2684,9 @@ Feed API --> Redis feed:{user} + bài của celeb (cache theo tác giả) --> me
   },
 
   "p12.m4.t4": {
+    videos: [
+      { id: "J-5JozlYIqI", title: "19: Notification Service | Systems Design Interview Questions With Ex-Google SWE", channel: "Jordan has no life", lang: "en", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Yêu cầu",
@@ -2698,6 +2801,9 @@ Log trạng thái: 50M x 3 sự kiện x 200 B ≈ 30 GB/ngày -> kho phân tíc
   },
 
   "p12.m4.t5": {
+    videos: [
+      { id: "fhdPyoO6aXI", title: "System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer", channel: "Hello Interview", lang: "en", minutes: 59, embed: true }
+    ],
     sections: [
       {
         h: "Yêu cầu",
@@ -2819,6 +2925,10 @@ export async function reserve(saleId: string, userId: string) {
   },
 
   "p12.m0.t7": {
+    videos: [
+      { id: "1NngTUYPdpI", title: "Caching in System Design Interviews w/ Meta Staff Engineer", channel: "Hello Interview", lang: "en", minutes: 30, embed: true },
+      { id: "wh98s0XhMmQ", title: "Caching Pitfalls Every Developer Should Know", channel: "ByteByteGo", lang: "en", minutes: 7, embed: true }
+    ],
     "sections": [
       {
         "h": "Cache stampede và cách chống",
@@ -2897,6 +3007,10 @@ export async function reserve(saleId: string, userId: string) {
   },
 
   "p12.m1.t6": {
+    videos: [
+      { id: "BJiFd2KjRYs", title: "The Strangler Pattern | Designing Event-Driven Microservices", channel: "Confluent, an IBM Company", lang: "en", minutes: 6, embed: true },
+      { id: "9zAjtcf9Wyo", title: "Sidecar Pattern to SIMPLIFY services or just more COMPLEXITY?", channel: "CodeOpinion", lang: "en", minutes: 10, embed: true }
+    ],
     "sections": [
       {
         "h": "Mẫu thiết kế là lời giải đã được kiểm chứng",
@@ -3065,6 +3179,10 @@ export async function reserve(saleId: string, userId: string) {
     ]
   },
   "p12.m4.t6": {
+    videos: [
+      { id: "v7dMZrjxMgc", title: "Mock Interview System Design tại Big Tech cho Senior Software Engineers", channel: "Future Software Engineers", lang: "vi", minutes: 34, embed: true },
+      { id: "tyxsHQwLEsQ", title: "Các bước trình bày System Design chuẩn trong các buổi phỏng vấn tại Big Tech", channel: "Engineer Pro", lang: "vi", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Người phỏng vấn thực sự chấm gì",

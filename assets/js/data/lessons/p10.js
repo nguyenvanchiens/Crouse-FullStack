@@ -2,6 +2,10 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p10.m0.t0": {
+    videos: [
+      { id: "cfkHE0iTuSw", title: "✅ #4 | Cluster Architecture  | Học Kubernetes (K8s) và Amazon EKS Tiếng Việt Full", channel: "Viet Tran", lang: "vi", minutes: 12, embed: true },
+      { id: "TlHvYWVUZyc", title: "Kubernetes Explained in 6 Minutes | k8s Architecture", channel: "ByteByteGo", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Kubernetes giải quyết vấn đề gì",
@@ -59,6 +63,10 @@ kubectl get events --sort-by=.lastTimestamp`
     ]
   },
   "p10.m0.t1": {
+    videos: [
+      { id: "OY9yzDmFNhs", title: "Bài 14. Pod Kubernetes | Khoá học Kubernetes thực tế", channel: "DEVOPSEDU VN", lang: "vi", minutes: 8, embed: true },
+      { id: "yRiFq1ykBxc", title: "Day 11/40 - Multi Container Pod Kubernetes - Sidecar vs Init Container", channel: "Tech Tutorials with Piyush", lang: "en", minutes: 25, embed: true }
+    ],
     sections: [
       {
         h: "Pod: đơn vị nhỏ nhất",
@@ -135,6 +143,10 @@ kubectl delete pod api-demo`
     ]
   },
   "p10.m0.t2": {
+    videos: [
+      { id: "jaS7u6BQi1Y", title: "Bài 15. Deployment Kubernetes | Khoá học Kubernetes thực tế", channel: "DEVOPSEDU VN", lang: "vi", minutes: 14, embed: true },
+      { id: "KPTMtsCYztk", title: "✅ #23 Rollout Deployment Kubernetes | Học Kubernetes & Amazon EKS Tiếng Việt", channel: "Viet Tran", lang: "vi", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Deployment quản lý ReplicaSet, ReplicaSet quản lý Pod",
@@ -213,6 +225,10 @@ kubectl rollout restart deploy/task-api              # tạo lại Pod, cùng im
     ]
   },
   "p10.m0.t3": {
+    videos: [
+      { id: "jamOqeGR_5A", title: "✅ #30 Services | ClusterIP vs NodePort vs LoadBalancer vs ExternalName | Kubernetes", channel: "Viet Tran", lang: "vi", minutes: 17, embed: true },
+      { id: "T4Z7visMM4E", title: "Kubernetes Services explained | ClusterIP vs NodePort vs LoadBalancer vs Headless Service", channel: "TechWorld with Nana", lang: "en", minutes: 24, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần Service",
@@ -283,6 +299,10 @@ kubectl run tmp --rm -it --image=busybox:1.36 --restart=Never -n prod -- \\
     ]
   },
   "p10.m0.t4": {
+    videos: [
+      { id: "q76XVCTDZCY", title: "An Introduction to Gateway API for Beginners in Kubernetes", channel: "That DevOps Guy", lang: "en", minutes: 40, embed: true },
+      { id: "xaZ87iSvMAI", title: "Gateway API Explained: The Future of Kubernetes Networking", channel: "KodeKloud", lang: "en", minutes: 45, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao chuyển từ Ingress sang Gateway API",
@@ -410,6 +430,10 @@ kubectl get certificate -n infra`
     ]
   },
   "p10.m0.t5": {
+    videos: [
+      { id: "pMOmDQ7K0O4", title: "✅ #39 - Resource Quotas | Học Kubernetes & Amazon EKS Tiếng Việt", channel: "Viet Tran", lang: "vi", minutes: 12, embed: true },
+      { id: "REKxEvzkJ2g", title: "✅ #40 - Limit Ranges | Học Kubernetes & Amazon EKS Tiếng Việt", channel: "Viet Tran", lang: "vi", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Namespace: phân vùng logic trong cluster",
@@ -486,6 +510,10 @@ spec:
     ]
   },
   "p10.m1.t0": {
+    videos: [
+      { id: "bSEmsOeQ4IM", title: "Bài 26. ConfigMap Kubernetes | Khoá học Kubernetes thực tế", channel: "DEVOPSEDU VN", lang: "vi", minutes: 12, embed: true },
+      { id: "9rNaO5p_0zo", title: "Bài 27. Secret Kubernetes | Khoá học Kubernetes thực tế", channel: "DEVOPSEDU VN", lang: "vi", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Tách cấu hình khỏi image",
@@ -578,6 +606,9 @@ spec:
     ]
   },
   "p10.m1.t1": {
+    videos: [
+      { id: "QNq_RRooAew", title: "✅ #35 - Requests & Limits | Học Kubernetes & Amazon EKS Tiếng Việt", channel: "Viet Tran", lang: "vi", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Requests và limits khác nhau thế nào",
@@ -643,6 +674,9 @@ spec:
     ]
   },
   "p10.m1.t2": {
+    videos: [
+      { id: "x2e6pIBLKzw", title: "Day 18/40 - Kubernetes Health Probes Explained | Liveness vs Readiness Probes", channel: "Tech Tutorials with Piyush", lang: "en", minutes: 29, embed: true }
+    ],
     sections: [
       {
         h: "Ba loại probe và câu hỏi mỗi loại trả lời",
@@ -715,6 +749,10 @@ spec:
     ]
   },
   "p10.m1.t3": {
+    videos: [
+      { id: "Ofn942zoL7g", title: "Bài 29. Horizontal Pod Autoscaler (HPA) Kubernetes | Khoá học Kubernetes thực tế", channel: "DEVOPSEDU VN", lang: "vi", minutes: 16, embed: true },
+      { id: "hsJ2qtwoWZw", title: "Kubernetes Autoscaling: HPA vs. VPA vs. Keda vs. CA vs. Karpenter vs. Fargate", channel: "Anton Putra", lang: "en", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "HPA hoạt động thế nào",
@@ -782,6 +820,10 @@ kubectl top pods -l app=task-api`
     ]
   },
   "p10.m1.t4": {
+    videos: [
+      { id: "mQpQOtaTneo", title: "Bài 33. StorageClass Kubernetes | Khoá học Kubernetes thực tế", channel: "DEVOPSEDU VN", lang: "vi", minutes: 9, embed: true },
+      { id: "pPQKAR1pA9U", title: "Kubernetes StatefulSet simply explained | Deployment vs StatefulSet", channel: "TechWorld with Nana", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "StatefulSet khác Deployment ở đâu",
@@ -874,6 +916,9 @@ spec:
     ]
   },
   "p10.m1.t5": {
+    videos: [
+      { id: "cWUbkuzc8dM", title: "Jobs and CronJobs in Kubernetes", channel: "Pavan Elthepu", lang: "en", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "Job: chạy đến khi hoàn thành",
@@ -965,6 +1010,9 @@ spec:
     ]
   },
   "p10.m1.t6": {
+    videos: [
+      { id: "iE9Qb8dHqWI", title: "Kubernetes RBAC Explained", channel: "Anton Putra", lang: "en", minutes: 23, embed: true }
+    ],
     sections: [
       {
         h: "RBAC: ai được làm gì",
@@ -1046,6 +1094,10 @@ kubectl auth can-i --list -n prod --as=system:serviceaccount:prod:config-reader`
     ]
   },
   "p10.m1.t7": {
+    videos: [
+      { id: "18FEA5xXBGY", title: "Kubernetes Network Policies Explained", channel: "DevOps & AI Toolkit", lang: "en", minutes: 19, embed: true },
+      { id: "-CgB4bSkMYI", title: "How to Secure a Kubernetes pod in Minutes!", channel: "That DevOps Guy", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "NetworkPolicy: chặn mặc định, mở có chủ đích",
@@ -1141,6 +1193,10 @@ spec:
     ]
   },
   "p10.m2.t0": {
+    videos: [
+      { id: "wS277TdV3f8", title: "Important Kubernetes kubectl Command with Examples in 20 minutes!", channel: "Cloud Champ", lang: "en", minutes: 24, embed: true },
+      { id: "AMUQzyPvO04", title: "K9s | The BEST Terminal UI for Kubernetes (2025)", channel: "Better Stack", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Nhóm lệnh dùng hằng ngày",
@@ -1280,6 +1336,10 @@ kubectl get endpointslices -n prod -l kubernetes.io/service-name=task-api`
     ]
   },
   "p10.m2.t2": {
+    videos: [
+      { id: "NsHTam9pqBo", title: "[#helm] Hướng dẫn sử dụng helm trong kubernetes | DevOps Mentor", channel: "DevOps Mentor", lang: "vi", minutes: 26, embed: true },
+      { id: "w51lDVuRWuk", title: "Helm and Helm Charts Explained - Helm Tutorial for Beginners", channel: "DevOps Journey", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Helm: package manager của Kubernetes",
@@ -1370,6 +1430,10 @@ helm uninstall task-api -n prod`
     ]
   },
   "p10.m2.t3": {
+    videos: [
+      { id: "vrrsIRwpKac", title: "Hướng dẫn sử dụng Kustomize để quản lý Kubernetes Manifest | Kustomize | Kubernetes | DevOps Mentor", channel: "DevOps Mentor", lang: "vi", minutes: 16, embed: true },
+      { id: "spCdNeNCuFU", title: "Kustomize: The Best Way to Manage Your Kubernetes Configs", channel: "DevOps Journey", lang: "en", minutes: 25, embed: true }
+    ],
     sections: [
       {
         h: "Kustomize: YAML thuần, không template",
@@ -1459,6 +1523,10 @@ cd k8s/overlays/prod && kustomize edit set image ghcr.io/my-org/task-api=ghcr.io
     ]
   },
   "p10.m2.t4": {
+    videos: [
+      { id: "xS3SekxnlKo", title: "Bài 4. Các cách cài đặt Kubernetes cluster | Khoá học Kubernetes thực tế", channel: "DEVOPSEDU VN", lang: "vi", minutes: 4, embed: true },
+      { id: "eKr75oClPZ4", title: "Kubernetes in Docker (KIND) Tutorial", channel: "Abhishek.Veeramalla", lang: "en", minutes: 26, embed: true }
+    ],
     sections: [
       {
         h: "Cluster local khi phát triển",
@@ -1520,6 +1588,9 @@ aws eks describe-cluster --name prod --query cluster.version`
     ]
   },
   "p10.m2.t5": {
+    videos: [
+      { id: "16fgzklcF7Y", title: "Istio & Service Mesh - simply explained in 15 mins", channel: "TechWorld with Nana", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "Service mesh là gì",
@@ -1587,6 +1658,10 @@ spec:
     ]
   },
   "p10.m1.t8": {
+    videos: [
+      { id: "e2HjRrmXMDw", title: "Kubernetes Pod Disruption Budget (Examples)", channel: "Anton Putra", lang: "en", minutes: 4, embed: true },
+      { id: "vYPGWcIEeW0", title: "Pod Topology Spread Constraints | Kỹ thuật Scheduling hiệu quả trong Kubernetes | DevOps Mentor", channel: "DevOps Mentor", lang: "vi", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Gián đoạn chủ ý và PodDisruptionBudget",

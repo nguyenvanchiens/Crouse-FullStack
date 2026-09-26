@@ -12,7 +12,8 @@
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed --workers=1",
     "test:report": "playwright show-report",
-    "validate:lessons": "node tests/validate-lessons.js"
+    "validate:lessons": "node tests/validate-lessons.js",
+    "verify:videos": "node tests/verify-videos.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.0",

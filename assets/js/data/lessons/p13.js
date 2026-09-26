@@ -2,6 +2,10 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p13.m0.t0": {
+    videos: [
+      { id: "dMSZ0WcK1oI", title: "A very subjective comparison of Claude Code, OpenCode, Cursor & GitHub Copilot", channel: "Maximilian Schwarzmüller", lang: "en", minutes: 19, embed: true },
+      { id: "qYqIhX9hTQk", title: "FULL Claude Code Tutorial for Beginners in 2026! (Step-By-Step)", channel: "Tech With Tim", lang: "en", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "Các nhóm công cụ AI coding",
@@ -82,6 +86,9 @@ Object.assign(window.LESSON_CONTENT, {
   },
 
   "p13.m0.t1": {
+    videos: [
+      { id: "LAF-lACf2QY", title: "Prompt engineering essentials: Getting better results from LLMs | Tutorial", channel: "GitHub", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao prompt quan trọng",
@@ -161,6 +168,9 @@ Dừng lại để tôi review test. Chưa viết code cài đặt.`
   },
 
   "p13.m0.t2": {
+    videos: [
+      { id: "X0UI0O8YzJM", title: "How Developers Secure AI-Generated Code: 5 Security Best Practices", channel: "IBM Technology", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Bạn là người chịu trách nhiệm",
@@ -245,6 +255,10 @@ export class TasksRepository {
   },
 
   "p13.m0.t3": {
+    videos: [
+      { id: "8hyvYP5PCks", title: "How to close pull requests faster with Copilot code review | GitHub Checkout", channel: "GitHub", lang: "en", minutes: 11, embed: true },
+      { id: "R1MvBwoyHxw", title: "Claude Code GitHub Action: Automated PR Reviews Setup", channel: "The Gray Cat", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "AI làm được gì trong pipeline",
@@ -340,6 +354,10 @@ jobs:
   },
 
   "p13.m1.t0": {
+    videos: [
+      { id: "ZRpgQ1vLWhI", title: "Cẩm nang về LLMs dành cho những người không muốn tối cổ về AI | Minh Triết", channel: "Spiderum", lang: "vi", minutes: 32, embed: true },
+      { id: "nKSk_TiR8YA", title: "Most devs don't understand how LLM tokens work", channel: "Matt Pocock", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Token và dự đoán từ kế tiếp",
@@ -403,6 +421,10 @@ jobs:
   },
 
   "p13.m1.t1": {
+    videos: [
+      { id: "ba_vrnfalYE", title: "Claude API Crash Course #2 - Sending a Message", channel: "Net Ninja", lang: "en", minutes: 10, embed: true },
+      { id: "_XQiU3mLNk0", title: "Server-sent events are pretty cool", channel: "Web Dev Cody", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "Gọi API qua SDK chính thức",
@@ -518,6 +540,10 @@ export class ChatController {
   },
 
   "p13.m1.t2": {
+    videos: [
+      { id: "h8gMhXYAv1k", title: "What is Tool Calling? Connecting LLMs to Your Data", channel: "IBM Technology", lang: "en", minutes: 5, embed: true },
+      { id: "xqXrBI_n9rI", title: "Claude API Crash Course #4 - Output Format (using Zod)", channel: "Net Ninja", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Structured output: đầu ra máy đọc được",
@@ -622,6 +648,10 @@ interface TaskRepo { listByOwner(ownerId: string, status: string): Promise<unkno
   },
 
   "p13.m1.t3": {
+    videos: [
+      { id: "LUnZMge4Gds", title: "Vector Database: \"Xương sống\" của các hệ thống AI hiện đại | Sơ lược về VECTOR DATABASE trong 6 PHÚT", channel: "Học Lập Trình cùng Phát", lang: "vi", minutes: 6, embed: true },
+      { id: "gl1r1XV0SLw", title: "What is a Vector Database? Powering Semantic Search & AI Applications", channel: "IBM Technology", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Embedding: biến ý nghĩa thành vector",
@@ -722,6 +752,9 @@ LIMIT 5;`
   },
 
   "p13.m1.t4": {
+    videos: [
+      { id: "NQOYXmZxqvI", title: "Tất tần tật về RAG cơ bản trong 20 phút", channel: "Việt Nguyễn AI", lang: "vi", minutes: 25, embed: true }
+    ],
     sections: [
       {
         h: "RAG giải quyết vấn đề gì",
@@ -818,6 +851,10 @@ export async function answer(tenantId: string, question: string, deps: {
   },
 
   "p13.m1.t5": {
+    videos: [
+      { id: "ToOEOEcmtPM", title: "Giải thích MCP siêu đơn giản và hướng dẫn kết nối MCP Server", channel: "Việt Nguyễn AI", lang: "vi", minutes: 26, embed: true },
+      { id: "eur8dUO9mvE", title: "What is MCP? Integrate AI Agents with Databases & APIs", channel: "IBM Technology", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "MCP là gì và vì sao cần",
@@ -911,6 +948,10 @@ await server.connect(new StdioServerTransport());`
   },
 
   "p13.m1.t6": {
+    videos: [
+      { id: "jrHRe9lSqqA", title: "What Is a Prompt Injection Attack?", channel: "IBM Technology", lang: "en", minutes: 11, embed: true },
+      { id: "u57EnkQaUTY", title: "What is Prompt Caching? Optimize LLM Latency with AI Transformers", channel: "IBM Technology", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Prompt injection: rủi ro số một",

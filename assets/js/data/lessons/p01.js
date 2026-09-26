@@ -2,6 +2,9 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p01.m0.t0": {
+    videos: [
+      { id: "GKJh3vdat8A", title: "Watch This If You Don’t Understand Type Coercion", channel: "Web Dev Simplified", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Primitive và reference: giá trị nằm ở đâu",
@@ -93,6 +96,10 @@ console.log(opts.limit ?? 20);             // 0: chỉ thay khi null/undefined`
   },
 
   "p01.m0.t1": {
+    videos: [
+      { id: "xtQtGKL0NCI", title: "Closure trong JavaScript | JavaScript nâng cao", channel: "F8 Official", lang: "vi", minutes: 41, embed: true },
+      { id: "3MLhU1DrUxM", title: "Hoisting trong Javascript | JavaScript nâng cao", channel: "F8 Official", lang: "vi", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Lexical scope: phạm vi được quyết định khi viết code",
@@ -183,6 +190,10 @@ console.log(limiter.hit(), limiter.hit(), limiter.hit()); // true true false`
   },
 
   "p01.m0.t2": {
+    videos: [
+      { id: "ii1Ra_zLDIo", title: "This keyword trong JavaScript | JavaScript nâng cao", channel: "F8 Official", lang: "vi", minutes: 25, embed: true },
+      { id: "Wi-khBYt658", title: "Object prototype(cơ bản) trong JavaScript", channel: "F8 Official", lang: "vi", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "4 quy tắc binding của this",
@@ -272,6 +283,9 @@ console.log(typeof Dog);                // "function"`
   },
 
   "p01.m0.t3": {
+    videos: [
+      { id: "eiC58R16hb8", title: "JavaScript Visualized - Event Loop, Web APIs, (Micro)task Queue", channel: "Lydia Hallie", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần event loop",
@@ -354,6 +368,9 @@ process.nextTick(() => console.log("3: nextTick"));
   },
 
   "p01.m0.t4": {
+    videos: [
+      { id: "vn3tm0quoqE", title: "The Async Await Episode I Promised", channel: "Fireship", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Promise và async/await hoạt động thế nào",
@@ -438,6 +455,9 @@ declare function getOrders(id: string): Promise<unknown[]>;`
   },
 
   "p01.m0.t5": {
+    videos: [
+      { id: "6_JNPmjSevo", title: "Import vs Require: The Biggest JavaScript Divide", channel: "Matt Pocock", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "CommonJS và ESM khác nhau ở đâu",
@@ -516,6 +536,9 @@ export async function exportReport(format: "pdf" | "csv") {
   },
 
   "p01.m0.t6": {
+    videos: [
+      { id: "VBPOEzaIM_Y", title: "Top 6 JavaScript Array Methods mà bạn nên biết (2022)", channel: "Holetex", lang: "vi", minutes: 25, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao tránh mutate state",
@@ -606,6 +629,9 @@ console.log(state.user.tags, deep.at instanceof Date); // ["admin"] true`
   },
 
   "p01.m1.t0": {
+    videos: [
+      { id: "e0AIkYrXAYE", title: "Types vs Interfaces: What I Got Wrong In 2022", channel: "Matt Pocock", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "TypeScript làm gì cho bạn",
@@ -694,6 +720,9 @@ export {};`
   },
 
   "p01.m1.t1": {
+    videos: [
+      { id: "EcCTIExsqmI", title: "Learn TypeScript Generics In 13 Minutes", channel: "Web Dev Simplified", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Generics: kiểu như một tham số",
@@ -792,6 +821,9 @@ class InMemoryRepository<T extends { id: string }> {
   },
 
   "p01.m1.t2": {
+    videos: [
+      { id: "xsfdypZCLQ8", title: "This Is One Of My Favorite TypeScript Features", channel: "Web Dev Simplified", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Union và narrowing",
@@ -871,6 +903,9 @@ function describe(p: PaymentState): string {
   },
 
   "p01.m1.t3": {
+    videos: [
+      { id: "BhNSauna0eo", title: "You are a Junior Dev if You Don’t Know These 18 TypeScript Utility Types", channel: "Web Dev Simplified", lang: "en", minutes: 22, embed: true }
+    ],
     sections: [
       {
         h: "Utility types dựng sẵn",
@@ -968,6 +1003,9 @@ type Open = Exclude<Status, "done">;             // "todo" | "doing"`
   },
 
   "p01.m1.t4": {
+    videos: [
+      { id: "eJXVEju3XLM", title: "The TSConfig Cheat Sheet", channel: "Matt Pocock", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "strict: bật ngay từ ngày đầu",
@@ -1057,6 +1095,9 @@ type Open = Exclude<Status, "done">;             // "todo" | "doing"`
   },
 
   "p01.m1.t5": {
+    videos: [
+      { id: "9UVPk0Ulm6U", title: "Zod Makes TypeScript Even Better", channel: "Web Dev Simplified", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao kiểu TypeScript không đủ",
@@ -1147,6 +1188,9 @@ export const env = EnvSchema.parse(process.env); // sai cấu hình: dừng ngay
   },
 
   "p01.m2.t0": {
+    videos: [
+      { id: "H3cYspcoSaA", title: "Big O Notation là gì? - Hiểu về độ phức tạp của thuật toán", channel: "TiCungBim DSA", lang: "vi", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "Big-O đo điều gì",
@@ -1225,6 +1269,9 @@ function attachFast(orders: Order[], users: User[]) {
   },
 
   "p01.m2.t1": {
+    videos: [
+      { id: "uKIFNzqX2a8", title: "Cấu trúc dữ liệu và thuật toán #20: Hash table, hash function | DS&A", channel: "Ông Dev", lang: "vi", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "Array: liên tục trong bộ nhớ",
@@ -1309,6 +1356,10 @@ console.log(twoSum([2, 7, 11, 15], 9)); // [0, 1]`
   },
 
   "p01.m2.t2": {
+    videos: [
+      { id: "egHqUFU_MVM", title: "Leetcode 146 – LRU Cache - Câu hỏi phỏng vấn tại AMAZON - DOUBLY LINKEDLIST, HASHMAP", channel: "TiCungBim DSA", lang: "vi", minutes: 23, embed: true },
+      { id: "A3ZUpyrnCbM", title: "Introduction to Stacks and Queues (Data Structures & Algorithms #12)", channel: "CS Dojo", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "Stack và Queue",
@@ -1410,6 +1461,10 @@ class Queue<T> {
   },
 
   "p01.m2.t3": {
+    videos: [
+      { id: "x7UXHePmCkw", title: "HEAP/PRIORITY QUEUE hoạt động như thế nào? Chìa khóa cho bài toán: Tìm số lớn thứ K", channel: "TiCungBim DSA", lang: "vi", minutes: 7, embed: true },
+      { id: "K1a2Bk8NrYQ", title: "Understanding B-Trees: The Data Structure Behind Modern Databases", channel: "Spanning Tree", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Tree và cách duyệt",
@@ -1521,6 +1576,10 @@ function topK(nums: number[], k: number): number[] {
   },
 
   "p01.m2.t4": {
+    videos: [
+      { id: "yYI5bUkZBbo", title: "[CTDL và GT] BFS - Duyệt đồ thị theo chiều rộng - Tìm đường đi ngắn nhất", channel: "Học Nhanh - Code Chuẩn", lang: "vi", minutes: 8, embed: true },
+      { id: "pcKY4hjDrxk", title: "5.1 Graph Traversals - BFS & DFS -Breadth First Search and Depth First Search", channel: "Abdul Bari", lang: "en", minutes: 19, embed: true }
+    ],
     sections: [
       {
         h: "Graph và cách biểu diễn",
@@ -1619,6 +1678,10 @@ console.log(hasCycle(new Map([["deploy", ["build"]], ["build", ["test"]], ["test
   },
 
   "p01.m2.t5": {
+    videos: [
+      { id: "6D1Ob8PqOKA", title: "Tất Tần Tật Về Các Thuật Toán Sắp Xếp Trong 20 Phút (Python Visualization)", channel: "Ruồi IT", lang: "vi", minutes: 19, embed: true },
+      { id: "G2_Lu93By7Y", title: "BINARY SEARCH là gì? Giải thích dễ hiểu qua bài Koko Eating Bananas | Leetcode 875", channel: "TiCungBim DSA", lang: "vi", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Merge sort và quick sort",
@@ -1715,6 +1778,10 @@ console.log(minCapacity([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 5)); // 15`
   },
 
   "p01.m2.t6": {
+    videos: [
+      { id: "E0lYuQan_OU", title: "SLIDING WINDOW - CỬA SỔ TRƯỢT là gì? Giải thích cách ứng dụng", channel: "TiCungBim DSA", lang: "vi", minutes: 6, embed: true },
+      { id: "9d0BrYIFSf0", title: "Làm Chủ Quy Hoạch Động Trong 15 Phút", channel: "Học Giải Thuật Cùng HPN", lang: "vi", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "Two pointers và sliding window",
@@ -1813,6 +1880,10 @@ console.log(climbStairs(5), subsets([1, 2]).length); // 8 4`
   },
 
   "p01.m3.t0": {
+    videos: [
+      { id: "qwPvkhemvHA", title: "Tất Tần Tật Về Lập Trình Hướng Đối Tượng (OOP Java) Trong 15 Phút", channel: "Ruồi IT", lang: "vi", minutes: 17, embed: true },
+      { id: "hxGOiiR9ZKg", title: "The Flaws of Inheritance", channel: "CodeAesthetic", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Bốn trụ cột của OOP",
@@ -1907,6 +1978,9 @@ const notifier: Notifier = new RetryingNotifier(new EmailNotifier());`
   },
 
   "p01.m3.t1": {
+    videos: [
+      { id: "_dTJeiticT8", title: "SA - SOLID và ứng dụng thực tế", channel: "Việt Trần", lang: "vi", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "SOLID là gì",
@@ -2001,6 +2075,10 @@ export class OrderService {
   },
 
   "p01.m3.t2": {
+    videos: [
+      { id: "tAuRQs_d9F8", title: "8 Design Patterns EVERY Developer Should Know", channel: "NeetCode", lang: "en", minutes: 10, embed: true },
+      { id: "eiWnblyjw58", title: "Nhập môn Design Pattern siêu tốc trong 10 phút", channel: "Phạm Huy Hoàng", lang: "vi", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "Design pattern là gì và vì sao học",
@@ -2090,6 +2168,10 @@ console.log(shippingFee("standard", 1.2, 25, 200_000)); // 31000`
   },
 
   "p01.m3.t3": {
+    videos: [
+      { id: "HNnUUOUnUfo", title: "GIẢI THÍCH DI (Dependency Injection) qua ví dụ dễ hiểu !", channel: "Trung Phạm", lang: "vi", minutes: 7, embed: true },
+      { id: "J1f5b4vcxCQ", title: "Dependency Injection, The Best Pattern", channel: "CodeAesthetic", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Dependency Injection là gì",
@@ -2200,6 +2282,9 @@ export class UsersModule {}`
   },
 
   "p01.m3.t4": {
+    videos: [
+      { id: "e-5obm1G_FY", title: "Learning Functional Programming with JavaScript - Anjana Vakil - JSUnconf", channel: "JSConf", lang: "en", minutes: 30, embed: true }
+    ],
     sections: [
       {
         h: "Pure function và immutability",
@@ -2275,6 +2360,9 @@ console.log(total({ items: [{ price: 100_000, qty: 2 }], coupon: "SALE10" })); /
   },
 
   "p01.m3.t5": {
+    videos: [
+      { id: "-J3wNP6u5YU", title: "Naming Things in Code", channel: "CodeAesthetic", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Code được đọc nhiều hơn được viết",
@@ -2363,6 +2451,10 @@ function canExport(user: User | null): boolean {
   },
 
   "p01.m0.t7": {
+    videos: [
+      { id: "oYbldfGTJ1o", title: "Hướng dẫn sử dụng debugger, fix bug Siêu Nhanh Siêu Hiệu Quả (Có demo)", channel: "Phạm Huy Hoàng", lang: "vi", minutes: 9, embed: true },
+      { id: "2oFKNL7vYV8", title: "Getting started with Node.js debugging in VS Code", channel: "Visual Studio Code", lang: "en", minutes: 8, embed: true }
+    ],
     "sections": [
       {
         "h": "Debug là kỹ năng, không phải may mắn",

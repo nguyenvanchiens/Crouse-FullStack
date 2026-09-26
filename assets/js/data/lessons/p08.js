@@ -2,6 +2,10 @@
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 Object.assign(window.LESSON_CONTENT, {
   "p08.m0.t0": {
+    videos: [
+      { id: "olJZtO1jiuk", title: "DevOps for Freshers | Bài 15: CI/CD là gì? CI/CD để làm gì? | DevOps cho người mới bắt đầu", channel: "DEVOPSEDU VN", lang: "vi", minutes: 8, embed: true },
+      { id: "7SNbDWob6cI", title: "The Difference Between Continuous Delivery & Continuous Deployment", channel: "Modern Software Engineering", lang: "en", minutes: 18, embed: true }
+    ],
     sections: [
       {
         h: "Ba khái niệm hay bị nhầm",
@@ -104,6 +108,9 @@ jobs:
     ]
   },
   "p08.m0.t1": {
+    videos: [
+      { id: "AknbizcLq4w", title: "CI/CD Explained: The DevOps Skill That Makes You 10x More Valuable", channel: "TechWorld with Nana", lang: "en", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Pipeline là dây chuyền các cổng kiểm tra",
@@ -222,6 +229,10 @@ jobs:
     ]
   },
   "p08.m0.t2": {
+    videos: [
+      { id: "GQQqf-C2ha4", title: "3 Git Workflows Every Developer Should Know (And When to Use Each)", channel: "TechWorld with Nana", lang: "en", minutes: 32, embed: true },
+      { id: "CR3LP2n2dWw", title: "We Tried Trunk-Based Development... The Results Were Shocking.", channel: "Modern Software Engineering", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Trunk-based development là gì",
@@ -293,6 +304,9 @@ async checkout(userId: string, cart: Cart) {
     ]
   },
   "p08.m0.t3": {
+    videos: [
+      { id: "ZTbM-h9RZOo", title: "Introduction to GitHub Actions - Part 6 - Repository Rulesets", channel: "Mickey Gousset", lang: "en", minutes: 15, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao phải bảo vệ nhánh main",
@@ -598,6 +612,10 @@ jobs:
     ]
   },
   "p08.m0.t6": {
+    videos: [
+      { id: "70YgbPh6pXA", title: "Automated GitHub release with Release Please GitHub action", channel: "Ana's Dev Scribbles", lang: "en", minutes: 14, embed: true },
+      { id: "mah8PV6ugNY", title: "Automate your GitHub Actions Releases (with Semantic Release)!", channel: "Dave's Dev Channel", lang: "en", minutes: 24, embed: true }
+    ],
     sections: [
       {
         h: "SemVer và Conventional Commits",
@@ -696,6 +714,9 @@ jobs:
     ]
   },
   "p08.m0.t7": {
+    videos: [
+      { id: "_IKB4h9e4NA", title: "State of the Art of DORA Metrics & AI Integration • Nathen Harvey & Charles Humble • GOTO 2025", channel: "GOTO Conferences", lang: "en", minutes: 45, embed: true }
+    ],
     sections: [
       {
         h: "Các chỉ số DORA",
@@ -770,6 +791,10 @@ gh api "repos/my-org/task-api/deployments?environment=production&per_page=100" \
     ]
   },
   "p08.m1.t0": {
+    videos: [
+      { id: "ZKaDy0mNHGs", title: "Github Actions - CI/CD chưa bao giờ dễ hơn thế", channel: "Holetex", lang: "vi", minutes: 32, embed: true },
+      { id: "BQrohJ3PT7I", title: "How to use GitHub Actions | GitHub for Beginners", channel: "GitHub", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Bốn khái niệm nền tảng",
@@ -1069,6 +1094,9 @@ jobs:
     ]
   },
   "p08.m1.t3": {
+    videos: [
+      { id: "Ijz_6vPa8RI", title: "Mastering Matrix Jobs in GitHub Actions", channel: "Mickey Gousset", lang: "en", minutes: 16, embed: true }
+    ],
     sections: [
       {
         h: "Matrix: một job, nhiều cấu hình",
@@ -1192,6 +1220,9 @@ jobs:
     ]
   },
   "p08.m1.t4": {
+    videos: [
+      { id: "7PVUjRXUY0o", title: "Cache Management with GitHub actions", channel: "Mickey Gousset", lang: "en", minutes: 12, embed: true }
+    ],
     sections: [
       {
         h: "Cache và artifact khác nhau thế nào",
@@ -1301,6 +1332,9 @@ jobs:
     ]
   },
   "p08.m1.t5": {
+    videos: [
+      { id: "w_37LDOy4sI", title: "GitHub Actions: Approvals, Environments and Visualization DEEP DIVE", channel: "CoderDave", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Secret, variable và environment",
@@ -1402,6 +1436,9 @@ jobs:
     ]
   },
   "p08.m1.t6": {
+    videos: [
+      { id: "Io5UFJlEJKc", title: "Securely deploy to AWS with GitHub Actions and OIDC", channel: "GitHub", lang: "en", minutes: 17, embed: true }
+    ],
     sections: [
       {
         h: "Vấn đề của access key dài hạn",
@@ -1493,6 +1530,9 @@ jobs:
     ]
   },
   "p08.m1.t7": {
+    videos: [
+      { id: "zc19mR3O4a4", title: "Composite Actions VS Reusable Workflows in GitHub Actions [2023 Update]", channel: "CoderDave", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Hai cách tái sử dụng",
@@ -1614,6 +1654,9 @@ jobs:
     ]
   },
   "p08.m1.t8": {
+    videos: [
+      { id: "aLHyPZO0Fy0", title: "GitHub Actions Selfhosted Runners | easy devops tutorial ci/cd", channel: "Tech with Marco", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "Concurrency: huỷ run cũ, tránh deploy chồng nhau",
@@ -1710,6 +1753,10 @@ jobs:
     ]
   },
   "p08.m2.t0": {
+    videos: [
+      { id: "IV5MQUEUx44", title: "GitLab for Everyone: Your First CI/CD Pipeline Explained", channel: "GitLab", lang: "en", minutes: 10, embed: true },
+      { id: "z7nLsJvEyMY", title: "GitLab CI/CD Pipeline Tutorial for Beginners", channel: "Valentin Despa", lang: "en", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "Cấu trúc .gitlab-ci.yml",
@@ -1830,6 +1877,10 @@ deploy_production:
     ]
   },
   "p08.m2.t1": {
+    videos: [
+      { id: "8ujz58xmMFI", title: "DevOps for Freshers | Bài 29: Jenkins CI/CD (Continuous Deployment) | DevOps cho người mới bắt đầu", channel: "DEVOPSEDU VN", lang: "vi", minutes: 32, embed: true },
+      { id: "EzgCoOQvOf0", title: "Complete Jenkins Pipeline Tutorial | Jenkinsfile explained | KodeKloud", channel: "KodeKloud", lang: "en", minutes: 30, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao vẫn cần biết Jenkins",
@@ -2204,6 +2255,9 @@ aws ecr put-lifecycle-policy \\
     ]
   },
   "p08.m3.t0": {
+    videos: [
+      { id: "lxc4EXZOOvE", title: "Most Common Kubernetes Deployment Strategies (Examples & Code)", channel: "Anton Putra", lang: "en", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "Recreate: tắt hết rồi bật lại",
@@ -2295,6 +2349,10 @@ spec:
     ]
   },
   "p08.m3.t1": {
+    videos: [
+      { id: "JZB3uHVmGjI", title: "📗 #8 - Blue/Green Deployment vs Canary Deployment vs A/B Testing | Software Engineering Cơ Bản", channel: "Viet Tran", lang: "vi", minutes: 11, embed: true },
+      { id: "W6HANd8c9t4", title: "An in-depth introduction to Blue Green Deployments", channel: "Arpit Bhayani", lang: "en", minutes: 29, embed: true }
+    ],
     sections: [
       {
         h: "Hai môi trường, một công tắc",
@@ -2383,6 +2441,9 @@ spec:
     ]
   },
   "p08.m3.t2": {
+    videos: [
+      { id: "w3xdopP4aEk", title: "Argo Rollouts in 15 minutes!", channel: "DevOps Journey", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Canary: thử trên một nhóm nhỏ trước",
@@ -2500,6 +2561,10 @@ spec:
     ]
   },
   "p08.m3.t3": {
+    videos: [
+      { id: "AJa2B-twtG4", title: "What are Feature Flags?", channel: "IBM Technology", lang: "en", minutes: 7, embed: true },
+      { id: "ZJzQLSfuNUI", title: "OpenFeature Will CHANGE How You Deploy Code", channel: "Better Stack", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Tách deploy khỏi release",
@@ -2585,6 +2650,9 @@ export async function isNewCheckout(userId: string): Promise<boolean> {
     ]
   },
   "p08.m3.t4": {
+    videos: [
+      { id: "ONSCQWLD9d0", title: "Every engineer should know this.. (Expand-Contract Pattern)", channel: "Software Developer Diaries", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Migration là bước riêng, chạy trước deploy",
@@ -2876,6 +2944,9 @@ git push`
     ]
   },
   "p08.m4.t0": {
+    videos: [
+      { id: "wqErjqFgEa0", title: "The Ultimate SAST Guide: What is Static Application Security Testing? Code Security with Mackenzie", channel: "Aikido Security", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "SAST: tìm lỗ hổng bằng cách đọc mã",
@@ -2975,6 +3046,9 @@ jobs:
     ]
   },
   "p08.m4.t1": {
+    videos: [
+      { id: "njm1nZlrR68", title: "Supply Chain Security - The Ultimate Guide to Software Composition Analysis (SCA) Tools", channel: "Aikido Security", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "SCA: phần lớn mã của bạn là của người khác",
@@ -3077,6 +3151,9 @@ updates:
     ]
   },
   "p08.m4.t2": {
+    videos: [
+      { id: "2cjH6Zkieys", title: "Cloud Security: Container image and IaC scanning with Trivy", channel: "Anais Urlichs", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Container image cũng có lỗ hổng",
@@ -3188,6 +3265,10 @@ jobs:
     ]
   },
   "p08.m4.t3": {
+    videos: [
+      { id: "vMhDkt5JNN0", title: "Introduction to secret leaks and getting started with GitHub Secret Protection", channel: "GitHub", lang: "en", minutes: 3, embed: true },
+      { id: "VB6yohnukGk", title: "Gitleaks - Find Secrets Like API Keys, Tokens, Passwords - Install and Test Locally", channel: "Fahd Mirza", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Secret lọt vào Git là chuyện rất thường",
@@ -3295,6 +3376,9 @@ jobs:
     ]
   },
   "p08.m4.t4": {
+    videos: [
+      { id: "j9vqvzBPVMw", title: "DAST Scanning with OWASP ZAP and Docker", channel: "Damien Burks", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "DAST: tấn công thử ứng dụng đang chạy",
@@ -3392,6 +3476,10 @@ jobs:
     ]
   },
   "p08.m4.t5": {
+    videos: [
+      { id: "CM13RNBR9hw", title: "How to Generate an SBOM with Free Open Source Tools", channel: "Anchore", lang: "en", minutes: 30, embed: true },
+      { id: "HLb1Q086u6M", title: "Signing and Verifying Container Images With Sigstore Cosign and Kyverno", channel: "DevOps & AI Toolkit", lang: "en", minutes: 14, embed: true }
+    ],
     sections: [
       {
         h: "Chuỗi cung ứng phần mềm",
@@ -3512,6 +3600,9 @@ gh attestation verify oci://ghcr.io/my-org/task-api@sha256:<digest> --owner my-o
     ]
   },
   "p08.m4.t6": {
+    videos: [
+      { id: "sMWh4D-Ou_A", title: "Kyverno vs OPA Gatekeeper – Which Policy Engine Rules Kubernetes?", channel: "Is it Observable", lang: "en", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Policy as code là gì",
@@ -3652,6 +3743,10 @@ deny contains msg if {
     ]
   },
   "p08.m4.t7": {
+    videos: [
+      { id: "4dnniFk5i2Q", title: "GitHub Actions Policy Update: Blocking & SHA Pinning Explained!", channel: "Mickey Gousset", lang: "en", minutes: 12, embed: true },
+      { id: "Emj_mprPNWY", title: "tj-actions Supply Chain Attack – How to Check & Fix It NOW", channel: "Aikido Security", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Pipeline là mục tiêu tấn công giá trị nhất",
@@ -3751,6 +3846,10 @@ jobs:
     ]
   },
   "p08.m5.t0": {
+    videos: [
+      { id: "wY5NP2GmqwU", title: "Giải thích GitOps hoạt động như thế nào trong 4 phút | Kubernetes | DevOps Mentor", channel: "DevOps Mentor", lang: "vi", minutes: 4, embed: true },
+      { id: "GlG6Xr2HH1g", title: "Demystifying GitOps: A Beginner-Friendly Explanation | KodeKloud", channel: "KodeKloud", lang: "en", minutes: 8, embed: true }
+    ],
     sections: [
       {
         h: "GitOps: Git là nguồn sự thật",
@@ -3824,6 +3923,10 @@ jobs:
     ]
   },
   "p08.m5.t1": {
+    videos: [
+      { id: "MeU5_k9ssrs", title: "ArgoCD Tutorial for Beginners | GitOps CD for Kubernetes", channel: "TechWorld with Nana", lang: "en", minutes: 48, embed: true },
+      { id: "LrS6MgrrTlE", title: "Kubernetes CICD – triển khai ứng dụng trên Kubernetes với Argo CD", channel: "Kien Le Tech", lang: "vi", minutes: 26, embed: true }
+    ],
     sections: [
       {
         h: "Application: đơn vị cơ bản của Argo CD",
@@ -3938,6 +4041,9 @@ spec:
     ]
   },
   "p08.m5.t2": {
+    videos: [
+      { id: "X5W_706-jSY", title: "Introduction to Flux CD on Kubernetes | GitOps | CICD", channel: "That DevOps Guy", lang: "en", minutes: 34, embed: true }
+    ],
     sections: [
       {
         h: "Flux: bộ controller GitOps",
@@ -4067,6 +4173,9 @@ spec:
     ]
   },
   "p08.m5.t3": {
+    videos: [
+      { id: "pJ9f7w4AxtU", title: "How to design a Deployment Pipeline (GitOps)", channel: "DevOps Journey", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Tách repo app và repo config",
@@ -4205,6 +4314,10 @@ jobs:
     ]
   },
   "p08.m5.t4": {
+    videos: [
+      { id: "Wnh9mF_BpWo", title: "External Secrets Operator Explained (ESO) | Kubernetes Secrets Made Simple", channel: "Infisical", lang: "en", minutes: 16, embed: true },
+      { id: "wWMJCY2E0d4", title: "Sealed Secrets: Safeguarding Your Kubernetes Secrets | Step By Step Tutorial | KodeKloud", channel: "KodeKloud", lang: "en", minutes: 13, embed: true }
+    ],
     sections: [
       {
         h: "Bài toán: Git là nguồn sự thật, nhưng secret không được vào Git",

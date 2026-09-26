@@ -80,6 +80,10 @@ export const log = () => als.getStore()?.log ?? logger;
     ]
   },
   "p11.m0.t1": {
+    videos: [
+      { id: "fhx0ehppMGM", title: "Understanding Prometheus Metric Types | Meaning and Usage (Gauge, Counter, Summary, Histogram)", channel: "Prometheus Monitoring with Julius | PromLabs", lang: "en", minutes: 11, embed: true },
+      { id: "zk77VS98Em8", title: "The RED Method: How To Instrument Your Services", channel: "Grafana", lang: "en", minutes: 20, embed: true }
+    ],
     sections: [
       {
         h: "Metrics là gì và khác log thế nào",
@@ -149,6 +153,10 @@ queueDepth.set(42);`
     ]
   },
   "p11.m0.t2": {
+    videos: [
+      { id: "h4Sl21AKiDg", title: "How Prometheus Monitoring works | Prometheus Architecture explained", channel: "TechWorld with Nana", lang: "en", minutes: 22, embed: true },
+      { id: "STVMGrYIlfg", title: "Introduction to the Prometheus Monitoring System | Key Concepts and Features", channel: "Prometheus Monitoring with Julius | PromLabs", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "Mô hình pull và exporter",
@@ -231,6 +239,10 @@ up == 0`
     ]
   },
   "p11.m0.t3": {
+    videos: [
+      { id: "EGgtJUjky8w", title: "Creating Grafana Dashboards for Prometheus | Grafana Setup & Simple Dashboard (Chart, Gauge, Table)", channel: "Prometheus Monitoring with Julius | PromLabs", lang: "en", minutes: 14, embed: true },
+      { id: "vTiIkdDwT-0", title: "Understanding Dashboards in Grafana | Panels, Visualizations, Queries, and Transformations", channel: "Grafana", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Dashboard theo RED",
@@ -297,6 +309,10 @@ providers:
     ]
   },
   "p11.m0.t4": {
+    videos: [
+      { id: "HD5C8FBz1R0", title: "Distributed Tracing Hoạt Động Như Nào và Triển Khai Sử Dụng OpenTelemetry + SigNoz | Microservices", channel: "Ronin Engineer", lang: "vi", minutes: 28, embed: true },
+      { id: "XYvQHjWJJTE", title: "Distributed Tracing in Microservices | System Design", channel: "ByteMonk", lang: "en", minutes: 7, embed: true }
+    ],
     sections: [
       {
         h: "Trace và span",
@@ -352,6 +368,10 @@ providers:
     ]
   },
   "p11.m0.t5": {
+    videos: [
+      { id: "iEEIabOha8U", title: "What is OTel? | OTel for Beginners - The JavaScript Journey", channel: "OpenTelemetry", lang: "en", minutes: 9, embed: true },
+      { id: "_CJrFW_yjRo", title: "OpenTelemetry Collector: EVERYTHING you need to know [to get started]", channel: "Adam Gardner", lang: "en", minutes: 10, embed: true }
+    ],
     sections: [
       {
         h: "OpenTelemetry là gì",
@@ -436,6 +456,10 @@ service:
     ]
   },
   "p11.m0.t6": {
+    videos: [
+      { id: "1uk8LtQqsZQ", title: "How to Get Started with Loki | Zero to Hero: Loki | Grafana", channel: "Grafana", lang: "en", minutes: 16, embed: true },
+      { id: "1X3dV3D5EJg", title: "Grafana is the goat... Let's deploy the LGTM stack", channel: "Fireship", lang: "en", minutes: 6, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao cần tập trung log",
@@ -491,6 +515,10 @@ sum by (service) (count_over_time({env="prod"} | json | level="error" [1m]))`
     ]
   },
   "p11.m1.t0": {
+    videos: [
+      { id: "pouVbehfnqQ", title: "SLAs, SLOs, and SLIs EXPLAINED in 7 Minutes (2025)", channel: "Better Stack", lang: "en", minutes: 7, embed: true },
+      { id: "E3ReKuJ8ewA", title: "The Art of SLOs (Service Level Objectives)", channel: "Google Cloud Tech", lang: "en", minutes: 4, embed: true }
+    ],
     sections: [
       {
         h: "SLI, SLO, SLA khác nhau thế nào",
@@ -551,6 +579,10 @@ sum(increase(http_request_duration_seconds_bucket{le="0.3", status!~"5.."}[30d])
     ]
   },
   "p11.m1.t1": {
+    videos: [
+      { id: "TnjVxcaQZkQ", title: "Thiết lập theo dõi, cảnh báo cho linux server | Prometheus | Alertmanager | Grafana | DevOps Mentor", channel: "DevOps Mentor", lang: "vi", minutes: 16, embed: true },
+      { id: "ra0cCmEVKS8", title: "SLOconf 2023 - How I learned to stop worrying and love burn rates - Ashley Chen", channel: "Nobl9", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Cảnh báo theo triệu chứng",
@@ -633,6 +665,9 @@ receivers:
     ]
   },
   "p11.m1.t2": {
+    videos: [
+      { id: "yoY_pDxc0TA", title: "Simulated Incident Call Recording", channel: "PagerDuty Inc.", lang: "en", minutes: 27, embed: true }
+    ],
     sections: [
       {
         h: "Chuẩn bị on-call",
@@ -688,6 +723,9 @@ Cập nhật tiếp theo: 14:40`
     ]
   },
   "p11.m1.t3": {
+    videos: [
+      { id: "Fv0nwb1Qn6A", title: "Blameless Postmortem Culture In Software Engineering", channel: "Clément Mihailescu", lang: "en", minutes: 9, embed: true }
+    ],
     sections: [
       {
         h: "Vì sao postmortem phải không đổ lỗi",
@@ -815,6 +853,9 @@ Chủ sở hữu: team-backend | Cập nhật: 2026-09-20`
     ]
   },
   "p11.m1.t5": {
+    videos: [
+      { id: "OmASCUJEVy8", title: "🔥 The Ultimate Guide to Disaster Recovery: RTO, RPO, & Failover!", channel: "ByteMonk", lang: "en", minutes: 11, embed: true }
+    ],
     sections: [
       {
         h: "RPO và RTO",
@@ -873,6 +914,9 @@ pg_restore -h restore-test.internal -U postgres -d orders_restore --jobs=4 "orde
     ]
   },
   "p11.m1.t6": {
+    videos: [
+      { id: "mfEMXKSFtaQ", title: "Understanding Chaos Engineering", channel: "Microsoft Developer", lang: "en", minutes: 21, embed: true }
+    ],
     sections: [
       {
         h: "Chaos engineering là gì",
@@ -946,6 +990,10 @@ spec:
     ]
   },
   "p11.m0.t7": {
+    videos: [
+      { id: "cl8tPBI4qUc", title: "Sentry 101: Error Monitoring For Frontend Applications", channel: "Sentry", lang: "en", minutes: 31, embed: true },
+      { id: "m6dF4sfcW90", title: "Real User Monitoring vs Synthetic Monitoring Comparison: What Should You Use? | Sematext", channel: "Sematext", lang: "en", minutes: 5, embed: true }
+    ],
     sections: [
       {
         h: "Server xanh nhưng người dùng vẫn kêu",
