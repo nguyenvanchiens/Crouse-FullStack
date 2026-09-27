@@ -2,7 +2,7 @@
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 
-const ROUTES = ['#/', '#/roadmap', '#/phase/p00', '#/phase/p08', '#/phase/p13', '#/learn/p03/2/4', '#/learn/p07/1/0', '#/learn/p13/1/6', '#/labs', '#/lab/lab03', '#/lab/lab06', '#/projects', '#/career', '#/progress'];
+const ROUTES = ['#/', '#/roadmap', '#/guide', '#/phase/p00', '#/phase/p08', '#/phase/p13', '#/learn/p03/2/4', '#/learn/p07/1/0', '#/learn/p13/1/6', '#/labs', '#/lab/lab03', '#/lab/lab06', '#/projects', '#/career', '#/progress'];
 
 // Thu lỗi JS (bỏ qua lỗi tải tài nguyên CDN khi chạy offline)
 function trackErrors(page) {
@@ -224,7 +224,7 @@ test.describe('Trang học (player)', () => {
 test.describe('Điều hướng', () => {
   test('menu dọc hoạt động', async ({ page, isMobile }) => {
     await page.goto('/#/');
-    for (const [name, h1] of [['Lộ trình', 'Lộ trình học'], ['Labs', 'Labs thực hành'], ['Dự án', '12 bậc dự án'], ['Sự nghiệp', 'Từ học viên'], ['Tiến độ', 'Bạn đã đi được'], ['Trang chủ', 'Lộ trình Backend']]) {
+    for (const [name, h1] of [['Lộ trình', 'Lộ trình học'], ['Cách học', 'Cách học để làm chủ Backend'], ['Labs', 'Labs thực hành'], ['Dự án', '12 bậc dự án'], ['Sự nghiệp', 'Từ học viên'], ['Tiến độ', 'Bạn đã đi được'], ['Trang chủ', 'Lộ trình Backend']]) {
       await openMenuIfMobile(page, isMobile);
       await page.locator('#rail a', { hasText: name }).click();
       await expect(page.locator('main h1').first()).toContainText(h1);
@@ -397,6 +397,51 @@ test.describe('Tìm kiếm', () => {
   });
 });
 
+test.describe('Cách học', () => {
+  test('hiện đủ các chặng theo thứ tự, vị trí hiện tại và lối tắt Jenkins', async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto('/#/guide');
+    await expect(page.locator('h1')).toHaveText('Cách học để làm chủ Backend');
+    await expect(page.locator('.stage:not(.stage-side) h3')).toHaveText(['Chặng 1: Nền móng', 'Chặng 2: Backend cốt lõi', 'Chặng 3: Đưa lên production', 'Chặng 4: Vận hành & mở rộng', 'Chặng 5: Hoàn thiện & đi làm']);
+    await expect(page.locator('.stage-side')).toContainText('Frontend');
+    await expect(page.locator('.stage.is-current h3')).toHaveText('Chặng 1: Nền móng');
+    await expect(page.locator('.guide-now .btn')).toHaveAttribute('href', '#/learn/p00/0/0');
+    // Mỗi chương xuất hiện đúng một lần trong các chặng
+    const chapters = await page.locator('.stage .chip-link').evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+    expect(new Set(chapters).size).toBe(14);
+    expect(chapters.length).toBe(14);
+    await expect(page.locator('.loop li')).toHaveCount(6);
+    await expect(page.locator('.shortcut').first().locator('a[href="#/lab/lab13"]')).toHaveCount(1);
+    expect(errors).toEqual([]);
+  });
+
+  test('đổi nhịp học tính lại thời gian và được ghi nhớ', async ({ page }) => {
+    await page.goto('/#/guide');
+    await expect(page.locator('.pace-total')).toContainText('71 tuần');
+    await page.locator('[data-act="pace"][data-h="8"]').click();
+    await expect(page.locator('.pace-total')).toContainText('155 tuần');
+    await expect(page.locator('[data-act="pace"][data-h="8"]')).toHaveAttribute('aria-checked', 'true');
+    await page.reload();
+    await expect(page.locator('.pace-total')).toContainText('155 tuần');
+  });
+
+  test('chặng hiện tại chuyển theo tiến độ và checkbox tự kiểm tra được lưu', async ({ page }) => {
+    await page.goto('/#/');
+    await page.evaluate(() => {
+      const p = {};
+      for (const ph of window.PHASES.filter((x) => ['p00', 'p01'].includes(x.id))) ph.modules.forEach((m, mi) => m.topics.forEach((_, ti) => { p[ph.id + '.m' + mi + '.t' + ti] = 1; }));
+      localStorage.setItem('devpath-progress-v1', JSON.stringify(p));
+    });
+    await page.goto('/#/guide');
+    await page.reload();
+    await expect(page.locator('.stage.is-current h3')).toHaveText('Chặng 2: Backend cốt lõi');
+    await expect(page.locator('.stage.is-done')).toHaveCount(1);
+    await page.locator('.stage.is-current .check').first().click();
+    await page.reload();
+    await expect(page.locator('.stage.is-current input[type="checkbox"]').first()).toBeChecked();
+  });
+});
+
 test.describe('Labs', () => {
   test('trang Labs có 13 lab', async ({ page }) => {
     await page.goto('/#/labs');
@@ -500,7 +545,7 @@ test.describe('Giao diện', () => {
 });
 
 test.describe('Accessibility (axe)', () => {
-  for (const route of ['#/', '#/phase/p08', '#/learn/p07/1/0', '#/lab/lab03', '#/roadmap', '#/projects', '#/career', '#/progress']) {
+  for (const route of ['#/', '#/phase/p08', '#/learn/p07/1/0', '#/lab/lab03', '#/roadmap', '#/guide', '#/projects', '#/career', '#/progress']) {
     for (const theme of ['light', 'dark']) {
       test(`không có vi phạm nghiêm trọng: ${route} (${theme})`, async ({ page }) => {
         await page.addInitScript((t) => { try { localStorage.setItem('devpath-theme', t); } catch (e) {} }, theme);

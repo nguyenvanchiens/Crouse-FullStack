@@ -6,6 +6,7 @@
   const LADDER = window.LADDER || [];
   const CAPSTONE = window.CAPSTONE || {};
   const CAREER = window.CAREER || {};
+  const GUIDE = window.GUIDE || { paces: [], stages: [], loop: [], week: [], rules: [], shortcuts: [], mastery: [], frontend: {} };
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -260,6 +261,129 @@
         </li>`;
       }).join('')}
     </ol>`;
+  }
+
+  /* ---------- Trang Cách học ---------- */
+  const PACE_KEY = 'devpath-pace';
+  const fmtNum = (n) => (Math.round(n * 10) / 10).toString().replace('.', ',');
+  function dur(weeks, h) {
+    const w = Math.max(1, Math.round((weeks * GUIDE.hoursPerWeek) / h));
+    return w < 9 ? `khoảng ${w} tuần` : `khoảng ${w} tuần (${fmtNum(w / 4.33)} tháng)`;
+  }
+  function pageGuide() {
+    const saved = store.read(PACE_KEY, 17.5);
+    const h = GUIDE.paces.some((x) => x.h === saved) ? saved : 17.5;
+    const stages = GUIDE.stages.map((s) => ({ ...s, ps: s.ids.map(findPhase).filter(Boolean) }));
+    const stageStat = (s) => {
+      let done = 0, total = 0;
+      s.ps.forEach((p) => { done += lessonsDone(p); total += lessonCount(p); });
+      return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+    };
+    const curIdx = Math.max(0, stages.findIndex((s) => stageStat(s).pct < 100));
+    const cur = stages[curIdx];
+    const nx = nextLessonIn(cur.ps.find((p) => lessonsDone(p) < lessonCount(p)) || cur.ps[0]) || nextLesson();
+    const o = overall();
+    const hoursTotal = totalWeeks * GUIDE.hoursPerWeek;
+    const fe = findPhase(GUIDE.frontend.id);
+    const stepLink = (id, t) => {
+      const l = findLab(id);
+      return l ? `<a href="#/lab/${l.id}">${esc(t)}</a>` : `<a href="#/phase/${id}">${esc(t)}</a>`;
+    };
+
+    return `
+    <header class="page-head">
+      <h1>Cách học để làm chủ Backend</h1>
+      <p class="lead">Khóa học chia thành ${stages.length} chặng, học theo thứ tự. Mỗi chặng có mục tiêu rõ ràng, những việc bạn sẽ làm được và phần tự kiểm tra trước khi đi tiếp. Tổng cộng khoảng ${Math.round(hoursTotal / 10) * 10} giờ học và thực hành.</p>
+    </header>
+
+    <section class="guide-now" aria-label="Vị trí hiện tại">
+      <div class="gn-ring">${ring(o.pct, 64, 6)}<span>${o.pct}%</span></div>
+      <div class="gn-body">
+        <p class="gn-label">Bạn đang ở chặng ${curIdx + 1}: ${esc(cur.t)}</p>
+        <p class="muted">${o.done === 0 ? 'Chưa bắt đầu. Hãy học từ bài đầu tiên của chặng 1.' : `Đã xong ${o.done}/${o.total} bài của toàn khóa.`}</p>
+      </div>
+      ${nx ? `<a class="btn btn-primary" href="${lessonHref(nx.p.id, nx.mi, nx.ti)}">${o.done ? 'Học tiếp' : 'Bắt đầu học'}</a>` : ''}
+    </section>
+
+    <section class="block">
+      <h2>Chọn nhịp học của bạn</h2>
+      <p class="muted">Thời gian ở các chặng bên dưới được tính lại theo số giờ bạn học mỗi tuần. Đây là ước tính cho người học đều và làm đủ lab, dự án.</p>
+      <div class="pace" role="radiogroup" aria-label="Số giờ học mỗi tuần">
+        ${GUIDE.paces.map((p) => `<button type="button" class="pace-opt ${p.h === h ? 'on' : ''}" role="radio" aria-checked="${p.h === h}" data-act="pace" data-h="${p.h}">
+          <strong>${p.h === 17.5 ? '15–20' : p.h} giờ/tuần</strong><span>${esc(p.t)}</span><small>${esc(p.d)}</small>
+        </button>`).join('')}
+      </div>
+      <p class="pace-total">Toàn khóa: <strong>${dur(totalWeeks, h)}</strong></p>
+    </section>
+
+    <section class="block">
+      <h2>Các chặng học theo thứ tự</h2>
+      <ol class="stages">
+        ${stages.map((s, si) => {
+          const st = stageStat(s);
+          const weeks = s.ps.reduce((a, p) => a + p.weeks, 0);
+          const item = `<li class="stage ${si === curIdx ? 'is-current' : ''} ${st.pct === 100 ? 'is-done' : ''}">
+            <span class="stage-num" aria-hidden="true">${st.pct === 100 ? ICON.check : si + 1}</span>
+            <div class="stage-card">
+              <div class="stage-head">
+                <h3>Chặng ${si + 1}: ${esc(s.t)}</h3>
+                <p class="stage-meta"><span>${ICON.clock}${dur(weeks, h)}</span><span>${st.done}/${st.total} bài</span>${si === curIdx ? '<span class="stage-badge">Bạn đang ở đây</span>' : ''}</p>
+              </div>
+              <p class="stage-why">${esc(s.why)}</p>
+              <div class="stage-chapters">${s.ps.map((p) => `<a class="chip-link" href="#/phase/${p.id}">Chương ${phaseNum(p)}: ${esc(p.title)}</a>`).join('')}</div>
+              <div class="stage-cols">
+                <div><h4>Sau chặng này bạn làm được</h4><ul>${s.can.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></div>
+                <div><h4>Tự kiểm tra trước khi sang chặng sau</h4>${s.gate.map((g, gi) => check(`guide.s${si}.g${gi}`, esc(g), 'small')).join('')}</div>
+              </div>
+            </div>
+          </li>`;
+          const side = si === 0 && fe ? `<li class="stage stage-side">
+            <span class="stage-num" aria-hidden="true">+</span>
+            <div class="stage-card">
+              <div class="stage-head"><h3>${esc(GUIDE.frontend.t)}</h3><p class="stage-meta"><span>${ICON.clock}${dur(3, h)} cho phần 1–2</span></p></div>
+              <p class="stage-why">${esc(GUIDE.frontend.d)}</p>
+              <div class="stage-chapters"><a class="chip-link" href="#/phase/${fe.id}">Chương ${phaseNum(fe)}: ${esc(fe.title)}</a></div>
+            </div>
+          </li>` : '';
+          return item + side;
+        }).join('')}
+      </ol>
+    </section>
+
+    <section class="block">
+      <h2>Học một bài như thế nào</h2>
+      <p class="muted">Mỗi bài mất khoảng 45–90 phút nếu làm đủ các bước. Đừng chỉ đọc rồi bấm hoàn thành.</p>
+      <ol class="loop">${GUIDE.loop.map(([t, d]) => `<li><h3>${esc(t)}</h3><p>${esc(d)}</p></li>`).join('')}</ol>
+    </section>
+
+    <section class="block">
+      <h2>Một tuần học mẫu (10–12 giờ)</h2>
+      <table class="week-table">
+        <thead><tr><th scope="col">Ngày</th><th scope="col">Thời gian</th><th scope="col">Làm gì</th></tr></thead>
+        <tbody>${GUIDE.week.map(([d, t, w]) => `<tr><th scope="row">${esc(d)}</th><td>${esc(t)}</td><td>${esc(w)}</td></tr>`).join('')}</tbody>
+      </table>
+    </section>
+
+    <section class="block">
+      <h2>Nguyên tắc để học đến cuối</h2>
+      <ul class="rules">${GUIDE.rules.map((r) => `<li>${ICON.check}<span>${esc(r)}</span></li>`).join('')}</ul>
+    </section>
+
+    <section class="block">
+      <h2>Đang đi làm, cần một kỹ năng ngay?</h2>
+      <p class="muted">Học lối tắt trước để làm được việc, sau đó quay lại học theo thứ tự chặng để lấp phần nền.</p>
+      <div class="shortcuts">${GUIDE.shortcuts.map((sc) => `<div class="shortcut">
+        <h3>${esc(sc.t)}</h3>
+        <ol>${sc.steps.map(([id, t]) => `<li>${stepLink(id, t)}</li>`).join('')}</ol>
+        <p class="muted">${esc(sc.note)}</p>
+      </div>`).join('')}</div>
+    </section>
+
+    <section class="checkpoint">
+      <h2>Thế nào là làm chủ Backend</h2>
+      <p class="muted">Khi đánh dấu được hết danh sách này và hoàn thành <a href="#/projects">Capstone</a>, bạn đã có đủ năng lực và bằng chứng để ứng tuyển vị trí Backend. Checklist đi làm, portfolio và câu hỏi phỏng vấn có ở trang <a href="#/career">Sự nghiệp</a>.</p>
+      ${GUIDE.mastery.map((m, i) => check(`guide.m${i}`, esc(m))).join('')}
+    </section>`;
   }
 
   /* ---------- Trang chi tiết chương (kiểu trang khóa học) ---------- */
@@ -743,6 +867,7 @@
     switch (route) {
       case undefined: out = pageHome(); break;
       case 'roadmap': out = pageRoadmap(); break;
+      case 'guide': out = pageGuide(); break;
       case 'phase': out = pagePhase(arg, query); break;
       case 'learn': out = pageLearn(arg, a2, a3); break;
       case 'labs': out = pageLabs(); break;
@@ -765,7 +890,7 @@
       if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
 
-    const titles = { roadmap: 'Lộ trình', labs: 'Labs', projects: 'Dự án', career: 'Sự nghiệp', progress: 'Tiến độ' };
+    const titles = { roadmap: 'Lộ trình', guide: 'Cách học', labs: 'Labs', projects: 'Dự án', career: 'Sự nghiệp', progress: 'Tiến độ' };
     let title = titles[route];
     if (route === 'phase' && findPhase(arg)) title = findPhase(arg).title;
     if (route === 'lab' && findLab(arg)) title = findLab(arg).title;
@@ -842,6 +967,11 @@
       if (!isNarrow()) { sideOpen = open; store.write('devpath-side', sideOpen); }
     }
     if (act === 'play-video') { playVideo(btn); return; }
+    if (act === 'pace') {
+      store.write(PACE_KEY, +btn.dataset.h); render();
+      $(`[data-act="pace"][data-h="${btn.dataset.h}"]`)?.focus();
+      return;
+    }
     if (act === 'theme') toggleTheme();
     if (act === 'quiz-reset') {
       Object.keys(progress).filter((k) => k.startsWith(btn.dataset.lesson + '.q')).forEach((k) => delete progress[k]);

@@ -17,6 +17,7 @@ Nội dung đối chiếu với roadmap.sh (Backend, DevOps, Full Stack), OWASP 
 
 Tính năng:
 - Trang chủ dạng lưới khóa học, trang chi tiết khóa học, trang học (player) có danh sách bài bên phải.
+- Trang Cách học: 5 chặng học theo thứ tự, mỗi chặng có mục tiêu và phần tự kiểm tra; chọn số giờ học mỗi tuần để ước tính thời gian; cách học một bài, tuần học mẫu, lối tắt cho người đang đi làm.
 - Theo dõi tiến độ, quiz lưu kết quả, xuất/nhập tiến độ bằng file JSON.
 - Tìm kiếm `Ctrl+K` (gõ không dấu vẫn tìm được), chuyển bài bằng phím ← →.
 - Dark mode, responsive, nút sao chép code.
