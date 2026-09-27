@@ -5515,4 +5515,238 @@ curl -fsS -X POST --user "chien:$JENKINS_TOKEN" \\
       }
     ]
   },
+  "p08.m6.t11": {
+    videos: [
+      { id: "ZbSfspvzyC0", title: "Jenkins Tutorial: Cấu hình webhook cho Gitlab repo", channel: "TechMaster Vietnam", lang: "vi", minutes: 8, embed: true },
+      { id: "adpYbOKx7Qc", title: "Tự động triển khai job với Gitlab và Jenkins", channel: "Kien Le Tech", lang: "vi", minutes: 11, embed: true }
+    ],
+    sections: [
+      {
+        h: "Mô hình mỗi môi trường một nhánh",
+        p: [
+          "Rất nhiều công ty dùng GitLab + Jenkins theo cách này: mỗi môi trường có một nhánh riêng, ví dụ `builds/dev` và `builds/prod`. Muốn đưa code lên môi trường nào thì merge vào nhánh của môi trường đó. Trên Jenkins, mỗi nhánh gắn với một pipeline riêng: pipeline dev deploy lên máy chủ dev, pipeline prod deploy lên máy chủ production.",
+          "Khi bạn merge vào `builds/dev`, chuỗi sự kiện diễn ra như sau:"
+        ],
+        list: [
+          "GitLab ghi nhận có push vào nhánh `builds/dev` và gửi webhook (một request HTTP POST) tới Jenkins, ví dụ `https://jenkins.congty.vn/project/app-dev`. Đây là cái mà nhiều người gọi là \"trỏ GitLab vào Jenkins\".",
+          "Jenkins nhận request, kiểm tra secret token và bộ lọc nhánh, rồi xếp job `app-dev` vào hàng đợi.",
+          "Agent kéo code của nhánh `builds/dev` bằng credential chỉ có quyền đọc repo, sau đó chạy Jenkinsfile: test, build image Docker.",
+          "Image được đẩy lên registry của công ty: Harbor, AWS ECR, registry trên FPT Cloud hoặc tương tự. Registry là nơi lưu image, giống như GitLab lưu code.",
+          "Bước deploy ra lệnh cho máy chủ dev kéo (pull) image mới về và chạy lại container, qua SSH, `docker compose`, `kubectl` hoặc `helm`.",
+          "Kết quả (xanh/đỏ) hiện trên Jenkins và có thể được báo ngược về GitLab hoặc vào nhóm chat."
+        ]
+      },
+      {
+        h: "Jenkins \"chọn nhánh\" ở đâu",
+        p: [
+          "Có ba cách cấu hình hay gặp. Mở Jenkins của công ty, bạn nhận ra ngay mình đang dùng cách nào:"
+        ],
+        list: [
+          "Hai job riêng, tên kiểu `app-dev` và `app-prod`. Vào Configure của job, phần Pipeline → SCM có ô Branch Specifier ghi `*/builds/dev` hoặc `*/builds/prod`. Phần Build Triggers có \"Build when a change is pushed to GitLab\" (plugin GitLab) kèm GitLab webhook URL. Đây là cách phổ biến nhất với mô hình nhánh theo môi trường.",
+          "Một job có tham số: bấm Build with Parameters thì hiện danh sách nhánh để chọn, thường nhờ plugin Git Parameter. Người bấm build tự chọn nhánh và môi trường.",
+          "Multibranch Pipeline: một thư mục chứa các job con tên `builds%2Fdev`, `builds%2Fprod` (dấu `/` trong tên nhánh bị mã hoá thành `%2F`). Jenkinsfile phân biệt môi trường bằng `when { branch 'builds/prod' }`."
+        ]
+      },
+      {
+        h: "Cấu hình phía GitLab",
+        p: [
+          "Webhook: vào repo → Settings → Webhooks, URL là địa chỉ webhook mà job Jenkins hiển thị (dạng `/project/TEN_JOB`, không phải `/job/TEN_JOB/build`), điền Secret token trùng với token trong job, chọn Push events và có thể lọc theo nhánh. Nút Test gửi thử một sự kiện và cho biết Jenkins trả về mã gì. Nếu GitLab tự host và Jenkins nằm trong cùng mạng nội bộ, GitLab mặc định chặn webhook tới địa chỉ nội bộ (10.x, 172.16-31.x, 192.168.x); admin GitLab phải bật \"Allow requests to the local network from webhooks and integrations\" ở Admin → Settings → Network → Outbound requests.",
+          "Bảo vệ nhánh: vào Settings → Repository → Branch rules, tạo rule cho `builds/prod`. \"Allowed to push and merge\" để No one (không ai push thẳng), \"Allowed to merge\" chỉ cho Maintainer. Như vậy code chỉ vào prod qua merge request có người duyệt. `builds/dev` thường nới hơn, cho Developer merge."
+        ]
+      },
+      {
+        h: "Luồng làm việc hằng ngày và khi có hotfix",
+        list: [
+          "Làm tính năng trên nhánh riêng `feature/xxx`, mở merge request vào `builds/dev`. Merge xong, pipeline dev chạy và bạn kiểm tra trên môi trường dev.",
+          "Khi dev ổn, mở merge request từ `builds/dev` vào `builds/prod`. Người có quyền duyệt và merge, pipeline prod chạy (thường có thêm bước bấm duyệt trên Jenkins).",
+          "Hotfix gấp: tạo nhánh từ `builds/prod`, sửa, merge request vào `builds/prod`. Sau đó bắt buộc đưa bản sửa về `builds/dev` (merge ngược hoặc cherry-pick). Quên bước này thì lần deploy prod sau, lỗi cũ quay lại.",
+          "Không bao giờ sửa code trực tiếp trên `builds/prod` rồi push, dù có quyền."
+        ],
+        p: [
+          "Điểm cần hiểu: merge request từ `builds/dev` sang `builds/prod` mang theo mọi thứ đang có trên dev lúc đó, kể cả tính năng người khác vừa merge mà chưa test xong. Trước khi mở MR lên prod, xem danh sách commit trong MR để biết chính xác cái gì sẽ lên production."
+        ]
+      },
+      {
+        h: "Không build lại image cho prod",
+        p: [
+          "Nhược điểm lớn của mô hình này: pipeline prod thường build lại image từ đầu, nên image chạy trên production không phải chính image đã test ở dev. Có thể khắc phục mà không đổi quy trình:",
+          "Đặt merge method của repo là Fast-forward merge (Settings → Merge requests → Merge method) và không squash khi merge từ `builds/dev` sang `builds/prod`. Khi đó commit trên `builds/prod` giống hệt commit đã chạy ở dev. Tag image theo commit SHA; pipeline prod kiểm tra image của SHA đó đã có trên registry chưa, có rồi thì dùng lại, không build. Nếu merge tạo merge commit hoặc squash, SHA mới khác đi và pipeline sẽ build lại."
+        ],
+        code: {
+          lang: "groovy",
+          file: "Jenkinsfile",
+          src: `stage('Build & push image') {
+  agent { label 'docker' }
+  steps {
+    script {
+      // Nhánh origin/builds/prod → prod, còn lại → dev
+      env.DEPLOY_ENV = env.GIT_BRANCH.endsWith('builds/prod') ? 'prod' : 'dev'
+      env.IMAGE = "registry.congty.vn/shop/api:\${env.GIT_COMMIT.take(12)}"
+    }
+    sh '''
+      if docker pull "$IMAGE" > /dev/null 2>&1; then
+        echo "Image $IMAGE đã được build ở dev với cùng commit, dùng lại"
+      else
+        docker build -t "$IMAGE" . && docker push "$IMAGE"
+      fi
+    '''
+  }
+}`
+        }
+      }
+    ],
+    summary: [
+      "Mỗi môi trường một nhánh: merge vào `builds/dev` hay `builds/prod` quyết định code lên đâu.",
+      "GitLab gửi webhook tới `/project/TEN_JOB`; job lọc theo nhánh rồi build, đẩy image lên registry và deploy.",
+      "Nhận biết cách chọn nhánh: Branch Specifier trong job, Build with Parameters, hoặc Multibranch với tên `%2F`.",
+      "Bảo vệ `builds/prod` bằng Branch rules; hotfix xong phải đưa về `builds/dev`.",
+      "Fast-forward merge + tag image theo SHA giúp prod dùng lại đúng image đã test."
+    ],
+    pitfalls: [
+      "Webhook trỏ tới `/job/app-dev/build` thay vì `/project/app-dev`, bỏ qua plugin GitLab và bộ lọc nhánh.",
+      "GitLab tự host chưa bật cho phép webhook tới mạng nội bộ, nên từ chối lưu webhook trỏ tới Jenkins (báo URL bị chặn hoặc không hợp lệ).",
+      "Hotfix trên `builds/prod` mà không đưa về `builds/dev`, lần deploy sau lỗi quay lại.",
+      "Squash khi merge `builds/dev` vào `builds/prod`, SHA đổi nên image lại bị build mới."
+    ],
+    quiz: [
+      {
+        q: "Với plugin GitLab, URL webhook đúng để GitLab kích hoạt job `app-dev` là gì?",
+        options: ["https://jenkins.congty.vn/job/app-dev/build", "https://jenkins.congty.vn/project/app-dev", "https://jenkins.congty.vn/app-dev/webhook", "https://gitlab.congty.vn/project/app-dev"],
+        answer: 1,
+        explain: "Plugin GitLab lắng nghe ở `/project/TEN_JOB`. Dùng `/job/.../build` là bỏ qua plugin, mất bộ lọc nhánh và secret token của plugin."
+      },
+      {
+        q: "Trên Jenkins thấy job con tên `builds%2Fprod`. Đây là loại job gì?",
+        options: ["Freestyle project", "Job con do Multibranch Pipeline tạo cho nhánh builds/prod", "Job bị lỗi tên", "Job chạy theo lịch cron"],
+        answer: 1,
+        explain: "Multibranch tạo job cho mỗi nhánh và mã hoá dấu `/` thành `%2F` trong tên job."
+      },
+      {
+        q: "Làm sao để pipeline prod dùng lại đúng image đã test ở dev?",
+        options: ["Build lại image với tag `latest`", "Dùng Fast-forward merge không squash, tag image theo commit SHA và dùng lại nếu đã có", "Copy thư mục code từ server dev sang prod", "Tắt test ở pipeline prod"],
+        answer: 1,
+        explain: "Fast-forward giữ nguyên SHA giữa hai nhánh, nên image tag theo SHA đã build ở dev được dùng lại. Tag `latest` không cho biết image là bản nào."
+      }
+    ]
+  },
+  "p08.m6.t12": {
+    videos: [
+      { id: "CerVEwjMiRE", title: "DevOps for Freshers | Bài 27: Jenkins là gì? Jenkins để làm gì? | DevOps cho người mới bắt đầu", channel: "DEVOPSEDU VN", lang: "vi", minutes: 5, embed: true },
+      { id: "govN7rXOmpc", title: "Top 5 Jenkins Issues And How To Avoid Them", channel: "CloudBeesTV", lang: "en", minutes: 33, embed: true }
+    ],
+    sections: [
+      {
+        h: "Vẽ lại hệ thống trước khi bấm bất cứ nút nào",
+        p: [
+          "Tuần đầu, mục tiêu là hiểu hệ thống chứ chưa phải thay đổi nó. Dành một buổi đi theo đường đi của một commit, ghi lại từng chặng vào một sơ đồ của riêng bạn. Mọi thứ dưới đây chỉ cần quyền đọc:"
+        ],
+        list: [
+          "GitLab → repo → Settings → Webhooks (cần quyền Maintainer; không có thì hỏi): webhook trỏ tới job Jenkins nào, lọc nhánh nào.",
+          "GitLab → Settings → Repository → Branch rules: nhánh nào được bảo vệ, ai được merge vào `builds/prod`.",
+          "Jenkins → danh sách job: job nào ứng với nhánh/môi trường nào, job nào có chữ prod.",
+          "Jenkins → job → Configure (chỉ đọc, không bấm Save): Branch Specifier, Build Triggers, đường dẫn Jenkinsfile.",
+          "File `Jenkinsfile` trong repo: các stage, registry được đẩy tới (`docker push ...`), bước deploy (`ssh`, `kubectl`, `helm`, `docker compose`).",
+          "Jenkins → Manage Jenkins → Credentials (nếu được xem): chỉ thấy tên credential như `harbor-robot`, `deploy-ssh`, `aws-ecr`, không thấy giá trị. Tên cho biết pipeline đang nói chuyện với hệ thống nào.",
+          "Console Output của build thành công gần nhất: bằng chứng thật về những gì pipeline đã làm."
+        ]
+      },
+      {
+        h: "Đọc Console Output",
+        p: [
+          "Log của một build pipeline có cấu trúc khá đều. Nhận ra các dòng mốc giúp bạn đọc nhanh:"
+        ],
+        code: {
+          lang: "text",
+          file: "Console Output",
+          src: `Started by GitLab push by Nguyen Van A          ← ai/cái gì kích hoạt build
+Checking out git http://gitlab.congty.vn/shop/api.git into ...
+using credential gitlab-clone                     ← credential dùng để kéo code
+Checking out Revision 3f9c2ab1d0e4... (refs/remotes/origin/builds/dev)   ← đúng commit và nhánh nào
+Commit message: "Sửa lỗi tính phí ship"
+[Pipeline] stage
+[Pipeline] { (Test)                                ← bắt đầu stage Test
+[Pipeline] node
+Running on agent-1 in /home/jenkins/agent/workspace/app-dev   ← chạy trên agent nào
++ npm test                                         ← dấu + là lệnh shell thật được chạy
+...
+[Pipeline] { (Build & push image)
++ docker push registry.congty.vn/shop/api:3f9c2ab1d0e4   ← image đi đâu
+[Pipeline] { (Deploy)
++ ssh deploy@10.0.1.20 ...                         ← deploy tới máy nào
+Finished: SUCCESS                                  ← kết quả cuối`
+        }
+      },
+      {
+        h: "Những việc chưa nên làm khi mới vào",
+        p: [
+          "Jenkins không phân biệt bạn đang \"xem thử\" hay làm thật. Cho tới khi được giao việc và hiểu rõ job, tránh những thao tác sau:"
+        ],
+        list: [
+          "Bấm Build hoặc Rebuild trên job prod \"để xem thử\": đó là một lần deploy production thật.",
+          "Dùng Replay trên job prod để thử sửa pipeline.",
+          "Bấm Save trong trang Configure của job khi chỉ định xem; một thay đổi vô tình có thể đổi nhánh hoặc tắt trigger.",
+          "Push thẳng vào `builds/dev` hoặc `builds/prod` thay vì mở merge request.",
+          "Thêm `echo $PASSWORD` hay `env` vào pipeline để debug: dễ làm lộ secret trong log mà ai xem được job cũng đọc được.",
+          "Xoá build cũ, workspace hay credential vì thấy \"không dùng\"."
+        ]
+      },
+      {
+        h: "Khi build của bạn bị đỏ",
+        p: [
+          "Build đỏ là chuyện hằng ngày, không cần hoảng. Làm theo thứ tự này để tự xử lý phần lớn trường hợp:"
+        ],
+        list: [
+          "Mở Console Output, tìm từ dưới lên dòng lỗi đầu tiên có ý nghĩa, đừng chỉ đọc dòng cuối `Finished: FAILURE`.",
+          "Phân loại: lỗi ở stage Test hoặc Build do code (test fail, lỗi biên dịch, thiếu biến cấu hình) thì bạn tự sửa trên nhánh của mình.",
+          "Lỗi hạ tầng như `There are no nodes with the label`, `No space left on device`, `unauthorized` khi `docker push`, timeout khi SSH tới máy chủ: không phải lỗi code, báo cho người phụ trách DevOps.",
+          "Nghi lỗi mạng tạm thời trên dev thì có thể chạy lại một lần. Trên prod thì hỏi trước.",
+          "Khi báo lỗi, gửi link build (`BUILD_URL`) và đoạn log lỗi, không chụp màn hình cả trang."
+        ]
+      },
+      {
+        h: "Câu hỏi nên hỏi người phụ trách",
+        list: [
+          "Quy trình đưa code lên dev và lên prod là gì, ai được merge vào `builds/prod`?",
+          "Image được lưu ở registry nào, giữ bao lâu, rollback bằng cách nào?",
+          "Máy chủ dev/prod nằm ở đâu (AWS, FPT Cloud, máy chủ riêng), deploy bằng cách nào?",
+          "Cấu hình và secret của từng môi trường nằm ở đâu, ai quản lý?",
+          "Khi pipeline prod lỗi giữa chừng thì làm gì, báo ai?"
+        ],
+        p: [
+          "Ghi câu trả lời vào tài liệu của team hoặc sơ đồ bạn đã vẽ. Người mới sau bạn sẽ cảm ơn."
+        ]
+      }
+    ],
+    summary: [
+      "Tuần đầu: lần theo một commit từ GitLab tới máy chủ, chỉ dùng quyền đọc.",
+      "Console Output cho biết ai kích hoạt, commit nào, chạy ở đâu, image đi đâu, deploy tới đâu.",
+      "Không bấm Build/Replay/Save trên job prod khi chưa được giao.",
+      "Build đỏ: tìm dòng lỗi đầu tiên, phân biệt lỗi code với lỗi hạ tầng, báo lỗi kèm link build."
+    ],
+    pitfalls: [
+      "Bấm Rebuild job prod để \"xem nó chạy thế nào\".",
+      "Chỉ đọc dòng `Finished: FAILURE` rồi hỏi \"sao build lỗi\".",
+      "In biến môi trường ra log để debug và vô tình lộ mật khẩu registry."
+    ],
+    quiz: [
+      {
+        q: "Trong Console Output, dòng nào cho biết build đang chạy commit của nhánh nào?",
+        options: ["Finished: SUCCESS", "Checking out Revision 3f9c2ab1d0e4 (refs/remotes/origin/builds/dev)", "[Pipeline] stage", "Running on agent-1"],
+        answer: 1,
+        explain: "Dòng Checking out Revision ghi SHA và nhánh được build. Running on cho biết agent, Finished là kết quả cuối."
+      },
+      {
+        q: "Build báo `unauthorized` ở bước `docker push`. Nên xử lý thế nào?",
+        options: ["Sửa code rồi push lại", "Đây là lỗi quyền truy cập registry, báo người phụ trách DevOps", "Thêm echo mật khẩu vào pipeline để kiểm tra", "Xoá credential cũ và tạo mới"],
+        answer: 1,
+        explain: "Lỗi xác thực registry thuộc về hạ tầng/credential, không phải code. In mật khẩu ra log hay tự xoá credential đều nguy hiểm."
+      },
+      {
+        q: "Việc nào an toàn để làm trong tuần đầu tìm hiểu Jenkins của công ty?",
+        options: ["Bấm Rebuild job prod để xem log mới", "Dùng Replay trên job prod", "Đọc Console Output của build thành công gần nhất", "Sửa Branch Specifier rồi Save để thử"],
+        answer: 2,
+        explain: "Đọc log là thao tác chỉ đọc. Rebuild và Replay trên prod là deploy thật; Save trong Configure thay đổi job."
+      }
+    ]
+  },
 });

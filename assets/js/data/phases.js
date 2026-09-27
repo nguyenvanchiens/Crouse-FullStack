@@ -682,9 +682,11 @@ window.PHASES = [
           ["Shared library nâng cao", "vars/src/resources, trusted vs untrusted, pin phiên bản, thử nghiệm và JenkinsPipelineUnit."],
           ["Pipeline build → deploy hoàn chỉnh", "Test, build image theo commit, staging, smoke test, duyệt, lock, rollback; biến thể Helm/GitOps."],
           ["Configuration as Code & quản trị", "Image có plugin pin phiên bản, JCasC, Job DSL seed job, backup, nâng cấp LTS, giám sát."],
-          ["Debug, tối ưu & xử lý sự cố", "Lỗi thường gặp, Replay, Restart from Stage, linter, tăng tốc pipeline và xử lý hàng đợi."]
+          ["Debug, tối ưu & xử lý sự cố", "Lỗi thường gặp, Replay, Restart from Stage, linter, tăng tốc pipeline và xử lý hàng đợi."],
+          ["Nhánh theo môi trường: builds/dev & builds/prod", "GitLab webhook → job theo nhánh → build image → registry → deploy; branch rules, hotfix, dùng lại image bằng fast-forward."],
+          ["Ngày đầu với Jenkins của công ty", "Lần theo một commit, đọc Console Output, những việc chưa nên làm, xử lý khi build đỏ, câu hỏi cho DevOps."]
         ],
-        practice: ["Làm Lab 12: dựng Jenkins bằng JCasC, multibranch pipeline có agent Docker, duyệt và deploy", "Chọn một job Freestyle ở công ty, viết lại thành Jenkinsfile và chạy song song hai tuần"],
+        practice: ["Làm Lab 12: dựng Jenkins bằng JCasC, multibranch pipeline có agent Docker, duyệt và deploy", "Làm Lab 13: GitLab tự host + Jenkins với hai nhánh builds/dev và builds/prod", "Chọn một job Freestyle ở công ty, viết lại thành Jenkinsfile và chạy song song hai tuần"],
         res: [["Jenkins User Handbook", "https://www.jenkins.io/doc/book/"], ["Pipeline Syntax", "https://www.jenkins.io/doc/book/pipeline/syntax/"], ["Pipeline Best Practices", "https://www.jenkins.io/doc/book/pipeline/pipeline-best-practices/"], ["Configuration as Code", "https://plugins.jenkins.io/configuration-as-code/"], ["Jenkins Security Advisories", "https://www.jenkins.io/security/advisories/"]]
       }
     ],

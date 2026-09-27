@@ -1230,5 +1230,456 @@ docker compose down -v && docker compose up -d --build`
       "Sửa cấu hình trên giao diện rồi quên đưa vào jenkins.yaml, lần khởi động sau bị ghi đè",
       "Muốn Job DSL giữ nguyên chuỗi \${...} mà không để JCasC thay biến thì phải viết ^\${...}"
     ]
+  },
+  {
+    id: "lab13",
+    phase: "p08",
+    title: "GitLab → Jenkins: nhánh builds/dev và builds/prod",
+    level: "Nâng cao",
+    minutes: 120,
+    goal: "Dựng lại trên máy mình đúng quy trình hay gặp ở công ty: GitLab tự host, push vào builds/dev hay builds/prod thì webhook gọi job Jenkins tương ứng, build image, đẩy lên registry, deploy lên máy chủ dev hoặc prod. Prod có nhánh được bảo vệ, bước duyệt, và dùng lại đúng image đã chạy ở dev.",
+    steps: [
+      {
+        t: "Chuẩn bị thư mục, khoá SSH và file .env",
+        d: "Lab chạy trên Docker Desktop, cần cấp cho Docker ít nhất 4GB RAM vì GitLab khá nặng. Token GitLab tạm để trống, sẽ điền ở bước cấu hình GitLab.",
+        lang: "bash", file: "terminal",
+        code: `mkdir -p gitlab-jenkins-lab/controller/casc gitlab-jenkins-lab/agent gitlab-jenkins-lab/keys gitlab-jenkins-lab/demo-app
+cd gitlab-jenkins-lab
+ssh-keygen -t ed25519 -N "" -C jenkins-agent -f keys/agent
+
+echo "GITLAB_ROOT_PASSWORD=DevPath-Lab-2026!" > .env
+echo "ADMIN_PASSWORD=doi-mat-khau-nay" >> .env
+echo "GITLAB_TOKEN=dien-sau" >> .env
+echo "WEBHOOK_TOKEN_DEV=$(openssl rand -hex 16)" >> .env
+echo "WEBHOOK_TOKEN_PROD=$(openssl rand -hex 16)" >> .env
+echo "JENKINS_AGENT_SSH_PUBKEY=$(cat keys/agent.pub)" >> .env`
+      },
+      {
+        t: "Docker Compose: GitLab, Jenkins, agent, registry và máy chủ giả lập",
+        d: "GitLab tự host như ở công ty; registry đóng vai AWS ECR hoặc registry trên FPT Cloud; container docker (Docker-in-Docker) đóng vai máy chủ chạy app, dev ở cổng 8081, prod ở cổng 8082.",
+        lang: "yaml", file: "compose.yaml",
+        code: `services:
+  gitlab:
+    image: gitlab/gitlab-ce:19.4.1-ce.0
+    hostname: gitlab
+    shm_size: 256m
+    ports: ["8929:8929"]
+    environment:
+      GITLAB_ROOT_PASSWORD: \${GITLAB_ROOT_PASSWORD}
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab:8929'
+        gitlab_rails['initial_root_password'] = ENV['GITLAB_ROOT_PASSWORD']
+        # Cấu hình cho máy ít RAM (theo tài liệu GitLab "memory-constrained environments")
+        puma['worker_processes'] = 0
+        sidekiq['concurrency'] = 10
+        prometheus_monitoring['enable'] = false
+        gitlab_kas['enable'] = false
+        gitlab_rails['env'] = { 'MALLOC_CONF' => 'dirty_decay_ms:1000,muzzy_decay_ms:1000' }
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_data:/var/opt/gitlab
+      - gitlab_logs:/var/log/gitlab
+
+  jenkins:
+    build: ./controller
+    ports: ["8080:8080"]
+    environment:
+      ADMIN_PASSWORD: \${ADMIN_PASSWORD}
+      GITLAB_TOKEN: \${GITLAB_TOKEN}
+      WEBHOOK_TOKEN_DEV: \${WEBHOOK_TOKEN_DEV}
+      WEBHOOK_TOKEN_PROD: \${WEBHOOK_TOKEN_PROD}
+    volumes: [jenkins_home:/var/jenkins_home]
+    secrets: [agent_key]
+
+  agent:
+    build: ./agent
+    environment:
+      JENKINS_AGENT_SSH_PUBKEY: \${JENKINS_AGENT_SSH_PUBKEY}
+
+  # "Máy chủ" giả lập: Docker riêng để build image và chạy app dev/prod
+  docker:
+    image: docker:29-dind
+    privileged: true
+    command: ["--insecure-registry=registry:5000"]
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    ports: ["8081:8081", "8082:8082"]
+
+  # Kho image, đóng vai trò như AWS ECR hoặc registry trên cloud của công ty
+  registry:
+    image: registry:3
+
+secrets:
+  agent_key:
+    file: ./keys/agent
+
+volumes:
+  gitlab_config: {}
+  gitlab_data: {}
+  gitlab_logs: {}
+  jenkins_home: {}`
+      },
+      {
+        t: "Image Jenkins có plugin GitLab",
+        d: "Giống Lab 12, thêm gitlab-plugin để nhận webhook dạng /project/TEN_JOB.",
+        lang: "dockerfile", file: "controller/Dockerfile",
+        code: `FROM jenkins/jenkins:2.568.3-jdk21
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
+ENV CASC_JENKINS_CONFIG=/var/jenkins_casc
+COPY --chown=jenkins:jenkins plugins.txt /usr/share/jenkins/ref/plugins.txt
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+COPY --chown=jenkins:jenkins casc/ /var/jenkins_casc/`
+      },
+      {
+        t: "Danh sách plugin",
+        d: "gitlab-plugin cung cấp trigger \"Build when a change is pushed to GitLab\" giống job ở công ty.",
+        lang: "text", file: "controller/plugins.txt",
+        code: `configuration-as-code
+workflow-aggregator
+git
+ssh-slaves
+credentials-binding
+matrix-auth
+job-dsl
+pipeline-graph-view
+lockable-resources
+timestamper
+ws-cleanup
+gitlab-plugin`
+      },
+      {
+        t: "JCasC: hai job app-dev và app-prod",
+        d: "Mỗi job cố định một nhánh (Branch Specifier) và chỉ nhận push của nhánh đó (includeBranchesSpec), có secret token riêng. Agent được cấp biến DOCKER_HOST trỏ tới máy chủ giả lập.",
+        lang: "yaml", file: "controller/casc/jenkins.yaml",
+        code: `jenkins:
+  systemMessage: "Lab 13: GitLab → Jenkins, nhánh builds/dev và builds/prod"
+  numExecutors: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "\${ADMIN_PASSWORD}"
+  authorizationStrategy:
+    globalMatrix:
+      entries:
+        - user:
+            name: "admin"
+            permissions: ["Overall/Administer"]
+        - group:
+            name: "authenticated"
+            permissions: ["Overall/Read", "Job/Read", "Job/Build"]
+  nodes:
+    - permanent:
+        name: "agent-1"
+        labelString: "linux docker"
+        numExecutors: 2
+        remoteFS: "/home/jenkins/agent"
+        nodeProperties:
+          - envVars:
+              env:
+                - key: "DOCKER_HOST"
+                  value: "tcp://docker:2375"
+        launcher:
+          ssh:
+            host: "agent"
+            port: 22
+            credentialsId: "agent-ssh"
+            sshHostKeyVerificationStrategy:
+              manuallyTrustedKeyVerificationStrategy:
+                requireInitialManualTrust: false
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - basicSSHUserPrivateKey:
+              scope: SYSTEM
+              id: "agent-ssh"
+              username: "jenkins"
+              privateKeySource:
+                directEntry:
+                  privateKey: "\${readFile:/run/secrets/agent_key}"
+          - usernamePassword:
+              scope: GLOBAL
+              id: "gitlab-clone"
+              description: "Access token để Jenkins kéo code từ GitLab"
+              username: "oauth2"
+              password: "\${GITLAB_TOKEN}"
+
+unclassified:
+  location:
+    url: "http://jenkins:8080/"
+
+jobs:
+  - script: |
+      pipelineJob('app-dev') {
+        description('Build và deploy môi trường DEV khi có push vào nhánh builds/dev')
+        properties {
+          pipelineTriggers {
+            triggers {
+              gitlab {
+                triggerOnPush(true)
+                triggerOnMergeRequest(false)
+                branchFilterType('NameBasedFilter')
+                includeBranchesSpec('builds/dev')
+                secretToken('\${WEBHOOK_TOKEN_DEV}')
+              }
+            }
+          }
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('http://gitlab:8929/root/demo-app.git')
+                  credentials('gitlab-clone')
+                }
+                branch('*/builds/dev')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }
+      pipelineJob('app-prod') {
+        description('Build và deploy môi trường PROD khi có push vào nhánh builds/prod')
+        properties {
+          pipelineTriggers {
+            triggers {
+              gitlab {
+                triggerOnPush(true)
+                triggerOnMergeRequest(false)
+                branchFilterType('NameBasedFilter')
+                includeBranchesSpec('builds/prod')
+                secretToken('\${WEBHOOK_TOKEN_PROD}')
+              }
+            }
+          }
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('http://gitlab:8929/root/demo-app.git')
+                  credentials('gitlab-clone')
+                }
+                branch('*/builds/prod')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }`
+      },
+      {
+        t: "Image agent: Node.js và Docker CLI",
+        d: "Agent chạy test bằng Node và ra lệnh build/chạy container trên máy chủ giả lập qua DOCKER_HOST.",
+        lang: "dockerfile", file: "agent/Dockerfile",
+        code: `FROM jenkins/ssh-agent:9.0.0-jdk21
+RUN apt-get update \\
+ && apt-get install -y --no-install-recommends nodejs npm docker-cli curl \\
+ && rm -rf /var/lib/apt/lists/*`
+      },
+      {
+        t: "Ứng dụng mẫu",
+        d: "Một API nhỏ trả lời theo môi trường, có endpoint /health cho smoke test.",
+        lang: "javascript", file: "demo-app/server.js",
+        code: `const http = require('node:http');
+
+const APP_ENV = process.env.APP_ENV || 'local';
+
+function handler(req, res) {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    return res.end(JSON.stringify({ status: 'ok', env: APP_ENV }));
+  }
+  res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });
+  res.end(\`Xin chào từ môi trường \${APP_ENV}\\n\`);
+}
+
+if (require.main === module) http.createServer(handler).listen(3000);
+module.exports = { handler };`
+      },
+      {
+        t: "Test của ứng dụng",
+        d: "Test chạy bằng test runner có sẵn của Node, không cần cài thư viện.",
+        lang: "javascript", file: "demo-app/server.test.js",
+        code: `const test = require('node:test');
+const assert = require('node:assert');
+const http = require('node:http');
+const { handler } = require('./server');
+
+test('GET /health trả về ok', async () => {
+  const server = http.createServer(handler).listen(0);
+  const { port } = server.address();
+  const res = await fetch(\`http://127.0.0.1:\${port}/health\`);
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual((await res.json()).status, 'ok');
+  server.close();
+});`
+      },
+      {
+        t: "package.json",
+        d: "Script test gọi node --test.",
+        lang: "json", file: "demo-app/package.json",
+        code: `{
+  "name": "demo-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "test": "node --test" }
+}`
+      },
+      {
+        t: "Dockerfile của ứng dụng",
+        d: "Image chạy bằng user node, không phải root.",
+        lang: "dockerfile", file: "demo-app/Dockerfile",
+        code: `FROM node:24-alpine
+WORKDIR /app
+COPY package.json server.js ./
+USER node
+EXPOSE 3000
+CMD ["node", "server.js"]`
+      },
+      {
+        t: "Jenkinsfile dùng chung cho hai nhánh",
+        d: "Môi trường suy ra từ nhánh. Image tag theo commit; nếu image của commit đó đã có trên registry (đã build ở dev) thì prod dùng lại, không build lại. Prod phải bấm duyệt trước khi deploy.",
+        lang: "groovy", file: "demo-app/Jenkinsfile",
+        code: `// Một Jenkinsfile dùng chung cho cả nhánh builds/dev và builds/prod.
+// Job app-dev kéo nhánh builds/dev, job app-prod kéo nhánh builds/prod.
+pipeline {
+  agent none
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    disableConcurrentBuilds()
+    timestamps()
+  }
+  environment {
+    REGISTRY = 'registry:5000'
+    APP      = 'demo-app'
+  }
+  stages {
+    stage('Xác định môi trường') {
+      agent { label 'linux' }
+      steps {
+        script {
+          // GIT_BRANCH có dạng origin/builds/dev hoặc origin/builds/prod
+          env.DEPLOY_ENV = env.GIT_BRANCH.endsWith('builds/prod') ? 'prod' : 'dev'
+          env.APP_PORT   = env.DEPLOY_ENV == 'prod' ? '8082' : '8081'
+          env.IMAGE      = "\${env.REGISTRY}/\${env.APP}:\${env.GIT_COMMIT.take(12)}"
+        }
+        echo "Nhánh \${env.GIT_BRANCH} → môi trường \${env.DEPLOY_ENV}, image \${env.IMAGE}"
+      }
+    }
+    stage('Test') {
+      agent { label 'linux' }
+      steps { sh 'npm test' }
+    }
+    stage('Build & push image') {
+      agent { label 'docker' }
+      steps {
+        sh '''
+          if docker pull "$IMAGE" > /dev/null 2>&1; then
+            echo "Image $IMAGE đã có sẵn (đã build ở dev với cùng commit), dùng lại, không build lại"
+          else
+            docker build -t "$IMAGE" .
+            docker push "$IMAGE"
+          fi
+        '''
+      }
+    }
+    stage('Duyệt production') {
+      when {
+        beforeInput true
+        expression { env.DEPLOY_ENV == 'prod' }
+      }
+      options { timeout(time: 1, unit: 'HOURS') }
+      input {
+        message 'Deploy bản này lên PRODUCTION?'
+        ok 'Deploy'
+        submitter 'admin'
+        submitterParameter 'APPROVER'
+      }
+      steps { echo "Duyệt bởi \${env.APPROVER}" }
+    }
+    stage('Deploy') {
+      agent { label 'docker' }
+      steps {
+        lock("demo-\${env.DEPLOY_ENV}") {
+          sh '''
+            docker rm -f "demo-$DEPLOY_ENV" > /dev/null 2>&1 || true
+            docker run -d --name "demo-$DEPLOY_ENV" --restart unless-stopped \\
+              -e APP_ENV="$DEPLOY_ENV" -p "$APP_PORT:3000" "$IMAGE"
+            curl -fsS --retry 10 --retry-delay 2 --retry-all-errors "http://docker:$APP_PORT/health"
+          '''
+        }
+      }
+    }
+  }
+  post {
+    success { echo "Đã deploy \${env.IMAGE} lên \${env.DEPLOY_ENV}" }
+    failure { echo "Pipeline lỗi, xem \${env.BUILD_URL}" }
+  }
+}`
+      },
+      {
+        t: "Khởi động và cấu hình GitLab",
+        d: "Mở http://localhost:8929, đăng nhập root với mật khẩu trong .env, rồi làm trên giao diện: (1) Admin → Settings → Network → Outbound requests: bật \"Allow requests to the local network from webhooks and integrations\" vì Jenkins nằm cùng mạng nội bộ. (2) Ảnh đại diện → Edit profile → Access → Personal access tokens → Generate token → Legacy token, chọn scope read_repository; dán token vào GITLAB_TOKEN trong .env. (3) Tạo project trống tên demo-app, bỏ chọn tạo README. (4) Trong project: Settings → Merge requests → Merge method: Fast-forward merge.",
+        lang: "bash", file: "terminal",
+        code: `docker compose up -d --build
+docker compose logs -f gitlab     # chờ khoảng 3-5 phút tới khi trang đăng nhập mở được
+
+# Sau khi điền GITLAB_TOKEN vào .env:
+docker compose up -d jenkins      # tạo lại container Jenkins để JCasC đọc token mới`
+      },
+      {
+        t: "Đẩy code vào hai nhánh, bảo vệ prod và tạo webhook",
+        d: "Sau khi đẩy code: (1) Settings → Repository → Branch rules → Add branch rule cho builds/prod: Allowed to merge = Maintainers, Allowed to push and merge = No one. (2) Settings → Webhooks → Add new webhook: URL http://jenkins:8080/project/app-dev, Secret token là WEBHOOK_TOKEN_DEV, tick Push events và lọc nhánh builds/dev, bỏ Enable SSL verification vì lab dùng http. Tạo webhook thứ hai tương tự cho http://jenkins:8080/project/app-prod với WEBHOOK_TOKEN_PROD và nhánh builds/prod.",
+        lang: "bash", file: "terminal",
+        code: `cd demo-app
+git init -b builds/dev
+git add . && git commit -m "Khởi tạo demo-app"
+# Nhập user root và mật khẩu root khi được hỏi
+git push http://localhost:8929/root/demo-app.git builds/dev builds/dev:builds/prod`
+      },
+      {
+        t: "Chạy thử cả quy trình",
+        d: "Push vào builds/dev: app-dev tự chạy và deploy lên cổng 8081. Tạo merge request builds/dev → builds/prod trên GitLab và merge: app-prod tự chạy, log báo dùng lại image, dừng chờ bạn bấm Deploy trên Jenkins (http://localhost:8080), rồi deploy lên cổng 8082.",
+        lang: "bash", file: "terminal",
+        code: `echo "# demo-app" > README.md
+git add README.md && git commit -m "Thêm README"
+git push http://localhost:8929/root/demo-app.git builds/dev
+
+curl http://localhost:8081/      # Xin chào từ môi trường dev
+# Sau khi merge MR lên prod và bấm Deploy trên Jenkins:
+curl http://localhost:8082/      # Xin chào từ môi trường prod
+
+# Thử push thẳng vào prod: GitLab phải từ chối
+git commit --allow-empty -m "thu push thang"
+git push http://localhost:8929/root/demo-app.git builds/dev:builds/prod
+
+# Dọn dẹp khi học xong (xoá cả dữ liệu)
+cd .. && docker compose down -v`
+      }
+    ],
+    verify: [
+      "Push vào builds/dev chỉ kích hoạt app-dev; log ghi \"Started by GitLab push\" và Checking out Revision ... (refs/remotes/origin/builds/dev)",
+      "http://localhost:8081 trả lời \"Xin chào từ môi trường dev\"",
+      "Merge request builds/dev → builds/prod kích hoạt app-prod; log ghi image đã có sẵn và dùng lại, không build lại",
+      "Trong lúc app-prod chờ duyệt, agent-1 không bị chiếm executor",
+      "Sau khi bấm Deploy, http://localhost:8082 trả lời \"Xin chào từ môi trường prod\"",
+      "Push thẳng vào builds/prod bị GitLab từ chối: You are not allowed to push code to protected branches"
+    ],
+    pitfalls: [
+      "Lần khởi động đầu, GitLab đôi khi dừng giữa chừng khi tự cấu hình (lỗi reload sidekiq log). Chạy lại docker compose up -d là được",
+      "Docker Desktop cấp dưới 4GB RAM, GitLab chạy rất chậm hoặc bị kill",
+      "Quên bật cho phép webhook tới mạng nội bộ, GitLab từ chối lưu webhook trỏ tới http://jenkins:8080",
+      "Webhook trỏ tới /job/app-dev/build thay vì /project/app-dev, bỏ qua plugin GitLab và bộ lọc nhánh",
+      "Điền token vào .env nhưng chỉ docker compose restart, container giữ biến môi trường cũ; phải dùng docker compose up -d jenkins",
+      "Chọn Merge commit hoặc squash khi merge lên prod: commit SHA đổi nên prod build lại image mới"
+    ]
   }
 ];

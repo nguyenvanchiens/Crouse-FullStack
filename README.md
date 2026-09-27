@@ -9,10 +9,10 @@ Nội dung đối chiếu với roadmap.sh (Backend, DevOps, Full Stack), OWASP 
 | Mục | Chi tiết |
 | --- | --- |
 | 14 khóa học (chương) | Nền tảng → JS/TS → Frontend → Backend Node/NestJS → Database → Security → Testing → Docker → **CI/CD & DevSecOps** → Cloud & Terraform → Kubernetes → Observability/SRE → System Design → AI cho kỹ sư |
-| 350 bài học | Mỗi bài: giải thích chi tiết, ví dụ code, tóm tắt, lỗi thường gặp, 3 câu quiz có giải thích |
-| 12 Labs | Dockerfile, Compose, GitHub Actions CI, CD + OIDC + rollback, Terraform AWS, K8s + Gateway API, Argo CD, GitLab CI, Jenkins, Nginx blue-green, Prometheus, Jenkins dựng bằng JCasC |
+| 352 bài học | Mỗi bài: giải thích chi tiết, ví dụ code, tóm tắt, lỗi thường gặp, 3 câu quiz có giải thích |
+| 13 Labs | Dockerfile, Compose, GitHub Actions CI, CD + OIDC + rollback, Terraform AWS, K8s + Gateway API, Argo CD, GitLab CI, Jenkins, Nginx blue-green, Prometheus, Jenkins dựng bằng JCasC, GitLab → Jenkins với nhánh builds/dev và builds/prod |
 | Dự án | 1 dự án cuối mỗi chương, 12 bậc dự án và Capstone *ShopFlow* có mốc và tiêu chí chấm |
-| Video | 462 video YouTube tuyển chọn cho 314/350 bài (ưu tiên tiếng Việt), xem ngay trong trang hoặc mở trên YouTube |
+| Video | 462 video YouTube tuyển chọn cho 314/352 bài (ưu tiên tiếng Việt), xem ngay trong trang hoặc mở trên YouTube |
 | Sự nghiệp | Checklist sẵn sàng đi làm, portfolio, câu hỏi phỏng vấn |
 
 Tính năng:
