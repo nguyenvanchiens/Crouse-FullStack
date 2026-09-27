@@ -577,10 +577,11 @@ window.PHASES = [
     id: "p08",
     title: "CI/CD chuyên sâu & DevSecOps",
     tag: "CI/CD",
-    weeks: 6,
+    weeks: 7,
     summary: "Mỗi commit được tự động kiểm tra, build, quét bảo mật, đóng gói và đưa lên môi trường một cách an toàn và có thể rollback. Đây là kỹ năng giúp một backend developer nổi bật hơn.",
     outcomes: [
-      "Tự thiết kế pipeline hoàn chỉnh từ PR tới production bằng GitHub Actions (và đọc hiểu GitLab CI, Jenkins)",
+      "Tự thiết kế pipeline hoàn chỉnh từ PR tới production bằng GitHub Actions (và đọc hiểu GitLab CI)",
+      "Viết, vận hành và bảo mật Jenkins trong doanh nghiệp: Jenkinsfile, agent Docker/Kubernetes, shared library, JCasC",
       "Triển khai rolling, blue-green, canary, có migration tự động, smoke test và rollback",
       "Tích hợp bảo mật vào pipeline (SAST, SCA, container scan, secret scan, SBOM) và vận hành theo GitOps"
     ],
@@ -667,6 +668,24 @@ window.PHASES = [
         ],
         practice: ["Làm Lab 07: Argo CD tự đồng bộ khi CI cập nhật tag image"],
         res: [["Argo CD Docs", "https://argo-cd.readthedocs.io/"], ["OpenGitOps", "https://opengitops.dev/"], ["External Secrets", "https://external-secrets.io/"]]
+      },
+      {
+        t: "Jenkins thực chiến trong doanh nghiệp",
+        topics: [
+          ["Kiến trúc Jenkins & cài đặt", "Controller, agent, executor, label, JENKINS_HOME; dòng LTS; Java 21/25; không build trên controller."],
+          ["Loại job & chuyển từ Freestyle", "Freestyle, Pipeline, Multibranch, Organization Folder; ánh xạ sang Jenkinsfile; đối chiếu GitHub Actions/GitLab CI."],
+          ["Declarative Pipeline đầy đủ", "options, parameters, triggers, when/beforeAgent, parallel, input, trạng thái build và post."],
+          ["Groovy, CPS & sandbox", "Groovy đủ dùng, script block, Groovy chạy trên controller, NotSerializableException, @NonCPS, Script Approval."],
+          ["Agent: tĩnh, Docker, Kubernetes", "Agent cố định vs tạm thời, agent Docker, pod template, build image không cần Docker daemon."],
+          ["Credentials & phân quyền", "Loại và scope credential, withCredentials, LDAP/SSO, Matrix/Role-based, cập nhật plugin."],
+          ["Multibranch, webhook & PR", "Branch Source plugin, webhook, báo trạng thái PR, PR từ fork không được tin cậy."],
+          ["Shared library nâng cao", "vars/src/resources, trusted vs untrusted, pin phiên bản, thử nghiệm và JenkinsPipelineUnit."],
+          ["Pipeline build → deploy hoàn chỉnh", "Test, build image theo commit, staging, smoke test, duyệt, lock, rollback; biến thể Helm/GitOps."],
+          ["Configuration as Code & quản trị", "Image có plugin pin phiên bản, JCasC, Job DSL seed job, backup, nâng cấp LTS, giám sát."],
+          ["Debug, tối ưu & xử lý sự cố", "Lỗi thường gặp, Replay, Restart from Stage, linter, tăng tốc pipeline và xử lý hàng đợi."]
+        ],
+        practice: ["Làm Lab 12: dựng Jenkins bằng JCasC, multibranch pipeline có agent Docker, duyệt và deploy", "Chọn một job Freestyle ở công ty, viết lại thành Jenkinsfile và chạy song song hai tuần"],
+        res: [["Jenkins User Handbook", "https://www.jenkins.io/doc/book/"], ["Pipeline Syntax", "https://www.jenkins.io/doc/book/pipeline/syntax/"], ["Pipeline Best Practices", "https://www.jenkins.io/doc/book/pipeline/pipeline-best-practices/"], ["Configuration as Code", "https://plugins.jenkins.io/configuration-as-code/"], ["Jenkins Security Advisories", "https://www.jenkins.io/security/advisories/"]]
       }
     ],
     project: {
@@ -674,7 +693,7 @@ window.PHASES = [
       desc: "PR → lint/test (có Postgres service) → build image → scan → push GHCR → tự deploy staging → smoke test → duyệt tay → production → tự rollback nếu smoke test lỗi.",
       reqs: ["OIDC thay cho access key; pin action theo SHA; concurrency", "Release tự động theo Conventional Commits", "Lead time từ merge tới production < 15 phút; tài liệu hoá pipeline"]
     },
-    checkpoint: ["Vẽ và giải thích pipeline của bạn trong 5 phút", "Giải thích 'build once, deploy many' và vì sao không build lại cho production", "Rollback production trong vòng dưới 2 phút"]
+    checkpoint: ["Vẽ và giải thích pipeline của bạn trong 5 phút", "Chuyển một job Jenkins Freestyle thành Jenkinsfile có duyệt và rollback", "Giải thích 'build once, deploy many' và vì sao không build lại cho production", "Rollback production trong vòng dưới 2 phút"]
   },
 
   {

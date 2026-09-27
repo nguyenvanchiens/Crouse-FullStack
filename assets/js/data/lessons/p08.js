@@ -4434,4 +4434,1085 @@ sops --encrypt --in-place secrets/production/task-api-db.yaml`
       }
     ]
   },
+  "p08.m6.t0": {
+    videos: [
+      { id: "6k8o_6vAaGQ", title: "Học Jenkins từ A đến Z / Kiên Lê TV", channel: "Kien Le Tech", lang: "vi", minutes: 23, embed: true },
+      { id: "4KghHJEz5no", title: "What Is a Jenkins Agent?", channel: "CloudBeesTV", lang: "en", minutes: 3, embed: true }
+    ],
+    sections: [
+      {
+        h: "Các thành phần của một hệ thống Jenkins",
+        p: [
+          "Khi công ty nói \"Jenkins\", thường đó là một hệ thống gồm nhiều máy chứ không phải một tiến trình. Hiểu đúng các khái niệm dưới đây giúp bạn đọc được log, biết build đang chạy ở đâu và vì sao nó phải xếp hàng.",
+          "Các tài liệu cũ dùng chữ master/slave; từ năm 2020 Jenkins đổi thành controller/agent, và node của controller gọi là built-in node."
+        ],
+        list: [
+          "Controller: tiến trình Java phục vụ giao diện web, lưu cấu hình, lên lịch build và điều phối agent. Controller không nên tự chạy build.",
+          "Agent: máy (VM, container, pod) nhận việc từ controller và chạy các bước `sh`, `docker build`, test.",
+          "Node: tên chung cho controller và agent. Executor: một \"khe\" chạy build trên node; node có 2 executor thì chạy tối đa 2 build cùng lúc.",
+          "Label: nhãn gắn cho agent như `docker`, `linux`, `deploy`. Pipeline xin `agent { label 'docker' }` và Jenkins chọn node có nhãn đó.",
+          "Workspace: thư mục làm việc của một job trên agent, chứa code đã checkout. Hai build song song của cùng job dùng workspace khác nhau (hậu tố `@2`).",
+          "`JENKINS_HOME`: thư mục dữ liệu của controller gồm cấu hình (`config.xml`), `jobs/` (lịch sử build), `plugins/`, `users/` và `secrets/` (khoá giải mã credential)."
+        ]
+      },
+      {
+        h: "Agent kết nối với controller thế nào",
+        p: [
+          "Có ba cách phổ biến. SSH: controller SSH vào máy agent và khởi động tiến trình agent (plugin SSH Build Agents), phù hợp với VM Linux cố định. Inbound: tiến trình agent trên máy kia tự kết nối về controller, qua cổng TCP 50000 hoặc qua WebSocket trên cổng HTTP(S) thông thường; cách này hợp khi agent nằm sau firewall hoặc controller đứng sau reverse proxy. Cloud: plugin Docker, Kubernetes hoặc EC2 tạo agent tạm thời cho mỗi build rồi xoá đi.",
+          "Agent tạm thời là hướng nên đi: mỗi build có môi trường sạch, không còn rác từ build trước, và không phải bảo trì một dàn máy build \"thú cưng\"."
+        ]
+      },
+      {
+        h: "Phiên bản và Java",
+        p: [
+          "Jenkins có hai dòng phát hành. Weekly ra mỗi tuần. LTS (Long-Term Support) chọn một bản weekly làm nền khoảng 12 tuần một lần, sau đó ra các bản vá .2, .3 cách nhau khoảng 4 tuần. Doanh nghiệp nên dùng LTS; tại thời điểm 9/2026 bản LTS mới nhất là 2.568.3 (phát hành 2/9/2026).",
+          "Từ LTS 2.555.1 (4/2026), Jenkins yêu cầu Java 21 hoặc Java 25. Yêu cầu này áp dụng cho controller và mọi loại agent, nên khi nâng cấp Jenkins phải kiểm tra cả Java trên agent. JDK dùng để build ứng dụng Java của bạn thì độc lập, có thể là bản khác."
+        ],
+        code: {
+          lang: "bash",
+          file: "terminal",
+          src: `# Chạy thử Jenkins LTS bằng Docker: pin đúng phiên bản thay vì tag trôi
+docker volume create jenkins_home
+docker run -d --name jenkins --restart=on-failure \\
+  -p 8080:8080 -p 50000:50000 \\
+  -v jenkins_home:/var/jenkins_home \\
+  jenkins/jenkins:2.568.3-jdk21
+
+# Mật khẩu admin lần đầu
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword`
+        }
+      },
+      {
+        h: "Không build trên controller",
+        p: [
+          "Mặc định Jenkins cho phép build chạy trên built-in node để người mới dễ bắt đầu. Tài liệu bảo mật của Jenkins khuyên tắt điều này: build chạy trên built-in node có cùng quyền truy cập file như chính tiến trình Jenkins, tức là đọc được `JENKINS_HOME` và các khoá giải mã credential. Vào Manage Jenkins → Nodes → Built-In Node → Configure, đặt số executor bằng 0, và chuẩn bị sẵn agent trước khi làm."
+        ]
+      }
+    ],
+    summary: [
+      "Controller điều phối, agent chạy build; executor là số build chạy song song trên một node.",
+      "Agent kết nối qua SSH, inbound (TCP 50000 hoặc WebSocket) hoặc được cloud plugin tạo tạm thời.",
+      "Dùng dòng LTS; từ 2.555.1 cần Java 21 hoặc 25 cho cả controller lẫn agent.",
+      "Đặt 0 executor cho built-in node để build không chạm được vào dữ liệu của controller."
+    ],
+    pitfalls: [
+      "Dùng tag `jenkins/jenkins:latest` (dòng weekly) cho production, mỗi lần pull lại nhảy phiên bản.",
+      "Nâng Jenkins lên LTS mới mà quên agent vẫn chạy Java 17, agent không kết nối được.",
+      "Để build chạy trên controller, một script lỗi làm đầy ổ đĩa là cả Jenkins ngừng hoạt động."
+    ],
+    quiz: [
+      {
+        q: "Một node có 3 executor nghĩa là gì?",
+        options: ["Node đó chạy tối đa 3 build cùng lúc", "Node đó có 3 CPU", "Mỗi build được chạy lại 3 lần nếu lỗi", "Node đó kết nối tới 3 controller"],
+        answer: 0,
+        explain: "Executor là khe chạy build. Số executor không gắn với số CPU, không liên quan tới retry và một agent chỉ thuộc một controller."
+      },
+      {
+        q: "Từ LTS 2.555.1, phiên bản Java nào được hỗ trợ để chạy Jenkins?",
+        options: ["Java 11 hoặc 17", "Java 17 hoặc 21", "Java 21 hoặc 25", "Bất kỳ Java nào từ 8 trở lên"],
+        answer: 2,
+        explain: "Chính sách Java của Jenkins: từ LTS 2.555.1 (4/2026) chỉ hỗ trợ Java 21 và 25, áp dụng cho controller và agent."
+      },
+      {
+        q: "Vì sao nên đặt số executor của built-in node về 0?",
+        options: ["Để Jenkins khởi động nhanh hơn", "Để build không có quyền truy cập file của controller", "Vì built-in node không chạy được lệnh sh", "Để tiết kiệm giấy phép Jenkins"],
+        answer: 1,
+        explain: "Build trên built-in node chạy với quyền của tiến trình Jenkins, đọc được cấu hình và khoá giải mã secret. Jenkins là mã nguồn mở, không có giấy phép theo executor."
+      }
+    ]
+  },
+  "p08.m6.t1": {
+    videos: [
+      { id: "IOUm1lw7F58", title: "What Is The Difference Between Freestyle and Pipeline in Jenkins", channel: "CloudBeesTV", lang: "en", minutes: 9, embed: true },
+      { id: "tuxO7ZXplRE", title: "Create Multibranch Pipeline with Git - Jenkins Pipeline Tutorial for Beginners 2/4", channel: "TechWorld with Nana", lang: "en", minutes: 14, embed: true }
+    ],
+    sections: [
+      {
+        h: "Các loại job bạn sẽ gặp",
+        p: [
+          "Một Jenkins lâu năm trong công ty thường có đủ mọi loại job, từ job click tay tạo năm 2015 tới multibranch pipeline mới. Biết loại job giúp bạn biết cấu hình nằm ở đâu và sửa ở đâu."
+        ],
+        list: [
+          "Freestyle project: cấu hình bằng form trên giao diện (checkout, Execute shell, post-build action). Cấu hình lưu trong `config.xml` trên controller, không có review, không có lịch sử thay đổi rõ ràng.",
+          "Pipeline: pipeline viết bằng Jenkinsfile, dán trực tiếp trong job hoặc lấy từ repo (Pipeline script from SCM).",
+          "Multibranch Pipeline: tự quét một repo, tạo job con cho mỗi nhánh và pull/merge request có Jenkinsfile.",
+          "Organization Folder: quét cả một organization GitHub hay group GitLab/Bitbucket, tự tạo multibranch cho mọi repo có Jenkinsfile.",
+          "Folder: gom job theo team hoặc dự án, gắn phân quyền và credential riêng cho từng folder."
+        ]
+      },
+      {
+        h: "Vì sao nên chuyển sang Pipeline as code",
+        p: [
+          "Jenkinsfile nằm trong repo nên thay đổi pipeline đi qua pull request, có review, có lịch sử git và rollback được. Pipeline còn có tính bền (durability): build đang chạy có thể tiếp tục sau khi controller khởi động lại. Freestyle không có các lợi ích này, và mỗi lần sửa là một lần click tay khó kiểm soát.",
+          "Cách chuyển một job Freestyle: mở trang cấu hình, ghi lại từng phần rồi ánh xạ sang Jenkinsfile. Làm song song, giữ job cũ cho đến khi pipeline mới chạy ổn vài tuần."
+        ],
+        list: [
+          "Source Code Management → `checkout scm` (multibranch tự làm việc này).",
+          "Build Triggers → webhook, hoặc `triggers { cron(...) }` cho job định kỳ.",
+          "This project is parameterized → `parameters { ... }`.",
+          "Execute shell → `sh '...'` trong `steps`.",
+          "Post-build Actions (publish JUnit, archive, email) → khối `post`."
+        ]
+      },
+      {
+        h: "Đối chiếu với GitHub Actions và GitLab CI",
+        p: [
+          "Nếu bạn đã học GitHub Actions ở các bài trước, phần lớn khái niệm có tương đương trực tiếp. Bảng này giúp bạn đọc Jenkinsfile nhanh hơn."
+        ],
+        list: [
+          "`pipeline` ↔ workflow (GitHub) ↔ pipeline (GitLab).",
+          "`stage` ↔ job ↔ job trong một stage.",
+          "`agent { label 'x' }` ↔ `runs-on` ↔ `tags` của runner; `agent { docker {...} }` ↔ `container:` ↔ `image:`.",
+          "Jenkins Credentials ↔ Secrets ↔ CI/CD Variables (masked, protected).",
+          "`when { branch 'main' }` ↔ `if: github.ref == 'refs/heads/main'` ↔ `rules: - if: $CI_COMMIT_BRANCH == \"main\"`.",
+          "`input` ↔ environment có required reviewers ↔ `when: manual`.",
+          "`post { always {...} }` ↔ `if: always()` ↔ `after_script`.",
+          "Shared library ↔ reusable workflow/composite action ↔ `include:`/CI/CD components."
+        ]
+      }
+    ],
+    summary: [
+      "Freestyle cấu hình bằng click và nằm trên controller; Pipeline nằm trong repo và được review.",
+      "Multibranch tự tạo job theo nhánh và PR; Organization Folder làm việc đó cho cả tổ chức.",
+      "Chuyển Freestyle bằng cách ánh xạ từng phần cấu hình sang Jenkinsfile, chạy song song trước khi tắt job cũ.",
+      "Khái niệm Jenkins có tương đương trong GitHub Actions và GitLab CI."
+    ],
+    pitfalls: [
+      "Dán Jenkinsfile trực tiếp vào ô script của job, mất luôn lợi ích review và lịch sử.",
+      "Xoá job Freestyle ngay khi pipeline mới chạy được một lần, không còn đường lui.",
+      "Sửa pipeline bằng giao diện trên production Jenkins mà không ghi lại, người sau không biết vì sao nó chạy như vậy."
+    ],
+    quiz: [
+      {
+        q: "Loại job nào tự tạo job con cho mỗi nhánh và pull request có Jenkinsfile?",
+        options: ["Freestyle project", "Multibranch Pipeline", "Pipeline dán script trực tiếp", "Folder"],
+        answer: 1,
+        explain: "Multibranch Pipeline quét repo và tạo job cho từng nhánh/PR. Folder chỉ để gom nhóm, Freestyle và Pipeline đơn chỉ là một job."
+      },
+      {
+        q: "Lợi ích chính của Jenkinsfile trong repo so với job Freestyle là gì?",
+        options: ["Chạy nhanh hơn gấp đôi", "Không cần agent", "Thay đổi pipeline được review và có lịch sử git", "Không cần cài plugin nào"],
+        answer: 2,
+        explain: "Pipeline as code đưa pipeline vào quy trình review và version control. Tốc độ, agent và plugin không phải điểm khác biệt chính."
+      },
+      {
+        q: "Trong Jenkins, cái gì tương đương với `when: manual` của GitLab CI?",
+        options: ["Bước `input` chờ người duyệt", "Khối `post`", "`triggers { cron(...) }`", "`options { retry(3) }`"],
+        answer: 0,
+        explain: "`input` dừng pipeline chờ người bấm duyệt, giống job manual. `post` chạy sau stage, cron là lịch, retry là chạy lại khi lỗi."
+      }
+    ]
+  },
+  "p08.m6.t2": {
+    videos: [
+      { id: "_Qhe1rETqGg", title: "Jenkins Tutorial: Tích hợp Jenkins với Github bằng Jenkinsfile", channel: "TechMaster Vietnam", lang: "vi", minutes: 10, embed: true },
+      { id: "7KCS70sCoK0", title: "Complete Jenkins Pipeline Tutorial | Jenkinsfile explained", channel: "TechWorld with Nana", lang: "en", minutes: 35, embed: true }
+    ],
+    sections: [
+      {
+        h: "Bộ khung Declarative đầy đủ",
+        p: [
+          "Declarative Pipeline có cấu trúc cố định nên Jenkins kiểm tra được cú pháp trước khi chạy. Các directive chính: `agent` (chạy ở đâu), `environment` (biến môi trường), `options` (timeout, giữ bao nhiêu build, chặn chạy song song), `parameters` (tham số khi chạy tay), `triggers` (cron, pollSCM, upstream), `tools`, `stages`, và `post`.",
+          "Tham số đọc qua `params.TEN`. Jenkins cung cấp sẵn nhiều biến môi trường: `BUILD_NUMBER`, `BUILD_URL`, `JOB_NAME`, `WORKSPACE`; sau khi checkout có `GIT_COMMIT`; trong multibranch có `BRANCH_NAME`, và build của PR có thêm `CHANGE_ID`, `CHANGE_TARGET`."
+        ],
+        code: {
+          lang: "groovy",
+          file: "Jenkinsfile",
+          src: `pipeline {
+  agent { label 'linux' }
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '30'))
+    disableConcurrentBuilds()
+    timestamps()
+  }
+  parameters {
+    choice(name: 'LOG_LEVEL', choices: ['info', 'debug'], description: 'Mức log khi chạy test')
+    booleanParam(name: 'RUN_E2E', defaultValue: false, description: 'Chạy thêm test e2e')
+  }
+  triggers { cron('H 2 * * 1-5') }   // chạy đêm các ngày làm việc, H rải giờ theo tên job
+  stages {
+    stage('Install') { steps { sh 'npm ci' } }
+    stage('Kiểm tra') {
+      failFast true
+      parallel {
+        stage('Lint') { steps { sh 'npm run lint' } }
+        stage('Unit test') {
+          steps { sh 'LOG_LEVEL=' + params.LOG_LEVEL + ' npm test' }
+          post { always { junit 'reports/junit.xml' } }
+        }
+      }
+    }
+    stage('E2E') {
+      when { expression { params.RUN_E2E } }
+      steps { sh 'npm run test:e2e' }
+    }
+  }
+  post {
+    failure { echo "Build #\${env.BUILD_NUMBER} lỗi: \${env.BUILD_URL}" }
+    fixed   { echo 'Build đã xanh trở lại' }
+    cleanup { cleanWs() }
+  }
+}`
+        }
+      },
+      {
+        h: "when, beforeAgent và input",
+        p: [
+          "`when` quyết định stage có chạy không: `branch 'main'`, `buildingTag()`, `changeRequest()` (build của PR/MR), `changeset '**/*.sql'`, `environment name: 'X', value: 'y'`, `expression { ... }`, kết hợp bằng `allOf`, `anyOf`, `not`. Điều kiện `branch` chỉ hoạt động trong multibranch pipeline.",
+          "Mặc định Jenkins cấp agent cho stage rồi mới xét `when`. Thêm `beforeAgent true` trong `when` để xét điều kiện trước, tránh chiếm một agent chỉ để rồi bỏ qua stage. Tương tự có `beforeInput true` và `beforeOptions true`.",
+          "Directive `input` đặt ở cấp stage làm pipeline dừng trước khi vào `agent` của stage, nên khi chờ người duyệt sẽ không giữ executor nào. Đây là lý do nên dùng directive này thay vì gọi bước `input` bên trong `steps` của một stage đang giữ agent."
+        ]
+      },
+      {
+        h: "Trạng thái build và khối post",
+        p: [
+          "Build có các trạng thái SUCCESS, UNSTABLE, FAILURE, ABORTED. `junit` đánh dấu build UNSTABLE (màu vàng) khi có test lỗi, thay vì FAILURE. Khối `post` có các điều kiện `always`, `success`, `failure`, `unstable`, `aborted`, `unsuccessful` (mọi trạng thái trừ success), `changed` (khác lần trước), `fixed` (lần trước lỗi, lần này xanh), `regression` (lần trước xanh, lần này hỏng) và `cleanup` (chạy sau cùng, dùng để dọn dẹp).",
+          "Muốn chuyển file giữa các stage chạy trên agent khác nhau, dùng `stash`/`unstash`. Muốn giữ file sau khi build xong (bản build, báo cáo), dùng `archiveArtifacts`. Artifact lớn nên đẩy lên Nexus/Artifactory thay vì lưu trên controller."
+        ]
+      }
+    ],
+    summary: [
+      "Khung Declarative: agent, environment, options, parameters, triggers, stages, post.",
+      "`when` + `beforeAgent true` để không chiếm agent cho stage bị bỏ qua.",
+      "`input` ở cấp stage chờ duyệt mà không giữ executor.",
+      "Dùng `fixed`/`regression` để thông báo đúng lúc, `cleanup` để dọn workspace."
+    ],
+    pitfalls: [
+      "Dùng `when { branch 'main' }` trong job Pipeline thường (không phải multibranch), điều kiện không bao giờ đúng.",
+      "Không đặt `timeout`, một test treo giữ agent cả đêm.",
+      "Thông báo Slack/Telegram ở `always`, kênh chat ngập tin nhắn và mọi người tắt thông báo."
+    ],
+    quiz: [
+      {
+        q: "`beforeAgent true` trong khối `when` có tác dụng gì?",
+        options: ["Chạy stage trên controller", "Xét điều kiện `when` trước khi cấp agent cho stage", "Bỏ qua bước checkout", "Cấp agent trước khi pipeline bắt đầu"],
+        answer: 1,
+        explain: "Mặc định agent được cấp rồi mới xét `when`. `beforeAgent true` đảo thứ tự để stage bị bỏ qua không chiếm agent."
+      },
+      {
+        q: "Điều kiện `post` nào chạy khi build lần trước lỗi và lần này thành công?",
+        options: ["always", "changed chỉ khi lần này lỗi", "fixed", "regression"],
+        answer: 2,
+        explain: "`fixed` dành cho lỗi → xanh; `regression` là xanh → hỏng; `changed` chạy mỗi khi trạng thái khác lần trước, theo cả hai chiều."
+      },
+      {
+        q: "Khi test có lỗi và kết quả được publish bằng `junit`, build thường ở trạng thái nào?",
+        options: ["SUCCESS", "ABORTED", "NOT_BUILT", "UNSTABLE"],
+        answer: 3,
+        explain: "`junit` đặt build thành UNSTABLE khi có test lỗi. Nếu chính lệnh test trả exit code khác 0 thì stage sẽ FAILURE trước đó."
+      }
+    ]
+  },
+  "p08.m6.t3": {
+    videos: [
+      { id: "GJBlskiaRrI", title: "What Is the Difference Between Scripted and Declarative Pipeline", channel: "CloudBeesTV", lang: "en", minutes: 5, embed: true }
+    ],
+    sections: [
+      {
+        h: "Groovy trong Jenkins: đủ dùng là được",
+        p: [
+          "Jenkinsfile viết bằng một DSL dựa trên Groovy. Bạn cần biết vài cú pháp: chuỗi nháy đơn `'...'` là chuỗi thường, chuỗi nháy kép `\"...\"` là GString có nội suy `\${...}`, chuỗi ba nháy `'''...'''` cho lệnh nhiều dòng; map `[name: 'api', port: 3000]`; list `['a', 'b']`; closure `{ ... }`.",
+          "Trong Declarative, logic Groovy tuỳ ý phải nằm trong khối `script { }`. Nếu thấy khối `script` dài hàng chục dòng, đó là dấu hiệu nên chuyển logic vào shell script trong repo hoặc vào shared library.",
+          "Kết quả của lệnh shell lấy qua `sh(script: '...', returnStdout: true).trim()` hoặc mã thoát qua `returnStatus: true`."
+        ],
+        code: {
+          lang: "groovy",
+          file: "Jenkinsfile",
+          src: `stage('Chọn môi trường') {
+  steps {
+    script {
+      // Việc lọc file giao cho shell; Groovy chỉ nhận kết quả. Gán vào env để stage sau đọc được.
+      env.ONLY_DOCS = sh(
+        script: 'git diff --name-only HEAD~1 | grep -qv "^docs/" && echo false || echo true',
+        returnStdout: true
+      ).trim()
+    }
+    echo "Chỉ đổi tài liệu: \${env.ONLY_DOCS}"
+  }
+}`
+        }
+      },
+      {
+        h: "Groovy chạy trên controller, không phải trên agent",
+        p: [
+          "Đây là điều nhiều người không biết: mọi đoạn Groovy trong pipeline (vòng lặp, xử lý chuỗi, parse JSON) chạy trên controller và dùng CPU, RAM của controller. Chỉ các bước như `sh`, `bat` mới chạy trên agent. Hướng dẫn Pipeline Best Practices của Jenkins nói rõ: dùng Groovy làm \"keo dán\" nối các bước, còn việc nặng giao cho `sh`. Một pipeline đọc file log 200MB bằng `readFile` rồi xử lý bằng Groovy có thể làm chậm cả Jenkins.",
+          "Để pipeline tiếp tục được sau khi controller khởi động lại, Jenkins biến đổi code theo kiểu CPS và lưu trạng thái định kỳ. Hệ quả là biến giữ đối tượng không serialize được (ví dụ `java.util.regex.Matcher`) có thể gây `NotSerializableException`, và vài cú pháp Groovy như `collection.each { }` không được hỗ trợ đầy đủ. Hàm đánh dấu `@NonCPS` chạy như Groovy thường, nhanh hơn, nhưng bên trong không được gọi bước pipeline như `sh` hay `echo`."
+        ]
+      },
+      {
+        h: "Sandbox và Script Approval",
+        p: [
+          "Jenkinsfile trong repo chạy trong Groovy sandbox: chỉ gọi được các phương thức đã có trong danh sách an toàn. Khi gặp lỗi `Scripts not permitted to use method ...`, admin có thể phê duyệt chữ ký đó ở Manage Jenkins → In-process Script Approval.",
+          "Đừng bấm duyệt cho nhanh. Duyệt những chữ ký như `jenkins.model.Jenkins getInstance` hay `java.io.File` là trao cho mọi người có quyền sửa Jenkinsfile toàn quyền trên controller. Tương tự, Script Console (Manage Jenkins → Script Console) chạy Groovy ngoài sandbox với toàn quyền, chỉ dành cho admin."
+        ]
+      },
+      {
+        h: "Scripted Pipeline",
+        p: [
+          "Các Jenkins cũ hay có pipeline dạng Scripted, bắt đầu bằng `node { ... }` thay vì `pipeline { ... }`, với `stage('x') { ... }` bên trong và điều khiển luồng bằng `if`, `try/catch/finally` của Groovy. Bạn cần đọc được nó để bảo trì; pipeline mới thì viết Declarative, vì dễ đọc hơn và được kiểm tra cú pháp trước khi chạy."
+        ]
+      }
+    ],
+    summary: [
+      "Nháy đơn là chuỗi thường, nháy kép nội suy `\${}`; logic tuỳ ý đặt trong `script { }`.",
+      "Groovy chạy trên controller; việc nặng giao cho `sh` trên agent.",
+      "CPS giúp pipeline sống sót khi controller restart nhưng hạn chế một số cú pháp; `@NonCPS` không gọi được bước pipeline.",
+      "Cẩn trọng với Script Approval: duyệt sai chữ ký là mở toàn quyền controller."
+    ],
+    pitfalls: [
+      "Parse file JSON lớn bằng Groovy trong pipeline thay vì dùng `jq` trong `sh`.",
+      "Gọi `sh` bên trong một hàm `@NonCPS`.",
+      "Duyệt mọi chữ ký trong Script Approval để \"cho build chạy được\"."
+    ],
+    quiz: [
+      {
+        q: "Đoạn Groovy trong khối `script { }` (không phải bước `sh`) chạy ở đâu?",
+        options: ["Trên agent được cấp cho stage", "Trên máy của developer", "Trên controller", "Trong container riêng do Docker tạo"],
+        answer: 2,
+        explain: "Code Groovy của pipeline chạy trên controller; chỉ các bước như `sh`, `bat` được gửi xuống agent."
+      },
+      {
+        q: "Hàm đánh dấu `@NonCPS` có hạn chế gì?",
+        options: ["Không được gọi các bước pipeline như `sh`, `echo`", "Không được trả về giá trị", "Chỉ chạy trên Windows", "Không dùng được biến cục bộ"],
+        answer: 0,
+        explain: "`@NonCPS` chạy như Groovy thường, không qua CPS, nên không được gọi bước pipeline bên trong. Nó vẫn trả về giá trị và dùng biến cục bộ bình thường."
+      },
+      {
+        q: "Khi gặp lỗi `Scripts not permitted to use method jenkins.model.Jenkins getInstance`, cách xử lý đúng là gì?",
+        options: ["Duyệt ngay trong Script Approval", "Tắt sandbox cho mọi job", "Viết lại, tránh gọi API nội bộ của Jenkins từ pipeline", "Chạy build trên built-in node"],
+        answer: 2,
+        explain: "Duyệt chữ ký này trao toàn quyền controller cho người sửa Jenkinsfile. Best practice của Jenkins coi việc gọi `Jenkins.instance` từ pipeline là dùng sai."
+      }
+    ]
+  },
+  "p08.m6.t4": {
+    videos: [
+      { id: "ymI02j-hqpU", title: "How to Setup Docker Containers As Build Agents for Jenkins", channel: "CloudBeesTV", lang: "en", minutes: 10, embed: true },
+      { id: "ZXaorni-icg", title: "How to Use Kubernetes Pods As Jenkins Agents", channel: "CloudBeesTV", lang: "en", minutes: 25, embed: true }
+    ],
+    sections: [
+      {
+        h: "Ba kiểu agent trong thực tế",
+        p: [
+          "Agent cố định là VM được cài sẵn công cụ (Docker, Node, JDK, kubectl) và gắn label. Dễ hiểu, nhưng công cụ dần lệch phiên bản giữa các máy và rác từ build trước để lại. Agent Docker dùng một máy có Docker, mỗi stage chạy trong container từ image bạn chọn. Agent Kubernetes tạo một pod cho mỗi build rồi xoá đi, co giãn theo tải.",
+          "Với agent Docker, cần cài plugin Docker Pipeline và agent phải có Docker. Jenkins mount workspace vào container và chạy các bước `sh` bên trong."
+        ],
+        code: {
+          lang: "groovy",
+          file: "Jenkinsfile",
+          src: `pipeline {
+  agent none
+  stages {
+    stage('Test API') {
+      agent {
+        docker {
+          image 'node:24-alpine'
+          label 'docker'          // chọn máy có Docker
+        }
+      }
+      steps { sh 'npm ci && npm test' }
+    }
+    stage('Test Java') {
+      agent { docker { image 'maven:3.9-eclipse-temurin-21'; label 'docker' } }
+      steps { sh 'mvn -B verify' }
+    }
+  }
+}`
+        }
+      },
+      {
+        h: "Agent Kubernetes",
+        p: [
+          "Plugin Kubernetes tạo pod theo khai báo YAML. Pod luôn có container agent tên `jnlp` (tên lịch sử) giữ kết nối với controller, cộng với các container công cụ bạn thêm vào. Bước `container('ten') { ... }` chạy lệnh trong container đó; `defaultContainer` đặt container mặc định cho mọi bước.",
+          "Container công cụ cần một lệnh giữ nó sống, thường là `command: [cat]` với `tty: true`, vì image như `node` sẽ thoát ngay nếu không có lệnh chạy lâu. Nên đặt `resources.requests` để scheduler xếp pod đúng và build không tranh tài nguyên của nhau."
+        ],
+        code: {
+          lang: "groovy",
+          file: "Jenkinsfile",
+          src: `pipeline {
+  agent {
+    kubernetes {
+      defaultContainer 'node'
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: node
+            image: node:24-alpine
+            command: [cat]
+            tty: true
+            resources:
+              requests: { cpu: "500m", memory: "1Gi" }
+      '''
+    }
+  }
+  stages {
+    stage('Test') { steps { sh 'npm ci && npm test' } }
+    stage('Kiểm tra môi trường') {
+      steps { container('jnlp') { sh 'java -version' } }   // container agent vẫn dùng được
+    }
+  }
+}`
+        }
+      },
+      {
+        h: "Build image trong agent tạm thời",
+        p: [
+          "Trong pod Kubernetes không có Docker daemon. Có ba cách build image: mount Docker socket của node (nhanh nhưng build chiếm quyền root của node, không nên), Docker-in-Docker với container privileged, hoặc công cụ không cần daemon như Kaniko hay Buildah. Lưu ý repo Kaniko gốc (GoogleContainerTools) đã được archive ngày 3/6/2025 và không còn được phát triển; nếu Jenkins công ty đang dùng image Kaniko cũ, hãy lên kế hoạch chuyển sang Buildah, BuildKit rootless hoặc một bản fork còn được bảo trì. Agent Docker cũng cần cache phụ thuộc (npm, Maven) qua volume để build sau không tải lại từ đầu; nhớ cấp quyền ghi cho user mà Jenkins dùng trong container.",
+          "Agent cố định vẫn hợp lý cho vài trường hợp: build cần phần cứng đặc biệt, cần truy cập mạng nội bộ riêng (agent deploy đặt trong vùng mạng production), hoặc build Windows/macOS."
+        ]
+      }
+    ],
+    summary: [
+      "Agent cố định dễ dùng nhưng lệch cấu hình theo thời gian; agent Docker và Kubernetes cho môi trường sạch mỗi build.",
+      "`agent { docker { image ... } }` cần plugin Docker Pipeline và máy có Docker.",
+      "Pod Kubernetes có container `jnlp` cộng container công cụ; dùng `container()` hoặc `defaultContainer`.",
+      "Trong Kubernetes, build image bằng công cụ không cần daemon thay vì mount Docker socket."
+    ],
+    pitfalls: [
+      "Mount `/var/run/docker.sock` vào pod build, ai sửa được Jenkinsfile là có root trên node.",
+      "Container công cụ thiếu `command: [cat]`, container thoát ngay và bước `container()` báo lỗi.",
+      "Không đặt `resources.requests` cho pod build, nhiều build dồn lên một node và cùng chậm."
+    ],
+    quiz: [
+      {
+        q: "Trong pod agent Kubernetes, container `jnlp` dùng để làm gì?",
+        options: ["Chạy database cho test", "Giữ kết nối giữa agent và controller", "Lưu cache npm", "Build image Docker"],
+        answer: 1,
+        explain: "Container `jnlp` chạy tiến trình agent kết nối về controller. Các công cụ build nằm trong container khác do bạn khai báo."
+      },
+      {
+        q: "Vì sao container công cụ trong pod thường có `command: [cat]` và `tty: true`?",
+        options: ["Để in log ra màn hình", "Để giữ container chạy chờ Jenkins gửi lệnh vào", "Để bật chế độ debug", "Vì Kubernetes bắt buộc"],
+        answer: 1,
+        explain: "Không có tiến trình chạy lâu, container sẽ thoát ngay. `cat` với tty giữ nó sống để các bước `sh` chạy bên trong."
+      },
+      {
+        q: "Cách nào an toàn hơn để build image trong pod Kubernetes?",
+        options: ["Mount Docker socket của node vào pod", "Chạy mọi container ở chế độ privileged", "Dùng công cụ build không cần daemon như Buildah hoặc BuildKit rootless", "Build trên controller"],
+        answer: 2,
+        explain: "Mount socket hay privileged trao quyền root trên node. Build trên controller vi phạm nguyên tắc cách ly controller."
+      }
+    ]
+  },
+  "p08.m6.t5": {
+    videos: [
+      { id: "yfjtMIDgmfs", title: "The Correct Way to Handle Credentials in a Jenkins Pipeline", channel: "CloudBeesTV", lang: "en", minutes: 10, embed: true },
+      { id: "LJru4bq9yVY", title: "Jenkins Role Based Access Control (RBAC) #jenkins  #accesscontrol", channel: "DevOps - Free Tutorials", lang: "en", minutes: 7, embed: true }
+    ],
+    sections: [
+      {
+        h: "Các loại credential và phạm vi",
+        p: [
+          "Plugin Credentials lưu secret đã mã hoá trong `JENKINS_HOME`. Loại thường dùng: Username with password (tài khoản registry, Nexus), Secret text (token API, webhook Telegram/Slack), Secret file (kubeconfig, file `.env`), SSH Username with private key (deploy qua SSH, checkout Git), Certificate.",
+          "Mỗi credential có scope. Global: job dùng được. System: chỉ Jenkins dùng cho việc của nó (kết nối agent SSH, quét repo), job không đọc được. Nên tạo credential ở cấp folder của team thay vì Global, để team khác không dùng được secret production của bạn."
+        ]
+      },
+      {
+        h: "Dùng credential trong pipeline",
+        p: [
+          "`withCredentials` chỉ đưa secret vào biến môi trường trong phạm vi khối, và che giá trị bằng `****` trong log. Việc che log chỉ khớp đúng chuỗi secret: nếu script in secret đã bị biến đổi (base64, tách ký tự, in ra file rồi `cat`), log vẫn lộ. Luôn dùng nháy đơn để shell đọc biến; với nháy kép, Groovy chèn secret vào chuỗi lệnh và Jenkins sẽ cảnh báo trong log về việc truyền secret qua Groovy String interpolation."
+        ],
+        code: {
+          lang: "groovy",
+          file: "Jenkinsfile",
+          src: `stage('Deploy') {
+  steps {
+    withCredentials([
+      file(credentialsId: 'kubeconfig-staging', variable: 'KUBECONFIG'),
+      string(credentialsId: 'telegram-bot-token', variable: 'TG_TOKEN')
+    ]) {
+      sh 'kubectl -n shop set image deploy/order-api app="$IMAGE"'
+      sh 'curl -fsS -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" -d chat_id=-100123 -d text="Đã deploy $IMAGE"'
+    }
+    // SSH: cần plugin SSH Agent
+    sshagent(credentials: ['deploy-ssh']) {
+      sh 'ssh deploy@10.0.1.20 "docker compose -f /srv/app/compose.yaml pull && docker compose -f /srv/app/compose.yaml up -d"'
+    }
+  }
+}`
+        }
+      },
+      {
+        h: "Đăng nhập và phân quyền",
+        p: [
+          "Security Realm là nơi xác thực người dùng: cơ sở dữ liệu người dùng của Jenkins, LDAP/Active Directory (phổ biến trong doanh nghiệp), hoặc SSO qua SAML/OpenID Connect. Authorization Strategy quyết định ai được làm gì. Plugin Matrix Authorization Strategy cho phân quyền theo từng quyền (Job/Build, Job/Configure, Credentials/View...) ở cấp toàn hệ thống, folder hoặc job. Plugin Role-based Authorization Strategy gom quyền thành role, gán theo nhóm LDAP và theo mẫu tên job.",
+          "Nguyên tắc: developer được Build và Read job của team, chỉ một nhóm nhỏ có Configure, chỉ admin có Overall/Administer. Không bao giờ bật \"Anyone can do anything\", kể cả trong mạng nội bộ."
+        ]
+      },
+      {
+        h: "Giữ Jenkins an toàn",
+        p: [
+          "Phần lớn lỗ hổng Jenkins nằm ở plugin; trang Manage Jenkins hiển thị cảnh báo khi plugin đang cài có lỗ hổng đã công bố. Theo dõi Jenkins Security Advisories và cập nhật định kỳ. Bài học thật: CVE-2024-23897 (1/2024) cho phép đọc file tuỳ ý trên controller qua Jenkins CLI, kể cả khoá giải mã secret; nhiều máy chủ Jenkins để lộ ra Internet đã bị khai thác. Đừng đưa Jenkins ra Internet công khai nếu không bắt buộc; đặt sau VPN hoặc SSO."
+        ]
+      }
+    ],
+    summary: [
+      "Chọn đúng loại credential; scope System chỉ cho Jenkins dùng, credential của team nên đặt ở folder.",
+      "`withCredentials` giới hạn phạm vi secret và che log, nhưng không che được secret đã bị biến đổi.",
+      "Xác thực qua LDAP/SSO, phân quyền bằng Matrix hoặc Role-based theo nguyên tắc tối thiểu.",
+      "Cập nhật plugin và core thường xuyên, không để Jenkins lộ ra Internet."
+    ],
+    pitfalls: [
+      "Tạo mọi credential ở Global, job của team nào cũng đọc được secret production.",
+      "`sh \"curl -H 'Authorization: $TOKEN'\"` với nháy kép, token nằm trong chuỗi lệnh.",
+      "Cho developer quyền Job/Configure trên job deploy production, ai cũng sửa được bước deploy."
+    ],
+    quiz: [
+      {
+        q: "Credential có scope System dùng cho mục đích gì?",
+        options: ["Mọi job đều dùng được", "Chỉ Jenkins dùng cho việc hệ thống như kết nối agent, job không đọc được", "Chỉ dùng trong Freestyle job", "Lưu ngoài Jenkins, trong Vault"],
+        answer: 1,
+        explain: "System scope dành cho chính Jenkins (kết nối agent SSH, quét repo). Job cần credential Global hoặc cấp folder."
+      },
+      {
+        q: "`withCredentials` che secret trong log như thế nào?",
+        options: ["Che mọi dạng biến đổi của secret", "Thay đúng chuỗi secret bằng ****, không che bản đã biến đổi như base64", "Tắt toàn bộ log của khối", "Mã hoá log bằng khoá riêng"],
+        answer: 1,
+        explain: "Che log dựa trên khớp chuỗi. Secret bị mã hoá base64 hay tách ký tự vẫn lộ, nên đừng in secret ra log dưới bất kỳ dạng nào."
+      },
+      {
+        q: "Plugin nào cho phép gom quyền thành role và gán theo nhóm LDAP?",
+        options: ["Role-based Authorization Strategy", "Pipeline Graph View", "Workspace Cleanup", "Timestamper"],
+        answer: 0,
+        explain: "Role-based Authorization Strategy định nghĩa role và gán cho người dùng/nhóm. Các plugin còn lại phục vụ hiển thị pipeline, dọn workspace và thêm thời gian vào log."
+      }
+    ]
+  },
+  "p08.m6.t6": {
+    videos: [
+      { id: "aDmeeVDrp0o", title: "How to Create a GitHub Branch Source Multibranch Pipeline in Jenkins", channel: "CloudBeesTV", lang: "en", minutes: 27, embed: true },
+      { id: "y4XGFluzPHY", title: "How to Create a GitLab Multibranch Pipeline in Jenkins", channel: "CloudBeesTV", lang: "en", minutes: 21, embed: true }
+    ],
+    sections: [
+      {
+        h: "Multibranch pipeline làm gì",
+        p: [
+          "Multibranch Pipeline gắn với một repo. Mỗi lần quét (branch indexing), Jenkins tìm các nhánh, pull/merge request và tag có Jenkinsfile, tạo job con cho từng cái, và xoá job của nhánh đã bị xoá theo cấu hình Orphaned Item Strategy. Mỗi nhánh là một job riêng, có lịch sử build riêng.",
+          "Để nói chuyện với nền tảng Git, cài plugin nguồn tương ứng: GitHub Branch Source, GitLab Branch Source hoặc Bitbucket Branch Source. Các plugin này hiểu PR/MR, báo trạng thái build ngược về và nhận webhook. Nếu chỉ dùng plugin Git thuần, Jenkins vẫn thấy nhánh nhưng không hiểu PR."
+        ]
+      },
+      {
+        h: "Webhook thay vì poll",
+        p: [
+          "Poll SCM kiểm tra repo theo lịch, vừa chậm vừa tốn tải cho cả Jenkins lẫn máy chủ Git. Webhook để nền tảng Git gọi Jenkins ngay khi có push hoặc PR. Đường dẫn webhook tuỳ plugin, ví dụ `https://jenkins.company.vn/github-webhook/` cho GitHub; với GitLab Branch Source, plugin có thể tự đăng ký webhook cho repo khi được cấu hình quyền. Máy chủ Git phải gọi tới được Jenkins; nếu Jenkins nằm trong mạng nội bộ còn Git ở cloud, cần reverse proxy hoặc giải pháp chuyển tiếp webhook.",
+          "Vẫn nên đặt quét định kỳ thưa (ví dụ mỗi ngày) như lưới an toàn khi webhook bị lỡ."
+        ]
+      },
+      {
+        h: "Build PR và báo trạng thái",
+        p: [
+          "Plugin nguồn báo kết quả build lên PR dưới dạng commit status/check. Kết hợp với branch protection (bắt buộc check `continuous-integration/jenkins/pr-merge` hoặc tên tương ứng phải xanh) để không ai merge code đỏ. Với PR, chọn chiến lược build \"merge với nhánh đích\" để test đúng code sau khi merge.",
+          "Trong Jenkinsfile, tách hành vi cho PR và nhánh chính: PR chỉ chạy lint, test, build thử; nhánh `main` mới push image và deploy. Dùng `when { changeRequest() }` cho PR và `when { branch 'main' }` cho nhánh chính."
+        ]
+      },
+      {
+        h: "PR từ fork: đừng để lộ secret",
+        p: [
+          "Với repo có người ngoài gửi PR từ fork, nguy hiểm lớn nhất là PR sửa Jenkinsfile để in credential ra. GitHub Branch Source có tuỳ chọn Trust cho \"Discover pull requests from forks\": Nobody, Collaborators, From users with Admin or Write permission (mặc định), Everyone. Với PR từ người không được tin cậy, Jenkins dùng Jenkinsfile của nhánh đích thay vì Jenkinsfile trong PR, nên sửa pipeline trong PR không có tác dụng. Đừng chọn Everyone cho repo có credential."
+        ]
+      }
+    ],
+    summary: [
+      "Multibranch tự tạo và dọn job theo nhánh, PR, tag có Jenkinsfile.",
+      "Dùng plugin nguồn GitHub/GitLab/Bitbucket để hiểu PR và báo trạng thái.",
+      "Webhook cho build tức thì; quét định kỳ thưa làm lưới an toàn.",
+      "PR chỉ test; `main` mới deploy. Không tin Jenkinsfile từ fork lạ."
+    ],
+    pitfalls: [
+      "Để poll SCM mỗi phút cho hàng trăm repo, máy chủ Git bị quá tải.",
+      "Deploy trong stage không có `when`, mọi PR đều deploy lên staging.",
+      "Đặt Trust là Everyone cho repo công khai, PR từ fork đọc được credential."
+    ],
+    quiz: [
+      {
+        q: "Vì sao nên dùng webhook thay cho Poll SCM?",
+        options: ["Webhook bảo mật hơn vì không cần mạng", "Build bắt đầu ngay khi có push và giảm tải cho máy chủ Git", "Poll SCM không hoạt động với Git", "Webhook không cần Jenkinsfile"],
+        answer: 1,
+        explain: "Webhook đẩy sự kiện ngay lập tức; poll phải chờ tới lượt quét và liên tục hỏi máy chủ Git."
+      },
+      {
+        q: "Với PR từ fork của người không được tin cậy, GitHub Branch Source dùng Jenkinsfile nào?",
+        options: ["Jenkinsfile trong PR", "Jenkinsfile của nhánh đích", "Không build PR đó", "Jenkinsfile mặc định của Jenkins"],
+        answer: 1,
+        explain: "Jenkins dùng Jenkinsfile của nhánh đích để PR không sửa được pipeline nhằm lấy secret."
+      },
+      {
+        q: "Điều kiện nào dùng để chạy stage chỉ cho build của pull request?",
+        options: ["`when { branch 'main' }`", "`when { buildingTag() }`", "`when { changeRequest() }`", "`when { changelog '.*' }`"],
+        answer: 2,
+        explain: "`changeRequest()` đúng khi build là PR/MR. `branch` lọc theo tên nhánh, `buildingTag` cho tag, `changelog` theo nội dung commit."
+      }
+    ]
+  },
+  "p08.m6.t7": {
+    videos: [
+      { id: "Wj-weFEsTb0", title: "Getting Started With Shared Libraries in Jenkins", channel: "CloudBeesTV", lang: "en", minutes: 23, embed: true }
+    ],
+    sections: [
+      {
+        h: "Cấu trúc một shared library",
+        p: [
+          "Khi công ty có hàng chục service, copy Jenkinsfile giữa các repo sẽ nhanh chóng lệch nhau. Shared library gom phần dùng chung vào một repo riêng với cấu trúc cố định."
+        ],
+        list: [
+          "`vars/`: mỗi file `ten.groovy` trở thành một bước gọi được trong Jenkinsfile (`ten(...)`), thường có hàm `call`. File `ten.txt` cạnh đó là tài liệu hiển thị trong trang Pipeline Syntax.",
+          "`src/`: class Groovy theo package (ví dụ `src/vn/company/ci/Docker.groovy`), dùng cho logic phức tạp hơn.",
+          "`resources/`: file tĩnh (template, script shell, cấu hình), đọc bằng `libraryResource('path')`."
+        ]
+      },
+      {
+        h: "Trusted và untrusted",
+        p: [
+          "Library khai báo ở Manage Jenkins → System → Global Trusted Pipeline Libraries là trusted: chạy ngoài sandbox, gọi được mọi API Java và Jenkins. Tài liệu Jenkins cảnh báo: ai push được vào repo của library đó có toàn quyền trên Jenkins. Hãy bảo vệ repo library như code production: branch protection, review bắt buộc, giới hạn người được merge. Library khai báo ở cấp folder luôn là untrusted và chạy trong sandbox.",
+          "Có thể đánh dấu library \"Load implicitly\" để mọi pipeline tự nạp mà không cần `@Library`, nhưng khi đó người đọc Jenkinsfile khó biết bước lạ đến từ đâu. Nạp rõ ràng dễ bảo trì hơn."
+        ]
+      },
+      {
+        h: "Ví dụ: một bước build chuẩn cho mọi service Node",
+        p: [
+          "Library định nghĩa một bước nhận tham số và dựng cả pipeline. Mỗi service chỉ cần vài dòng. Pin phiên bản library bằng tag để thay đổi trong library không làm vỡ mọi pipeline cùng lúc; cấu hình \"Allow default version to be overridden\" cho phép service chọn phiên bản."
+        ],
+        code: {
+          lang: "groovy",
+          file: "vars/nodeService.groovy",
+          src: `def call(Map cfg) {
+  def registry = cfg.registry ?: 'harbor.company.vn'
+  pipeline {
+    agent { label 'docker' }
+    options { timeout(time: 30, unit: 'MINUTES'); buildDiscarder(logRotator(numToKeepStr: '30')) }
+    stages {
+      stage('Test') {
+        agent { docker { image "node:\${cfg.node ?: '24'}-alpine"; reuseNode true } }
+        steps { sh 'npm ci && npm test' }
+      }
+      stage('Image') {
+        when { branch 'main' }
+        steps {
+          script { env.IMAGE = "\${registry}/\${cfg.app}:\${env.GIT_COMMIT.take(12)}" }
+          dockerBuildPush(image: env.IMAGE, credentialsId: 'harbor-robot')   // bước khác trong vars/
+        }
+      }
+    }
+  }
+}
+
+// Jenkinsfile của service order-api chỉ còn:
+// @Library('company-ci@v2.3.0') _
+// nodeService(app: 'shop/order-api', node: '24')`
+        }
+      },
+      {
+        h: "Kiểm thử và phát hành library",
+        p: [
+          "Thử thay đổi library trước khi gắn tag: trong một Jenkinsfile thử nghiệm, nạp nhánh đang sửa bằng `@Library('company-ci@feature-x') _`; với library trên GitHub có thể dùng `@Library('company-ci@pull/123/head') _`. Với library untrusted, nút Replay cho sửa trực tiếp file library trong một lần chạy; Replay không hỗ trợ trusted library. Viết unit test cho `vars/` và `src/` bằng JenkinsPipelineUnit để bắt lỗi logic mà không cần Jenkins thật.",
+          "Theo best practice của Jenkins: không ghi đè bước có sẵn như `sh` hay `timeout`, tránh file biến toàn cục khổng lồ, và giữ library nhỏ vì nó được checkout cho mỗi lần chạy."
+        ]
+      }
+    ],
+    summary: [
+      "`vars/` chứa bước dùng chung, `src/` chứa class, `resources/` chứa file tĩnh.",
+      "Global trusted library chạy ngoài sandbox: bảo vệ repo của nó như production.",
+      "Pin library theo tag; thử nhánh hoặc PR của library trước khi phát hành.",
+      "Không ghi đè bước có sẵn, giữ library gọn."
+    ],
+    pitfalls: [
+      "Cho mọi developer push thẳng vào repo trusted library.",
+      "Dùng `@Library('company-ci') _` không kèm phiên bản, một commit lỗi ở library làm đỏ mọi pipeline.",
+      "Đặt một hàm `sh` trong `vars/sh.groovy`, ghi đè bước chuẩn và gây lỗi khó hiểu."
+    ],
+    quiz: [
+      {
+        q: "File `vars/deployApp.groovy` trong shared library tạo ra gì?",
+        options: ["Một biến môi trường tên deployApp", "Một bước `deployApp(...)` gọi được trong Jenkinsfile", "Một job mới tên deployApp", "Một plugin Jenkins"],
+        answer: 1,
+        explain: "Mỗi file trong `vars/` trở thành một bước (global variable) gọi được từ pipeline."
+      },
+      {
+        q: "Vì sao repo của Global Trusted Pipeline Library cần được bảo vệ chặt?",
+        options: ["Vì nó chạy ngoài sandbox, ai push được vào đó có toàn quyền trên Jenkins", "Vì Jenkins tính phí theo số library", "Vì library không có lịch sử git", "Vì library chạy trên máy developer"],
+        answer: 0,
+        explain: "Trusted library gọi được mọi API của Jenkins. Tài liệu chính thức cảnh báo người push được vào repo này có quyền không giới hạn."
+      },
+      {
+        q: "Cách an toàn để nạp library trong Jenkinsfile của service là gì?",
+        options: ["`@Library('company-ci') _` luôn lấy nhánh mới nhất", "Copy toàn bộ library vào repo service", "`@Library('company-ci@v2.3.0') _` pin theo tag", "Bật Load implicitly cho mọi library"],
+        answer: 2,
+        explain: "Pin theo tag giúp thay đổi library được phát hành có kiểm soát. Copy làm mất tác dụng dùng chung; nạp ngầm khó truy vết."
+      }
+    ]
+  },
+  "p08.m6.t8": {
+    videos: [
+      { id: "zEnF_BWCk6U", title: "DevOps for Freshers | Bài 30: Jenkins CI/CD (Continuous Delivery) | DevOps cho người mới bắt đầu", channel: "DEVOPSEDU VN", lang: "vi", minutes: 15, embed: true },
+      { id: "PKcGy9oPVXg", title: "Build & Push Docker Image using Jenkins Pipeline | Devops Integration Live Example Step By Step", channel: "Java Techie", lang: "en", minutes: 32, embed: true }
+    ],
+    sections: [
+      {
+        h: "Bức tranh thường gặp ở công ty",
+        p: [
+          "Một cấu hình rất phổ biến ở doanh nghiệp Việt Nam: GitLab hoặc Bitbucket tự host, Jenkins trong mạng nội bộ, registry Harbor hoặc Nexus, ứng dụng chạy bằng Docker Compose trên VM hoặc trên Kubernetes. Pipeline dưới đây gom các ý đã học: test trong container, build image một lần theo commit, deploy staging, smoke test, chờ duyệt, deploy production có khoá chống chạy chồng và rollback.",
+          "Pipeline dùng thêm plugin Lockable Resources (`lock`), SSH Agent (`sshagent`) và Docker Pipeline."
+        ],
+        code: {
+          lang: "groovy",
+          file: "Jenkinsfile",
+          src: `pipeline {
+  agent none
+  options {
+    timeout(time: 1, unit: 'HOURS')
+    buildDiscarder(logRotator(numToKeepStr: '50'))
+    disableConcurrentBuilds()
+  }
+  environment {
+    REGISTRY = 'harbor.company.vn'
+    APP      = 'shop/order-api'
+  }
+  stages {
+    stage('Test') {
+      agent { docker { image 'node:24-alpine'; label 'docker' } }
+      steps { sh 'npm ci && npm run lint && npm test' }
+      post { always { junit 'reports/junit.xml' } }
+    }
+    stage('Build & push image') {
+      when { branch 'main'; beforeAgent true }
+      agent { label 'docker' }
+      steps {
+        script { env.IMAGE = "\${env.REGISTRY}/\${env.APP}:\${env.GIT_COMMIT.take(12)}" }
+        withCredentials([usernamePassword(credentialsId: 'harbor-robot',
+                         usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
+          sh '''
+            echo "$REG_PASS" | docker login "$REGISTRY" -u "$REG_USER" --password-stdin
+            docker build -t "$IMAGE" .
+            docker push "$IMAGE"
+          '''
+        }
+      }
+      post { always { sh 'docker logout "$REGISTRY" || true' } }
+    }
+    stage('Deploy staging') {
+      when { branch 'main'; beforeAgent true }
+      agent { label 'deploy' }
+      steps {
+        lock('order-api-staging') {
+          sshagent(credentials: ['deploy-ssh']) {
+            sh 'ssh deploy@staging.company.vn "IMAGE=$IMAGE /srv/order-api/deploy.sh"'
+          }
+          sh 'curl -fsS --retry 10 --retry-delay 3 --retry-all-errors https://staging-api.company.vn/healthz'
+        }
+      }
+    }
+    stage('Duyệt production') {
+      when { branch 'main'; beforeInput true }
+      options { timeout(time: 1, unit: 'DAYS') }
+      input {
+        message 'Deploy bản này lên production?'
+        ok 'Deploy'
+        submitter 'release-managers'
+        submitterParameter 'APPROVER'
+      }
+      steps { echo "Duyệt bởi \${env.APPROVER}" }
+    }
+    stage('Deploy production') {
+      when { branch 'main'; beforeAgent true }
+      agent { label 'deploy' }
+      steps {
+        lock('order-api-production') {
+          sshagent(credentials: ['deploy-ssh']) {
+            sh 'ssh deploy@prod.company.vn "IMAGE=$IMAGE /srv/order-api/deploy.sh"'
+          }
+          sh 'curl -fsS --retry 10 --retry-delay 3 --retry-all-errors https://api.company.vn/healthz'
+        }
+      }
+      post {
+        failure {
+          sshagent(credentials: ['deploy-ssh']) {
+            sh 'ssh deploy@prod.company.vn "/srv/order-api/deploy.sh rollback"'
+          }
+        }
+      }
+    }
+  }
+  post {
+    failure { echo "Báo lỗi: \${env.JOB_NAME} #\${env.BUILD_NUMBER} \${env.BUILD_URL}" }
+  }
+}`
+        }
+      },
+      {
+        h: "Những điểm đáng chú ý",
+        list: [
+          "Image được build một lần với tag là 12 ký tự đầu của commit; staging và production dùng cùng image (build once, deploy many). Gán `env.IMAGE` trong `script` để các stage sau đọc được.",
+          "`agent none` ở cấp pipeline và agent riêng cho từng stage: stage duyệt không giữ executor nào trong lúc chờ người bấm.",
+          "`submitter` giới hạn ai được duyệt; `submitterParameter` ghi lại người duyệt để truy vết.",
+          "`lock` ngăn hai pipeline khác nhau (ví dụ hai service dùng chung môi trường) cùng deploy vào một nơi; `disableConcurrentBuilds` chỉ chặn trong cùng một job.",
+          "Agent label `deploy` đặt trong vùng mạng được phép SSH tới máy chủ; agent build không cần quyền đó.",
+          "Smoke test thất bại làm stage FAILURE và `post { failure }` gọi rollback. Script `deploy.sh` trên máy chủ cần lưu image đang chạy trước khi đổi để rollback được."
+        ],
+        p: [
+          "Pipeline có thể gọn hơn bằng shared library, nhưng hãy chắc chắn mình hiểu từng dòng trước khi đóng gói lại."
+        ]
+      },
+      {
+        h: "Nếu deploy lên Kubernetes",
+        p: [
+          "Thay bước SSH bằng Helm với kubeconfig lấy từ credential dạng Secret file. `--rollback-on-failure` (Helm 3 gọi là `--atomic`) chờ tài nguyên sẵn sàng và tự rollback nếu thất bại, nên thường không cần viết bước rollback riêng. Nếu công ty dùng GitOps với Argo CD, Jenkins chỉ cần cập nhật tag image trong repo cấu hình, việc deploy do Argo CD đảm nhận."
+        ],
+        code: {
+          lang: "groovy",
+          file: "Jenkinsfile",
+          src: `withCredentials([file(credentialsId: 'kubeconfig-prod', variable: 'KUBECONFIG')]) {
+  sh '''
+    helm upgrade --install order-api ./chart -n shop \\
+      --set image.tag="\${IMAGE##*:}" \\
+      --rollback-on-failure --timeout 5m
+  '''
+}`
+        }
+      }
+    ],
+    summary: [
+      "Test trong container, build image một lần theo commit, dùng lại cho staging và production.",
+      "Stage duyệt dùng directive `input` với `agent none` để không giữ executor; giới hạn người duyệt.",
+      "`lock` chống deploy chồng giữa các job; smoke test lỗi thì rollback.",
+      "Trên Kubernetes dùng Helm `--rollback-on-failure` hoặc để Argo CD deploy theo GitOps."
+    ],
+    pitfalls: [
+      "Build lại image cho production từ cùng commit, bản chạy production khác bản đã test.",
+      "Đặt `agent any` ở cấp pipeline rồi `input` bên trong, một executor bị giữ cả ngày chờ duyệt.",
+      "Không có `submitter`, ai vào được Jenkins cũng bấm deploy production."
+    ],
+    quiz: [
+      {
+        q: "Vì sao pipeline gán `env.IMAGE` theo commit ở stage build và dùng lại ở các stage deploy?",
+        options: ["Để production chạy đúng image đã deploy và kiểm tra ở staging", "Để build chạy nhanh hơn", "Vì Docker bắt buộc tag theo commit", "Để không cần registry"],
+        answer: 0,
+        explain: "Build once, deploy many: cùng một image đi qua staging rồi production, không build lại."
+      },
+      {
+        q: "`lock('order-api-production')` giải quyết vấn đề gì mà `disableConcurrentBuilds()` không giải quyết?",
+        options: ["Chặn hai job khác nhau cùng deploy vào một môi trường", "Tăng tốc build", "Tự động rollback", "Mã hoá credential"],
+        answer: 0,
+        explain: "`disableConcurrentBuilds` chỉ chặn chạy song song trong cùng job; `lock` là khoá dùng chung giữa mọi job."
+      },
+      {
+        q: "Tác dụng của `submitterParameter 'APPROVER'` trong directive `input` là gì?",
+        options: ["Chỉ định ai được duyệt", "Ghi tên người đã duyệt vào biến môi trường APPROVER", "Gửi email cho người duyệt", "Đặt thời gian chờ duyệt"],
+        answer: 1,
+        explain: "`submitter` giới hạn người được duyệt; `submitterParameter` lưu tên người duyệt để ghi log, truy vết."
+      }
+    ]
+  },
+  "p08.m6.t9": {
+    videos: [
+      { id: "ReAqFY4dyic", title: "Mastering Jenkins as Code: A Comprehensive Tutorial with Full Demo | JCasC | Jenkins Configuration", channel: "DevOpsCertification", lang: "en", minutes: 10, embed: true },
+      { id: "LCKm3tlQSCA", title: "Create Your Jenkins Job with Code ( Job DSL Plugin)", channel: "The Testing Academy", lang: "en", minutes: 8, embed: true }
+    ],
+    sections: [
+      {
+        h: "Dựng Jenkins bằng code",
+        p: [
+          "Jenkins cấu hình bằng click qua nhiều năm sẽ thành \"hộp đen\" không ai dám động vào. Cách hiện đại: một image Docker chứa sẵn plugin đã pin phiên bản, cộng file YAML của plugin Configuration as Code (JCasC) mô tả toàn bộ cấu hình. Dựng lại Jenkins lúc đó chỉ là build image và chạy container.",
+          "`jenkins-plugin-cli` có sẵn trong image chính thức, cài plugin theo danh sách trong file. Ghi rõ phiên bản mỗi plugin (`ten:phien-ban`) để lần build sau không tự nhảy phiên bản."
+        ],
+        code: {
+          lang: "dockerfile",
+          file: "Dockerfile",
+          src: `FROM jenkins/jenkins:2.568.3-jdk21
+# Bỏ trình hướng dẫn cài đặt lần đầu, cấu hình đã có trong JCasC
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
+# Đặt JCasC ngoài JENKINS_HOME: JENKINS_HOME là volume, file copy vào đó chỉ có hiệu lực ở lần tạo volume đầu tiên
+ENV CASC_JENKINS_CONFIG=/var/jenkins_casc
+COPY --chown=jenkins:jenkins plugins.txt /usr/share/jenkins/ref/plugins.txt
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+COPY --chown=jenkins:jenkins casc/ /var/jenkins_casc/`
+        }
+      },
+      {
+        h: "File JCasC",
+        p: [
+          "Plugin JCasC đọc biến `CASC_JENKINS_CONFIG`, có thể trỏ tới một file, một thư mục (đọc mọi file `.yaml`) hoặc URL. Secret không ghi thẳng trong YAML mà tham chiếu dạng `\${TEN_BIEN}`, lấy từ biến môi trường, file secret của Docker/Kubernetes hoặc Vault. Mẹo: cấu hình thử trên giao diện rồi vào Manage Jenkins → Configuration as Code → View Configuration để xem YAML tương ứng."
+        ],
+        code: {
+          lang: "yaml",
+          file: "casc/jenkins.yaml",
+          src: `jenkins:
+  systemMessage: "Jenkins được cấu hình bằng JCasC, đừng sửa tay trên giao diện"
+  numExecutors: 0                 # không build trên built-in node
+  securityRealm:
+    ldap:
+      configurations:
+        - server: "ldaps://ldap.company.vn:636"
+          rootDN: "dc=company,dc=vn"
+          managerDN: "cn=jenkins,ou=svc,dc=company,dc=vn"
+          managerPasswordSecret: "\${LDAP_PASSWORD}"
+  authorizationStrategy:
+    globalMatrix:
+      entries:
+        - group: { name: "jenkins-admins", permissions: ["Overall/Administer"] }
+        - group: { name: "developers", permissions: ["Overall/Read", "Job/Read", "Job/Build"] }
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: "harbor-robot"
+              username: "robot$ci"
+              password: "\${HARBOR_ROBOT_TOKEN}"
+unclassified:
+  location:
+    url: "https://jenkins.company.vn/"`
+        }
+      },
+      {
+        h: "Job cũng là code: Job DSL và seed job",
+        p: [
+          "Plugin Job DSL cho phép khai báo job (kể cả multibranch) bằng script. Một \"seed job\" chạy script đó để tạo và cập nhật mọi job khác. JCasC có khối `jobs:` gọi Job DSL ngay khi Jenkins khởi động. Kết hợp lại, cả cấu hình lẫn danh sách job đều nằm trong git."
+        ],
+        code: {
+          lang: "groovy",
+          file: "jobs/order-api.groovy",
+          src: `multibranchPipelineJob('shop/order-api') {
+  branchSources {
+    git {
+      id('order-api')
+      remote('https://gitlab.company.vn/shop/order-api.git')
+      credentialsId('gitlab-ci')
+    }
+  }
+  orphanedItemStrategy { discardOldItems { numToKeep(20) } }
+}`
+        }
+      },
+      {
+        h: "Vận hành hằng ngày",
+        list: [
+          "Sao lưu `JENKINS_HOME`, bỏ qua workspace và cache. Phải sao lưu thư mục `secrets/` cùng lúc: mất nó thì không giải mã được credential nào.",
+          "Nâng cấp theo dòng LTS: đọc LTS upgrade guide, sao lưu, thử trên một Jenkins staging dựng từ cùng image, rồi mới nâng production. Cập nhật plugin cùng đợt.",
+          "Giới hạn lịch sử build bằng `buildDiscarder` và dọn workspace, ổ đĩa đầy là nguyên nhân sự cố Jenkins rất phổ biến.",
+          "Giám sát bằng plugin Prometheus metrics (độ dài hàng đợi, executor rảnh, thời gian build) và cảnh báo khi hàng đợi dài bất thường.",
+          "Blue Ocean đã bị deprecate từ 7/2026 và không còn nhận bản vá bảo mật; dùng Pipeline Graph View hoặc Pipeline: Stage View thay thế."
+        ],
+        p: [
+          "Mục tiêu: nếu máy chủ Jenkins cháy hôm nay, bạn dựng lại được trong một giờ từ git và bản sao lưu."
+        ]
+      }
+    ],
+    summary: [
+      "Image Docker có plugin pin phiên bản + JCasC YAML = Jenkins dựng lại được.",
+      "Secret trong JCasC tham chiếu qua biến, không ghi thẳng.",
+      "Job DSL và seed job đưa danh sách job vào git.",
+      "Sao lưu `JENKINS_HOME` kèm `secrets/`, nâng cấp theo LTS có thử trước, bỏ Blue Ocean."
+    ],
+    pitfalls: [
+      "Sao lưu `jobs/` và `config.xml` nhưng quên `secrets/`, khôi phục xong mọi credential vô dụng.",
+      "`plugins.txt` không ghi phiên bản, mỗi lần build image lại ra một bộ plugin khác.",
+      "Vừa dùng JCasC vừa cho sửa tay trên giao diện, lần khởi động sau cấu hình tay bị ghi đè."
+    ],
+    quiz: [
+      {
+        q: "Biến môi trường nào chỉ cho plugin JCasC biết file cấu hình ở đâu?",
+        options: ["JENKINS_HOME", "CASC_JENKINS_CONFIG", "JAVA_OPTS", "JENKINS_URL"],
+        answer: 1,
+        explain: "JCasC đọc `CASC_JENKINS_CONFIG`, trỏ tới file, thư mục hoặc URL chứa YAML."
+      },
+      {
+        q: "Khi sao lưu Jenkins, vì sao phải giữ thư mục `secrets/`?",
+        options: ["Vì nó chứa log build", "Vì nó chứa khoá giải mã credential; mất nó thì credential không dùng được", "Vì nó chứa plugin", "Vì nó chứa workspace"],
+        answer: 1,
+        explain: "Credential được mã hoá bằng khoá trong `secrets/`. Log nằm trong `jobs/`, plugin trong `plugins/`."
+      },
+      {
+        q: "Tình trạng của Blue Ocean hiện nay là gì?",
+        options: ["Là giao diện mặc định mới của Jenkins", "Đã bị deprecate từ 7/2026, không còn nhận bản vá bảo mật", "Chỉ có trong bản trả phí", "Đã được gộp vào Jenkins core"],
+        answer: 1,
+        explain: "Theo tài liệu Jenkins, Blue Ocean bị deprecate từ 7/2026; Pipeline Graph View là lựa chọn được bảo trì."
+      }
+    ]
+  },
+  "p08.m6.t10": {
+    videos: [
+      { id: "VzJA3ciqKkU", title: "What Does Replay Do in Jenkins?", channel: "CloudBeesTV", lang: "en", minutes: 4, embed: true },
+      { id: "-7POl-vMLCQ", title: "How To Restart a Jenkins Pipeline From a Stage", channel: "CloudBeesTV", lang: "en", minutes: 3, embed: true }
+    ],
+    sections: [
+      {
+        h: "Đọc lỗi nhanh",
+        p: [
+          "Khi build đỏ, mở Console Output và tìm từ dưới lên dòng lỗi đầu tiên có ý nghĩa, không phải dòng cuối. Pipeline Graph View cho biết stage nào lỗi và log riêng của stage đó. Các lỗi hay gặp và nguyên nhân thường là:"
+        ],
+        list: [
+          "`script returned exit code 1`: lệnh shell thất bại; lỗi thật nằm ở vài dòng phía trên.",
+          "`Still waiting to schedule task` / `There are no nodes with the label 'x'`: không có agent nào mang label đó đang online, hoặc tất cả executor đang bận.",
+          "`Scripts not permitted to use method ...`: code gọi phương thức ngoài sandbox (xem bài Groovy & sandbox).",
+          "`java.io.NotSerializableException`: biến giữ đối tượng không serialize được qua điểm lưu trạng thái.",
+          "`No such DSL method 'xyz'`: gõ sai tên bước hoặc thiếu plugin cung cấp bước đó.",
+          "`No space left on device`: agent hoặc controller đầy ổ đĩa."
+        ]
+      },
+      {
+        h: "Công cụ sửa pipeline không cần commit liên tục",
+        p: [
+          "Replay: trên một build đã chạy, sửa trực tiếp Jenkinsfile và chạy lại để thử, không cần commit. Sửa đúng rồi thì mới đưa vào repo. Restart from Stage: chạy lại một Declarative pipeline từ stage bị lỗi mà không chạy lại các stage trước; nếu stage đó cần file từ `stash`, bật `preserveStashes()`.",
+          "Pipeline Syntax (đường dẫn `/pipeline-syntax` trong mỗi job) sinh đoạn code cho bước bất kỳ theo các plugin đang cài trên Jenkins của bạn, rất hữu ích khi không nhớ tham số. Kiểm tra cú pháp Declarative trước khi commit bằng linter của Jenkins:"
+        ],
+        code: {
+          lang: "bash",
+          file: "terminal",
+          src: `# Dùng API token của bạn (User → Security → API Token)
+curl -fsS -X POST --user "chien:$JENKINS_TOKEN" \\
+  -F "jenkinsfile=<Jenkinsfile" \\
+  https://jenkins.company.vn/pipeline-model-converter/validate`
+        }
+      },
+      {
+        h: "Làm pipeline nhanh hơn",
+        list: [
+          "Đo trước: xem stage nào tốn thời gian nhất trong Pipeline Graph View rồi mới tối ưu.",
+          "Chạy song song các bước độc lập (`parallel`, `matrix`) nếu có đủ executor.",
+          "Cache phụ thuộc: mount volume cache npm/Maven cho agent Docker, hoặc PersistentVolume cho pod; tận dụng cache layer Docker.",
+          "Checkout nông (shallow clone) cho repo lớn khi không cần toàn bộ lịch sử.",
+          "Gộp nhiều bước `sh` liên tiếp thành một: mỗi bước pipeline có chi phí điều phối riêng trên controller.",
+          "Với pipeline build-test chạy lại được, chọn chế độ Performance-optimized ở Manage Jenkins → System → Pipeline Speed/Durability Settings (hoặc riêng cho từng job) để giảm mạnh ghi đĩa trên controller; đánh đổi là build đang chạy có thể mất trạng thái nếu Jenkins tắt đột ngột."
+        ],
+        p: [
+          "Nếu hàng đợi thường xuyên dài, vấn đề là thiếu agent chứ không phải pipeline chậm: thêm agent hoặc chuyển sang agent Kubernetes co giãn."
+        ]
+      }
+    ],
+    summary: [
+      "Tìm dòng lỗi đầu tiên có ý nghĩa; nhận diện các lỗi thường gặp như thiếu label, sandbox, NotSerializable.",
+      "Replay để thử sửa, Restart from Stage để chạy lại từ chỗ hỏng, linter để kiểm tra cú pháp.",
+      "Đo trước khi tối ưu: song song hoá, cache phụ thuộc, gộp bước `sh`.",
+      "Hàng đợi dài thì thêm agent, không phải sửa pipeline."
+    ],
+    pitfalls: [
+      "Sửa Jenkinsfile bằng hàng chục commit \"fix ci\" thay vì dùng Replay.",
+      "Sửa bằng Replay xong quên đưa thay đổi vào repo, build sau lại lỗi như cũ.",
+      "Tối ưu stage mất 10 giây trong khi stage test mất 15 phút."
+    ],
+    quiz: [
+      {
+        q: "Build báo `There are no nodes with the label 'docker'`. Nguyên nhân thường là gì?",
+        options: ["Lỗi cú pháp Jenkinsfile", "Không có agent mang label `docker` đang online", "Thiếu credential registry", "Test bị lỗi"],
+        answer: 1,
+        explain: "Jenkins không tìm được node có label phù hợp để chạy stage. Kiểm tra agent có online và gắn đúng label không."
+      },
+      {
+        q: "Tính năng nào cho phép sửa Jenkinsfile và chạy lại một build mà không cần commit?",
+        options: ["Replay", "Rebuild", "Script Console", "Build with Parameters"],
+        answer: 0,
+        explain: "Replay mở trình sửa Jenkinsfile của build đó và chạy lại với nội dung đã sửa. Script Console là Groovy quản trị, không phải để sửa pipeline."
+      },
+      {
+        q: "Hàng đợi build luôn dài vào giờ cao điểm dù từng pipeline chạy nhanh. Nên làm gì trước?",
+        options: ["Viết lại Jenkinsfile bằng Scripted", "Tăng thêm agent hoặc dùng agent Kubernetes co giãn", "Tắt test", "Tăng số executor của built-in node"],
+        answer: 1,
+        explain: "Hàng đợi dài là dấu hiệu thiếu năng lực chạy. Tăng executor cho built-in node đưa build lên controller, trái nguyên tắc bảo mật."
+      }
+    ]
+  },
 });

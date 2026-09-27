@@ -836,7 +836,7 @@ docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword`
       }
     ],
     verify: ["Multibranch pipeline tự phát hiện nhánh mới", "Stage Lint và Test chạy song song"],
-    pitfalls: ["Dùng dấu nháy kép trong sh làm Groovy nội suy secret vào log", "Chạy build trên controller thay vì agent"]
+    pitfalls: ["Dùng dấu nháy kép trong sh làm Groovy nội suy secret vào log", "Chạy build trên controller thay vì agent", "Bước input nằm trong pipeline có agent any giữ executor suốt lúc chờ duyệt; Lab 12 dùng agent none và directive input ở cấp stage"]
   },
   {
     id: "lab10",
@@ -994,5 +994,241 @@ histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by 
     ],
     verify: ["Gọi /metrics thấy http_request_duration_seconds_bucket", "Tạo lỗi 500 hàng loạt → alert chuyển trạng thái Pending rồi Firing", "Dashboard hiển thị p95 theo route"],
     pitfalls: ["Dùng req.url làm label (có ID nên cardinality tăng vô hạn)", "Cảnh báo theo CPU thay vì theo trải nghiệm người dùng"]
+  },
+  {
+    id: "lab12",
+    phase: "p08",
+    title: "Jenkins dựng bằng code: JCasC + agent SSH + multibranch",
+    level: "Nâng cao",
+    minutes: 120,
+    goal: "Dựng một Jenkins hoàn toàn bằng file: image có plugin, JCasC cấu hình bảo mật, agent và job; pipeline multibranch có test, đóng gói, duyệt và deploy giả lập có khoá. Xoá sạch rồi dựng lại được trong vài phút.",
+    steps: [
+      {
+        t: "Cấu trúc thư mục và khoá SSH cho agent",
+        d: "Controller dùng khoá riêng để SSH vào agent; agent nhận khoá công khai qua biến môi trường. File .env và thư mục keys/ không được commit.",
+        lang: "bash", file: "terminal",
+        code: `mkdir -p jenkins-lab/controller/casc jenkins-lab/agent jenkins-lab/keys
+cd jenkins-lab
+ssh-keygen -t ed25519 -N "" -C jenkins-agent -f keys/agent
+
+echo "ADMIN_PASSWORD=doi-mat-khau-nay" > .env
+echo "JENKINS_AGENT_SSH_PUBKEY=$(cat keys/agent.pub)" >> .env
+echo "DEMO_REPO_URL=https://github.com/<tai-khoan-cua-ban>/task-api.git" >> .env
+printf ".env\\nkeys/\\n" > .gitignore`
+      },
+      {
+        t: "Image controller có sẵn plugin",
+        d: "Không chạy setup wizard; JCasC đặt ngoài JENKINS_HOME để mỗi lần build image mới là cấu hình mới có hiệu lực.",
+        lang: "dockerfile", file: "controller/Dockerfile",
+        code: `FROM jenkins/jenkins:2.568.3-jdk21
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
+ENV CASC_JENKINS_CONFIG=/var/jenkins_casc
+COPY --chown=jenkins:jenkins plugins.txt /usr/share/jenkins/ref/plugins.txt
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+COPY --chown=jenkins:jenkins casc/ /var/jenkins_casc/`
+      },
+      {
+        t: "Danh sách plugin",
+        d: "Lần đầu để plugin không kèm phiên bản cho dễ chạy; bước cuối sẽ xuất phiên bản đang cài để pin.",
+        lang: "text", file: "controller/plugins.txt",
+        code: `configuration-as-code
+workflow-aggregator
+git
+ssh-slaves
+credentials-binding
+matrix-auth
+job-dsl
+pipeline-graph-view
+junit
+lockable-resources
+timestamper
+ws-cleanup`
+      },
+      {
+        t: "Cấu hình JCasC",
+        d: "Không build trên controller, phân quyền theo ma trận, agent SSH với credential scope SYSTEM đọc từ file secret, và job multibranch tạo bằng Job DSL. JCasC thay biến dạng \${TEN} bằng biến môi trường, kể cả bên trong script Job DSL.",
+        lang: "yaml", file: "controller/casc/jenkins.yaml",
+        code: `jenkins:
+  systemMessage: "Lab 12: Jenkins được cấu hình bằng JCasC"
+  numExecutors: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "\${ADMIN_PASSWORD}"
+  authorizationStrategy:
+    globalMatrix:
+      entries:
+        - user:
+            name: "admin"
+            permissions: ["Overall/Administer"]
+        - group:
+            name: "authenticated"
+            permissions: ["Overall/Read", "Job/Read", "Job/Build"]
+  nodes:
+    - permanent:
+        name: "agent-1"
+        labelString: "linux node"
+        numExecutors: 2
+        remoteFS: "/home/jenkins/agent"
+        launcher:
+          ssh:
+            host: "agent"
+            port: 22
+            credentialsId: "agent-ssh"
+            sshHostKeyVerificationStrategy:
+              manuallyTrustedKeyVerificationStrategy:
+                requireInitialManualTrust: false
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - basicSSHUserPrivateKey:
+              scope: SYSTEM
+              id: "agent-ssh"
+              username: "jenkins"
+              privateKeySource:
+                directEntry:
+                  privateKey: "\${readFile:/run/secrets/agent_key}"
+
+unclassified:
+  location:
+    url: "http://localhost:8080/"
+
+jobs:
+  - script: |
+      multibranchPipelineJob('task-api') {
+        branchSources {
+          git {
+            id('task-api')
+            remote('\${DEMO_REPO_URL}')
+          }
+        }
+        orphanedItemStrategy { discardOldItems { numToKeep(10) } }
+      }`
+      },
+      {
+        t: "Image agent có Node.js",
+        d: "Dựa trên image SSH agent chính thức (có sẵn Java 21 và git), thêm Node.js để chạy test của task-api.",
+        lang: "dockerfile", file: "agent/Dockerfile",
+        code: `FROM jenkins/ssh-agent:9.0.0-jdk21
+RUN apt-get update \\
+ && apt-get install -y --no-install-recommends nodejs npm \\
+ && rm -rf /var/lib/apt/lists/*`
+      },
+      {
+        t: "Docker Compose",
+        d: "Khoá riêng đi vào controller dưới dạng secret file, không nằm trong image hay biến môi trường. Không cần mở cổng 50000 vì agent kết nối qua SSH.",
+        lang: "yaml", file: "compose.yaml",
+        code: `services:
+  jenkins:
+    build: ./controller
+    ports: ["8080:8080"]
+    environment:
+      ADMIN_PASSWORD: \${ADMIN_PASSWORD}
+      DEMO_REPO_URL: \${DEMO_REPO_URL}
+    volumes: [jenkins_home:/var/jenkins_home]
+    secrets: [agent_key]
+  agent:
+    build: ./agent
+    environment:
+      JENKINS_AGENT_SSH_PUBKEY: \${JENKINS_AGENT_SSH_PUBKEY}
+
+secrets:
+  agent_key:
+    file: ./keys/agent
+
+volumes:
+  jenkins_home: {}`
+      },
+      {
+        t: "Jenkinsfile trong repo task-api",
+        d: "Commit file này vào nhánh main của repo task-api (cần devDependency jest-junit). Stage duyệt không có agent nên không giữ executor khi chờ.",
+        lang: "groovy", file: "Jenkinsfile",
+        code: `pipeline {
+  agent none
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    timestamps()
+  }
+  stages {
+    stage('Test') {
+      agent { label 'linux' }
+      steps {
+        sh 'node --version && npm ci'
+        sh 'npm test -- --reporters=default --reporters=jest-junit'
+      }
+      post {
+        always  { junit allowEmptyResults: true, testResults: 'junit.xml' }
+        cleanup { cleanWs() }
+      }
+    }
+    stage('Đóng gói') {
+      when { branch 'main'; beforeAgent true }
+      agent { label 'linux' }
+      steps {
+        sh 'npm ci && npm pack'
+        archiveArtifacts artifacts: '*.tgz', fingerprint: true
+      }
+    }
+    stage('Duyệt') {
+      when { branch 'main'; beforeInput true }
+      options { timeout(time: 30, unit: 'MINUTES') }
+      input {
+        message 'Deploy bản này lên staging?'
+        ok 'Deploy'
+        submitter 'admin'
+        submitterParameter 'APPROVER'
+      }
+      steps { echo "Duyệt bởi \${env.APPROVER}" }
+    }
+    stage('Deploy (giả lập)') {
+      when { branch 'main'; beforeAgent true }
+      agent { label 'linux' }
+      steps {
+        lock('lab-staging') {
+          sh 'echo "Deploy commit $GIT_COMMIT lên staging" && sleep 20'
+        }
+      }
+    }
+  }
+  post {
+    fixed   { echo 'Pipeline đã xanh trở lại' }
+    failure { echo "Lỗi, xem \${env.BUILD_URL}" }
+  }
+}`
+      },
+      {
+        t: "Chạy, kiểm tra và pin phiên bản plugin",
+        d: "Sau khi mọi thứ chạy ổn, xuất phiên bản plugin đang cài và ghi đè plugins.txt để các lần build sau giống hệt nhau. Tạo API token ở trang người dùng admin → Security.",
+        lang: "bash", file: "terminal",
+        code: `docker compose up -d --build
+docker compose logs -f jenkins        # chờ dòng "Jenkins is fully up and running"
+
+# Xuất danh sách plugin kèm phiên bản để pin
+curl -fsS -u "admin:$JENKINS_TOKEN" \\
+  "http://localhost:8080/pluginManager/api/json?depth=1&tree=plugins%5BshortName,version%5D" \\
+  | jq -r '.plugins[] | "\\(.shortName):\\(.version)"' | sort > controller/plugins.txt
+
+# Thử dựng lại từ đầu: xoá cả volume, cấu hình phải quay lại y nguyên
+docker compose down -v && docker compose up -d --build`
+      }
+    ],
+    verify: [
+      "Đăng nhập bằng admin; trang Nodes có agent-1 online, Built-In Node có 0 executor",
+      "Job task-api tự xuất hiện, quét thấy nhánh main và chạy pipeline",
+      "Stage Duyệt dừng chờ, trong lúc chờ agent-1 không bị chiếm executor",
+      "Chạy hai build main gần nhau: build sau chờ khoá lab-staging",
+      "Sau docker compose down -v và up lại, cấu hình, agent và job vẫn đầy đủ"
+    ],
+    pitfalls: [
+      "Trên Linux, file keys/agent chỉ user trên máy host đọc được; nếu uid khác 1000, controller không đọc được secret và agent không kết nối. Kiểm tra quyền file",
+      "Git plugin chặn checkout từ đường dẫn file cục bộ vì lý do bảo mật; repo phải là URL (GitHub, GitLab)",
+      "Sửa cấu hình trên giao diện rồi quên đưa vào jenkins.yaml, lần khởi động sau bị ghi đè",
+      "Muốn Job DSL giữ nguyên chuỗi \${...} mà không để JCasC thay biến thì phải viết ^\${...}"
+    ]
   }
 ];

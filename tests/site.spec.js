@@ -32,7 +32,7 @@ test.describe('Trang chủ', () => {
     await page.goto('/#/');
     await expect(page.locator('.banner h1')).toHaveText('Lộ trình Backend & Fullstack Engineer');
     await expect(page.locator('.banner p')).toContainText('14 khóa học');
-    await expect(page.locator('.banner p')).toContainText('339 bài học');
+    await expect(page.locator('.banner p')).toContainText('350 bài học');
     await expect(page.locator('.course-card')).toHaveCount(14);
     await expect(page.locator('.track')).toHaveCount(5);
     await expect(page.locator('.track').nth(2).locator('.course-card')).toHaveCount(5);
@@ -69,20 +69,20 @@ test.describe('Trang chương', () => {
   test('bố cục trang khóa học: học được gì, nội dung, thẻ đăng ký', async ({ page }) => {
     await page.goto('/#/phase/p08');
     await expect(page.locator('h1')).toHaveText('CI/CD chuyên sâu & DevSecOps');
-    await expect(page.locator('.learn-list li')).toHaveCount(3 + 6);
-    await expect(page.locator('.curr-meta')).toContainText('6 phần');
-    await expect(page.locator('.curr-meta')).toContainText('41 bài học');
-    await expect(page.locator('details.module')).toHaveCount(6);
+    await expect(page.locator('.learn-list li')).toHaveCount(4 + 7);
+    await expect(page.locator('.curr-meta')).toContainText('7 phần');
+    await expect(page.locator('.curr-meta')).toContainText('52 bài học');
+    await expect(page.locator('details.module')).toHaveCount(7);
     await expect(page.locator('details.module[open]')).toHaveCount(1);
     await expect(page.locator('.enroll [data-start]')).toHaveText('Bắt đầu học');
-    await expect(page.locator('.enroll-list')).toContainText('Tổng số 41 bài học');
+    await expect(page.locator('.enroll-list')).toContainText('Tổng số 52 bài học');
     await expect(page.locator('.requirements')).toContainText('Chương 07');
   });
 
   test('mở/thu gọn tất cả phần', async ({ page }) => {
     await page.goto('/#/phase/p08');
     await page.locator('[data-act="expand"]').click();
-    await expect(page.locator('details.module[open]')).toHaveCount(6);
+    await expect(page.locator('details.module[open]')).toHaveCount(7);
     await page.locator('[data-act="collapse"]').click();
     await expect(page.locator('details.module[open]')).toHaveCount(0);
   });
@@ -122,7 +122,7 @@ test.describe('Trang học (player)', () => {
     await expect(page).toHaveTitle(/OIDC tới cloud/);
     await expect(page.locator('.lesson-meta')).toContainText('GitHub Actions chuyên sâu');
     await expect(page.locator('.player-bar')).toBeInViewport();
-    await expect(page.locator('.ps-lesson')).toHaveCount(41);
+    await expect(page.locator('.ps-lesson')).toHaveCount(52);
     if (isMobile) {
       await expect(page.locator('#player')).not.toHaveClass(/side-open/);
       await page.locator('.pb-side').click();
@@ -145,7 +145,7 @@ test.describe('Trang học (player)', () => {
     await page.locator('[data-act="complete"]').click();
     await expect(page).toHaveURL(/#\/learn\/p08\/1\/7$/);
     await expect(page.locator('#toast')).toContainText('Đã hoàn thành bài học');
-    await expect(page.locator('.pt-progress strong')).toHaveText('1/41');
+    await expect(page.locator('.pt-progress strong')).toHaveText('1/52');
     await page.locator('[data-prev]').click();
     await expect(page.locator('[data-act="complete"]')).toHaveText('Đã hoàn thành');
     await expect(page.locator('[data-act="complete"]')).toHaveAttribute('aria-pressed', 'true');
@@ -306,7 +306,7 @@ test.describe('Tiến độ', () => {
     await expect(page.locator('#toast')).toContainText('hoàn thành lab');
     await page.goto('/#/labs');
     await expect(page.locator('.lab-card.is-done')).toHaveCount(1);
-    await expect(page.locator('.page-head .lead strong')).toHaveText('1/11');
+    await expect(page.locator('.page-head .lead strong')).toHaveText('1/12');
   });
 
   test('xuất, nhập và xoá tiến độ', async ({ page }) => {
@@ -398,9 +398,9 @@ test.describe('Tìm kiếm', () => {
 });
 
 test.describe('Labs', () => {
-  test('trang Labs có 11 lab', async ({ page }) => {
+  test('trang Labs có 12 lab', async ({ page }) => {
     await page.goto('/#/labs');
-    await expect(page.locator('.lab-card')).toHaveCount(11);
+    await expect(page.locator('.lab-card')).toHaveCount(12);
   });
 
   test('lab GitHub Actions giữ nguyên cú pháp ${{ }} và copy được code', async ({ page, context }) => {
@@ -419,7 +419,7 @@ test.describe('Labs', () => {
 
   test('mọi lab render đủ bước, kiểm chứng và lỗi hay gặp', async ({ page }) => {
     const errors = trackErrors(page);
-    for (let i = 1; i <= 11; i++) {
+    for (let i = 1; i <= 12; i++) {
       const id = 'lab' + String(i).padStart(2, '0');
       await page.goto('/#/lab/' + id);
       await expect(page.locator('.crumbs')).toContainText(id.toUpperCase());
